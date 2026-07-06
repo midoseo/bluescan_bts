@@ -51,8 +51,6 @@ function ListARow({ c, rank, expanded, onToggle, onResult, recorded, logCount = 
         <div className="lrow-rank">{rank}</div>
         <div className="lrow-id">
           <div className="lrow-name">{c.name}
-            {c.nearFire && <ABadge tone="warning" shape="pill" dot>최근 인근 화재</ABadge>}
-            {floodSeasonOn && c.flood && c.flood.level === '주의' && <ABadge tone="info" shape="pill" dot>침수 주의</ABadge>}
             {c.noData.length > 0 && <ABadge tone="neutral">NO_DATA {c.noData.length}</ABadge>}
           </div>
           <div className="lrow-addr">{c.address} · {c.use} · {c.owner}</div>
@@ -92,20 +90,6 @@ function ListARow({ c, rank, expanded, onToggle, onResult, recorded, logCount = 
                 <div><dt>소유구분</dt><dd>{c.owner}</dd></div>
                 <div><dt>사용승인</dt><dd>{c.approvalDate ? `${c.approvalDate} (${c.approvalYrAgo}년)` : <i className="nd">NO_DATA</i>}</dd></div>
               </dl>
-              {c.nearFire && (
-                <div className="ld-fire">
-                  <div className="ld-h" style={{ margin: 0, color: 'var(--s1-orange-600)' }}><MI n="local_fire_department" s={18} /> 영업 타이밍 신호</div>
-                  <p>인근 <b>{c.nearFire.dist}m</b> 지점 · <b>{c.nearFire.days}일 전</b> {c.nearFire.scale} 화재</p>
-                  <p className="faint">{c.nearFire.title}</p>
-                </div>
-              )}
-              {floodSeasonOn && c.flood && c.flood.level === '주의' && (
-                <div className="ld-flood">
-                  <div className="ld-h" style={{ margin: 0, color: 'var(--accent)' }}><MI n="water_drop" s={18} /> 침수 위험 신호 <span className="faint" style={{ fontWeight: 400 }}>· 혹서기·풍수해기(6~9월) 시즌 신호</span></div>
-                  <p><b>도시침수 예상구역</b> 내 위치 · {c.flood.area} (기왕최대 시나리오)</p>
-                  <p className="faint">건물관리·방재 솔루션 제안 타이밍 신호로 활용하세요.</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -123,8 +107,6 @@ function ACard({ c, rank, onResult, recorded, onOpen, logCount = 0, floodSeasonO
       <div className="acard-addr">{c.address}</div>
       <div className="acard-tags">
         <span className="kw">{c.use}</span>
-        {c.nearFire && <ABadge tone="warning" shape="pill" dot>화재</ABadge>}
-        {floodSeasonOn && c.flood && c.flood.level === '주의' && <ABadge tone="info" shape="pill" dot>침수</ABadge>}
         {c.noData.length > 0 && <ABadge tone="neutral">NO_DATA</ABadge>}
       </div>
       <div style={{ marginTop: 12 }} onClick={e => e.stopPropagation()}>
@@ -217,7 +199,6 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               <span className="fb-label"><MI n="apartment" s={18} />용도</span>
               <div className="fb-chips">{uses.map(u => <AChip key={u} selected={use === u} onClick={() => setUse(u)}>{u}</AChip>)}</div>
               <div className="fb-spacer">
-                <AChip selected={fireOnly} onClick={() => setFireOnly(f => !f)}>인근 화재 발생</AChip>
                 <div style={{ width: 140 }}><DSSelectSort sort={sort} setSort={setSort} /></div>
               </div>
             </div>

@@ -190,8 +190,10 @@ export default function App() {
   // --- 지사 필터: 본사 전체 관리자만 전체 조회, 그 외(지사장·컨설턴트)는 본인 지사만 / 수주완료(방문상태=won) 건은 후보 리스트에서 제외 ---
   // 시연 경량화 — 컨설턴트(본인 지사) 화면만 상위 N건으로 캡. 관리자 전체(seeAll) 집계는 그대로.
   const DEMO_CAP_B = 12;
-  const _rawA = (seeAll ? listA : listA.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won');
-  const _rawB = (seeAll ? listB : listB.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won');
+  // 같은 건물 중복 제거 (건축물대장 동·호 단위 중복 방지) — 건물명+주소 기준
+  const _dedupe = (arr) => { const seen = new Set(); return arr.filter(c => { const k = `${c.name}|${c.address}`; if (seen.has(k)) return false; seen.add(k); return true; }); };
+  const _rawA = _dedupe((seeAll ? listA : listA.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won'));
+  const _rawB = _dedupe((seeAll ? listB : listB.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won'));
   const visibleA = seeAll ? _rawA : _rawA.slice().sort((a, b) => (b.score ?? -1) - (a.score ?? -1));  // 신규 후보 전건(페이지네이션으로 표시)
   const visibleB = seeAll ? _rawB : _rawB.slice(0, DEMO_CAP_B);
   const visRecorded = seeAll ? recorded : recorded.filter(c => c.branch === user.branch);
