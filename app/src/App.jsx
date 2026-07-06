@@ -242,7 +242,6 @@ export default function App() {
                   </div>
                 </div>)}
             </div>
-            <span className="hdr__user" title={`사번 ${user.empno}`}><MI n="account_circle" s={22} />{persona.name}</span>
             <button className="hdr__logout" onClick={logout}><MI n="logout" s={18} />로그아웃</button>
           </div>
         </div>
