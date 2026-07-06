@@ -1245,3 +1245,26 @@ body{ background: var(--surface-home); }
 .act-badge .material-symbols-rounded{ font-size:28px; }
 .act-badge span{ font-size:14px; font-weight:600; }
 .act-badge.on{ color:#c2860a; background:#fff8ec; border-color:#ffe1a8; }
+
+/* ===========================================================================
+   신규/기존 후보 리스트 — 시니어 글씨 확대 + 페이지네이션
+   =========================================================================== */
+.lrow-name{ font-size:19px; }
+.lrow-addr{ font-size:15px; }
+.acard-name{ font-size:19px; }
+.acard-addr{ font-size:15px; }
+.list-meta .muted{ font-size:16px; }
+.list-meta .muted b{ font-size:18px; }
+.fb-label{ font-size:16px; }
+.tierlab{ font-size:15px; }
+.ld-h{ font-size:16px; }
+.ld-attrs dt{ font-size:14px; }
+.ld-attrs dd{ font-size:16px; }
+
+/* 페이지 번호 네비게이션 (스크롤 대체) */
+.pager{ display:flex; align-items:center; justify-content:center; gap:6px; padding:16px 0 6px; flex-wrap:wrap; }
+.pager__b{ min-width:42px; height:42px; padding:0 12px; border:1px solid #d7dbe0; background:#fff; border-radius:11px;
+  font-size:16px; font-weight:700; color:#4e5968; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+.pager__b:hover:not(:disabled){ background:#f2f4f6; border-color:#1d6ceb; color:#1d6ceb; }
+.pager__b.on{ background:#1d6ceb; border-color:#1d6ceb; color:#fff; }
+.pager__b:disabled{ opacity:.4; cursor:default; }

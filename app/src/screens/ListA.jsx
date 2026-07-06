@@ -3,7 +3,8 @@ import React from 'react'
 import { MI, Meter, Gauge, tierOf, num } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
-const { useState } = React
+const { useState, useEffect } = React
+const PER_PAGE = 6  // 한 화면에 담기도록 페이지당 표시 건수 (스크롤 대신 페이지 번호)
 
 const { Chip: AChip, Badge: ABadge, Button: AButton, TextField: ATextField } = window.UXDesignSystem_59a60b;
 
@@ -168,6 +169,14 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
     return 0;
   });
   const dimItems = data.filter(c => c.excluded || c.duplicate);
+
+  // 페이지네이션 — 스크롤 대신 페이지 번호. 필터/검색/정렬이 바뀌면 1페이지로.
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [gun, dong, use, q, fireOnly, sort]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const curPage = Math.min(page, totalPages);
+  const pageBase = (curPage - 1) * PER_PAGE;
+  const pageItems = filtered.slice(pageBase, pageBase + PER_PAGE);
   // 지도엔 보이는 후보가 위치한 시군구의 침수 레이어만 그림 (12개 전부 그리면 무거움)
   const floodForView = (D.floodLayers || []).filter(fl => {
     const [a, b, c, d] = fl.bbox || [];
@@ -237,15 +246,25 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               </div>
               {filtered.length === 0
                 ? <div className="nodata-box" style={{ margin: 12 }}><MI n="filter_alt_off" s={20} /><div>{q ? <>‘{q}’ 검색 결과가 없어요. 고객처명을 다시 확인하거나 검색을 해제해 보세요.</> : '선택한 조건에 맞는 후보가 없어요. 군·구·동·용도 필터를 조정해 보세요.'}</div></div>
-                : listMode === 'card'
-                  ? <div className="cardgrid">{filtered.map((c, i) => <ACard key={c.id} c={c} rank={i + 1} onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} onOpen={() => select(c.id)} floodSeasonOn={floodSeasonOn} />)}</div>
-                  : <div className="rows" style={{ padding: '4px 12px 12px' }}>
-                    {filtered.map((c, i) => (
-                      <div id={'row-' + c.id} key={c.id}>
-                        <ListARow c={c} rank={i + 1} expanded={expanded === c.id} onToggle={() => { if (expanded === c.id) setExpanded(null); else select(c.id); }} onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} floodSeasonOn={floodSeasonOn} />
-                      </div>))}
-                    {dimItems.map(c => <div key={c.id}><ListARow c={c} floodSeasonOn={floodSeasonOn} /></div>)}
-                  </div>}
+                : <>
+                  {listMode === 'card'
+                    ? <div className="cardgrid">{pageItems.map((c, i) => <ACard key={c.id} c={c} rank={pageBase + i + 1} onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} onOpen={() => select(c.id)} floodSeasonOn={floodSeasonOn} />)}</div>
+                    : <div className="rows" style={{ padding: '4px 12px 12px' }}>
+                      {pageItems.map((c, i) => (
+                        <div id={'row-' + c.id} key={c.id}>
+                          <ListARow c={c} rank={pageBase + i + 1} expanded={expanded === c.id} onToggle={() => { if (expanded === c.id) setExpanded(null); else select(c.id); }} onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} floodSeasonOn={floodSeasonOn} />
+                        </div>))}
+                    </div>}
+                  {totalPages > 1 && (
+                    <div className="pager">
+                      <button className="pager__b" disabled={curPage === 1} onClick={() => setPage(curPage - 1)} aria-label="이전 페이지"><MI n="chevron_left" s={20} /></button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                        <button key={n} className={'pager__b' + (n === curPage ? ' on' : '')} onClick={() => setPage(n)}>{n}</button>
+                      ))}
+                      <button className="pager__b" disabled={curPage === totalPages} onClick={() => setPage(curPage + 1)} aria-label="다음 페이지"><MI n="chevron_right" s={20} /></button>
+                    </div>
+                  )}
+                </>}
             </div>
             <div className="split-map">
               <div className="map-top">
@@ -257,7 +276,7 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               </div>
               <div style={{ flex: 1, position: 'relative' }}>
                 {filtered.length > 0
-                  ? <TargetMap candidates={filtered} firePoints={D.firePoints} fireRegions={D.fireRegions} liveFirePoints={fireDispatch.liveItems} showFire={showFire} showFlood={showFlood} floodLayers={floodForView} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={`${gun}|${dong}|${qx}`} variant="A" />
+                  ? <TargetMap candidates={pageItems} firePoints={D.firePoints} fireRegions={D.fireRegions} liveFirePoints={fireDispatch.liveItems} showFire={showFire} showFlood={showFlood} floodLayers={floodForView} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={`${gun}|${dong}|${qx}|${curPage}`} variant="A" />
                   : <div className="map-empty"><MI n="map" s={28} /><span>표시할 후보가 없어요</span></div>}
               </div>
             </div>
