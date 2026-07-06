@@ -225,7 +225,6 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               <div className="list-meta">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <span className="muted"><b className="tnum">{filtered.length}</b>개 후보 · {sort === 'score' ? '점수순' : sort === 'age' ? '노후화순' : '규모순'}</span>
-                  <span className="faint" style={{ font: 'var(--type-12r)' }}>멸실·중복 {dimItems.length}건 제외</span>
                 </span>
                 {onListMode && (
                   <div className="seg seg--sm">
