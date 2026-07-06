@@ -14,7 +14,7 @@ import { currentSeasonKey } from './season.js'
 import { buildRetentionDemo } from './retention.demo.js'
 import { computeSessionPoints, questProgress, badgeStatus } from './gamification.js'
 import { pointToast, badgeToast, questToast } from './toastMessages.js'
-import { todayCompact, businessDayOfMonth } from './dateUtil.js'
+import { todayCompact, businessDayOfMonth, businessDaysInMonth } from './dateUtil.js'
 const { useState, useMemo, useCallback, useEffect, useRef } = React
 
 /* 화면 단위 에러 경계 — 한 화면이 실패해도 앱 전체가 빈 화면이 되지 않도록 */
@@ -205,6 +205,9 @@ export default function App() {
   const p2 = (x) => String(x).padStart(2, '0');
   const todayStr = `${_now.getFullYear()}.${p2(_now.getMonth() + 1)}.${p2(_now.getDate())}`;
   const bizDay = businessDayOfMonth(_now);
+  const bizTotal = businessDaysInMonth(_now);
+  const bizLeft = Math.max(0, bizTotal - bizDay);
+  const bizPct = bizTotal ? Math.round((bizDay / bizTotal) * 100) : 0;
 
   return (
     <div className="app appv2" data-density={t.density}>
@@ -216,8 +219,8 @@ export default function App() {
             <span className="hdr__word">블루스캔 <b>BTS</b></span>
           </div>
           <div className="hdr__right">
-            <span className="hdr__date" title="오늘 날짜 · 이달 영업일수 경과">
-              <MI n="calendar_month" s={18} />{todayStr} · 영업 {bizDay}일차
+            <span className="hdr__date" title="오늘 날짜 · 이달 영업일수(경과/전체) · 남은 영업일 · 진행률">
+              <MI n="calendar_month" s={18} />{todayStr} · 영업 {bizDay}/{bizTotal}일차 · 남은 {bizLeft}일 ({bizPct}%)
             </span>
             <div className="hdr__bellwrap">
               <button className="hdr__icon" title="영업 알림" aria-expanded={bellOpen} onClick={() => setBellOpen(o => !o)}>

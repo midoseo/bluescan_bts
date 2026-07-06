@@ -45,3 +45,15 @@ export const businessDayOfMonth = (base = new Date()) => {
   }
   return c;
 };
+
+// 이번 달 전체 영업일(주말 제외) 수
+export const businessDaysInMonth = (base = new Date()) => {
+  const y = base.getFullYear(), m = base.getMonth();
+  const last = new Date(y, m + 1, 0).getDate();
+  let c = 0;
+  for (let day = 1; day <= last; day++) {
+    const wd = new Date(y, m, day).getDay();
+    if (wd !== 0 && wd !== 6) c++;
+  }
+  return c;
+};
