@@ -188,12 +188,6 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
 
   return (
     <div className="pc-content pc-content--wide fadein" data-screen-label="리스트 A · 신규 후보">
-      <div className="pc-pagehead">
-        <div>
-          <div className="pc-pagehead__title">신규 후보 발굴</div>
-        </div>
-      </div>
-
       {active.length === 0 ? (
         <div className="empty">
           <div className="empty__ico"><MI n="travel_explore" s={32} /></div>

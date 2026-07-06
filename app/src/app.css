@@ -1274,3 +1274,6 @@ body{ background: var(--surface-home); }
 .fb-row{ padding:9px 0; gap:12px; }
 .lrow-id{ min-width:0; }
 .lrow-name{ flex-wrap:nowrap; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* 검색 라벨(고객처명/용도/읍·면·동) 한 줄 고정 — 고정폭 78px에서 줄바꿈되던 문제 해결 */
+.fb-label{ width:auto; white-space:nowrap; }
