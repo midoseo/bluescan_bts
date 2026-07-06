@@ -7,6 +7,8 @@ import { ListAScreen } from './screens/ListA.jsx'
 import { ListBScreen } from './screens/ListB.jsx'
 import { ConfirmedScreen } from './screens/Confirmed.jsx'
 import { RetentionScreen } from './screens/Retention.jsx'
+import { ActivityScreen } from './screens/Activity.jsx'
+import { InsightScreen } from './screens/Insight.jsx'
 import { VisitDialog } from './screens/Visit.jsx'
 import { Login } from './screens/Login.jsx'
 import { buildDemoVisits } from './demoVisits.js'
@@ -52,12 +54,16 @@ const BASE_NAV = [
   { key: 'listB', label: '기존 고객 (추가 제안)', short: '기존 고객', icon: 'apartment' },
   { key: 'retention', label: '유지 고객 관리', short: '유지 고객 관리', icon: 'shield_with_heart' },
   { key: 'confirmed', label: '방문 기록', short: '방문 기록', icon: 'fact_check' },
+  { key: 'activity', label: '미션 & 랭킹', short: '미션 & 랭킹', icon: 'military_tech' },
+  { key: 'insight', label: '인사이트', short: '인사이트', icon: 'insights' },
 ];
 const TITLES = {
   listA: { crumb: '신규 고객 후보' },
   listB: { crumb: '기존 고객 후보(업셀링)' },
   retention: { crumb: '유지고객 대시보드' },
   confirmed: { crumb: '방문 결과 기록' },
+  activity: { crumb: '미션 & 랭킹' },
+  insight: { crumb: '인사이트' },
 };
 
 export default function App() {
@@ -303,6 +309,8 @@ export default function App() {
                 reportSentOverrides={reportSentOverrides} onMarkReportSent={markReportSent}
                 touchOverrides={touchOverrides} onMarkTouched={markTouched} />}
               {view === 'confirmed' && <ConfirmedScreen confirmed={visRecorded} visits={visits} onVisit={saveVisit} onRemove={removeVisit} onDownload={download} onResult={openResult} />}
+              {view === 'activity' && <ActivityScreen gamify={gamify} visits={visits} listA={visibleA} listB={visibleB} retention={retention} reportSentOverrides={reportSentOverrides} touchOverrides={touchOverrides} myEmpno={user.empno} myBranch={user.branch} />}
+              {view === 'insight' && <InsightScreen />}
             </>
           )}
         </ErrorBoundary>

@@ -1184,3 +1184,64 @@ body{ background: var(--surface-home); }
   .homewrap{ grid-template-columns:1fr; }
   .hsummary{ position:static; }
 }
+
+/* ===========================================================================
+   인사이트 페이지 — 화재 iframe + 뉴스
+   =========================================================================== */
+.insight-card{ background:#fff; border:1px solid #eaecf0; border-radius:16px; padding:18px 20px; }
+.insight-card__head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.insight-card__title{ display:inline-flex; align-items:center; gap:8px; font-size:19px; font-weight:700; color:#191f28; }
+.insight-card__title .material-symbols-rounded{ color:#ff6b1a; }
+.insight-live{ font-size:12px; font-weight:700; color:#0f8f63; background:#e1f5ee; border-radius:999px; padding:3px 10px; }
+.insight-open{ display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 15px; border:1px solid #1d6ceb;
+  border-radius:11px; color:#1d6ceb; font-size:15px; font-weight:600; }
+.insight-open:hover{ background:#eef4ff; }
+.insight-frame{ width:100%; height:720px; border:1px solid #eaecf0; border-radius:12px; background:#f6f7f9; display:block; }
+.insight-note{ display:flex; align-items:flex-start; gap:8px; margin-top:12px; font-size:14px; color:#6b7684; line-height:1.5; }
+.insight-note .material-symbols-rounded{ color:#8b95a1; flex:none; }
+
+/* ===========================================================================
+   미션 & 랭킹 페이지
+   =========================================================================== */
+.act-hero{ display:flex; align-items:center; gap:24px; flex-wrap:wrap;
+  background:linear-gradient(135deg,#1d6ceb,#3182f6); border-radius:16px; padding:22px 24px; color:#fff; margin-bottom:16px; }
+.act-hero__pts{ display:inline-flex; align-items:center; gap:9px; font-size:38px; font-weight:800; }
+.act-hero__meta{ display:flex; gap:28px; margin-left:auto; flex-wrap:wrap; }
+.act-hero__meta > div{ display:flex; flex-direction:column; }
+.act-hero__meta b{ font-size:24px; font-weight:800; }
+.act-hero__meta span{ font-size:13px; opacity:.9; }
+
+.act-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:900px){ .act-grid{ grid-template-columns:1fr; } }
+.act-card{ background:#fff; border:1px solid #eaecf0; border-radius:16px; padding:18px 20px; }
+.act-card__title{ display:flex; align-items:center; gap:8px; font-size:18px; font-weight:700; color:#191f28; margin-bottom:14px; }
+.act-card__title .material-symbols-rounded{ color:#1d6ceb; }
+
+.act-quests{ display:flex; flex-direction:column; gap:14px; }
+.act-quest{ display:flex; align-items:center; gap:12px; }
+.act-quest__ico{ width:40px; height:40px; border-radius:11px; background:#f2f4f6; color:#8b95a1; display:grid; place-items:center; flex:none; }
+.act-quest.done .act-quest__ico{ background:#e1f5ee; color:#0f8f63; }
+.act-quest__body{ flex:1; min-width:0; }
+.act-quest__lab{ font-size:15px; font-weight:600; color:#333d4b; margin-bottom:6px; }
+.act-quest__bar{ height:8px; border-radius:999px; background:#eef1f5; overflow:hidden; }
+.act-quest__bar > i{ display:block; height:100%; border-radius:999px; background:#3182f6; }
+.act-quest.done .act-quest__bar > i{ background:#1fb279; }
+.act-quest__n{ font-size:15px; font-weight:700; color:#4e5968; flex:none; min-width:44px; text-align:right; }
+
+.act-rank{ display:flex; flex-direction:column; }
+.act-rankrow{ display:flex; align-items:center; gap:12px; padding:11px 8px; border-bottom:1px solid #f1f3f5; }
+.act-rankrow:last-child{ border-bottom:0; }
+.act-rankrow.me{ background:#eef4ff; border-radius:10px; }
+.act-rankn{ width:28px; height:28px; flex:none; display:grid; place-items:center; border-radius:8px;
+  font-size:15px; font-weight:700; color:#8b95a1; background:#f2f4f6; }
+.act-rankn.top{ background:#fff3ea; color:#c2560a; }
+.act-rankname{ flex:1; min-width:0; font-size:16px; font-weight:600; color:#191f28; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.act-rankrow.me .act-rankname{ color:#1d6ceb; }
+.act-rankpts{ font-size:16px; font-weight:700; color:#191f28; flex:none; }
+
+.act-badges{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+.act-badge{ display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
+  border:1px solid #eaecf0; border-radius:14px; padding:16px 10px; color:#b0b8c1; background:#fafbfc; }
+.act-badge .material-symbols-rounded{ font-size:28px; }
+.act-badge span{ font-size:14px; font-weight:600; }
+.act-badge.on{ color:#c2860a; background:#fff8ec; border-color:#ffe1a8; }
