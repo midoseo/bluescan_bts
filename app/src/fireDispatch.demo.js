@@ -1,5 +1,4 @@
 /* ===== fireDispatch.demo.js — 소방청 화재정보 공개API(국민안전24) 목업 =====
-import { todayYMD, todayMMDD } from './dateUtil.js'
  * 실연동 전, 대시보드·지도에 어떻게 배치될지 보여주기 위한 예시 데이터.
  * 실제 API 연동 시 이 파일의 buildFireDispatchDemo() 반환값과 동일한 구조로
  * API 호출 결과를 채워 넣으면 화면 변경 없이 교체된다.
@@ -12,6 +11,7 @@ import { todayYMD, todayMMDD } from './dateUtil.js'
  *   2) 실시간 화재 출동 현황 — safekorea.go.kr 실시간 화재정보(전 페이지, 화재 필터) → liveItems
  *      {id, type, loc, time, lat, lng, scale} 구조. 대시보드에는 스크롤 리스트로, 지도에는 마커로 표시한다.
  */
+import { todayYMD, todayMMDD } from './dateUtil.js'
 
 // 시도별 접수/진행/인명피해(명)/재산피해(원) — 어제자 스냅샷 가정 (예시, national 요약에만 사용)
 const BY_SIDO = [

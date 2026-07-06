@@ -1094,10 +1094,15 @@ body{ background: var(--surface-home); }
 .login2 .login-roleseg{ margin-bottom:22px; }
 .login2 .login-roleseg button{ height:50px; font-size:16px; border-radius:12px; }
 
-/* 시연용 추천 계정 카드 — 가독성 소폭 상향 */
+/* 시연용 추천 계정 카드 — 가독성 상향 */
 .login2 .login-rec{ border-radius:14px; }
-.login2 .login-rec__cell b{ font-size:16px; }
-.login2 .login-rec .s1-btn{ height:52px; border-radius:12px; font-size:16px; }
+.login2 .login-rec__cell b{ font-size:18px; }
+/* '이 계정으로 바로 로그인' — 상단 로그인 버튼과 색·크기 통일(시원시원하게) */
+.login2 .login-rec .s1-btn{ height:60px; border-radius:14px; font-size:19px; font-weight:600; margin-top:4px; }
+.login2 .login-rec .s1-btn,
+.login2 .login-rec .s1-btn:hover,
+.login2 .login-rec .s1-btn:active{ background:#3182f6; color:#fff; }
+.login2 .login-rec .s1-btn:hover{ background:#1f6fe4; }
 
 /* 오류 메시지 — 아이콘+큰 글씨(색 단독 의존 완화) */
 .login2 .login-err{ font-size:15px; font-weight:600; margin-top:12px; }

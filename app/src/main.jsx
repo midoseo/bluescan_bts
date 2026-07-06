@@ -15,10 +15,12 @@ import './app.css'
 import App from './App.jsx'
 import { injectBranchManagers } from './branchManagers.js'
 import { injectDemoConsultants } from './demoConsultants.js'
+import { applyDemoLoginOverride } from './demoLoginOverride.js'
 
 // 지사장(관리자)·데모 컨설턴트 계정을 명단에 주입 — 첫 렌더 전에 실행 (appdata.js 로드 이후)
 injectBranchManagers()
 injectDemoConsultants()
+applyDemoLoginOverride()   // 로그인 데모 계정 사번 8자리로 정리
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

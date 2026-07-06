@@ -88,15 +88,12 @@ export function Login({ onLogin }) {
               <div className="login-rec__head"><MI n="campaign" s={16} />발표·시연용 추천 계정</div>
               <div className="login-rec__role">
                 {role === 'admin'
-                  ? (rec.branch ? <>지사장 · {rec.branch} <span className="login-rec__tag">지사 관리자</span></> : <>관리자 · 전체 지사 조회</>)
-                  : <>영업 컨설턴트 · {rec.branch} <span className="login-rec__tag">데이터 최다</span></>}
+                  ? <>관리자 · 전체 지사 조회</>
+                  : <>영업 컨설턴트 · {rec.branch}</>}
               </div>
               <div className="login-rec__grid">
                 <div className="login-rec__cell"><span className="k">사번</span><b className="tnum">{rec.empno}</b></div>
                 <div className="login-rec__cell"><span className="k">비밀번호</span><b className="tnum">{hintPw}</b></div>
-                {role !== 'admin' && rec.countA != null && (
-                  <div className="login-rec__cell login-rec__cell--wide"><span className="k">보유 데이터</span><b>신규 {rec.countA}곳 · 기존 고객(업셀링) {rec.countB}곳</b></div>
-                )}
               </div>
               <LButton block onClick={() => loginWith(rec.empno)} iconLeft={<MI n="login" s={18} />}>이 계정으로 바로 로그인</LButton>
             </div>
