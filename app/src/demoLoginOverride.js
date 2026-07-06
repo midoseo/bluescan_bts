@@ -9,7 +9,7 @@ export function applyDemoLoginOverride() {
   if (typeof window === 'undefined') return;
 
   const D = window.APP_DEMO || (window.APP_DEMO = {});
-  D.consultant = { ...(D.consultant || {}), empno: '20123901', name: '윤연연', branch: '서강지사' };
+  D.consultant = { ...(D.consultant || {}), empno: '20123901', name: '김제니', branch: '서강지사' };
   D.admin = { ...(D.admin || {}), empno: '20123902', name: '박팀장' };
   D.password = '1234';
 
@@ -19,7 +19,7 @@ export function applyDemoLoginOverride() {
       const ex = list.find(a => String(a.empno) === acc.empno);
       if (ex) Object.assign(ex, acc); else list.push(acc);
     };
-    ensure({ empno: '20123901', name: '윤연연', branch: '서강지사', role: 'consultant' });
+    ensure({ empno: '20123901', name: '김제니', branch: '서강지사', role: 'consultant' });
     ensure({ empno: '20123902', name: '박팀장', branch: '', role: 'admin' });
   }
 }

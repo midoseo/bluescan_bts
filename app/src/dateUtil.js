@@ -35,3 +35,13 @@ export const dateTimeDaysAgo = (days, hh, mm) => {
   n.setDate(n.getDate() - days);
   return `${n.getFullYear()}.${p(n.getMonth() + 1)}.${p(n.getDate())} ${p(hh)}:${p(mm)}`;
 };
+
+// 이번 달 1일부터 오늘까지의 영업일(주말 제외) 수 = "이달 N영업일차"
+export const businessDayOfMonth = (base = new Date()) => {
+  let c = 0;
+  for (let day = 1; day <= base.getDate(); day++) {
+    const wd = new Date(base.getFullYear(), base.getMonth(), day).getDay();
+    if (wd !== 0 && wd !== 6) c++;
+  }
+  return c;
+};

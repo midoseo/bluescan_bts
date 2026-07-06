@@ -14,7 +14,7 @@ import { currentSeasonKey } from './season.js'
 import { buildRetentionDemo } from './retention.demo.js'
 import { computeSessionPoints, questProgress, badgeStatus } from './gamification.js'
 import { pointToast, badgeToast, questToast } from './toastMessages.js'
-import { todayCompact } from './dateUtil.js'
+import { todayCompact, businessDayOfMonth } from './dateUtil.js'
 const { useState, useMemo, useCallback, useEffect, useRef } = React
 
 /* 화면 단위 에러 경계 — 한 화면이 실패해도 앱 전체가 빈 화면이 되지 않도록 */
@@ -45,13 +45,13 @@ const PERSONA = {
   admin: { name: '박팀장', role: '영업 관리자', greet: '팀 영업 현황과 방문 결과를 한눈에 확인해 봐요.' },
 };
 const homeNav = (role) => role === 'admin'
-  ? { key: 'home', label: '관리자 대시보드', short: '관리자 대시보드', icon: 'space_dashboard' }
-  : { key: 'home', label: '컨설턴트 대시보드', short: '컨설턴트 대시보드', icon: 'space_dashboard' };
+  ? { key: 'home', label: '관리자 대시보드', short: '홈', icon: 'space_dashboard' }
+  : { key: 'home', label: '컨설턴트 대시보드', short: '홈', icon: 'space_dashboard' };
 const BASE_NAV = [
-  { key: 'listB', label: '기존 고객 후보(업셀링)', short: '기존 고객 후보(업셀링)', icon: 'apartment' },
-  { key: 'listA', label: '신규 고객 후보', short: '신규 고객 후보', icon: 'travel_explore' },
-  { key: 'retention', label: '유지고객 대시보드', short: '유지고객 대시보드', icon: 'shield_with_heart' },
-  { key: 'confirmed', label: '방문 결과 기록', short: '방문 결과', icon: 'fact_check' },
+  { key: 'listA', label: '신규 고객 찾기', short: '신규 고객 찾기', icon: 'travel_explore' },
+  { key: 'listB', label: '기존 고객 (추가 제안)', short: '기존 고객', icon: 'apartment' },
+  { key: 'retention', label: '유지 고객 관리', short: '유지 고객 관리', icon: 'shield_with_heart' },
+  { key: 'confirmed', label: '방문 기록', short: '방문 기록', icon: 'fact_check' },
 ];
 const TITLES = {
   listA: { crumb: '신규 고객 후보' },
@@ -200,70 +200,31 @@ export default function App() {
 
   const pageTitle = view === 'home' ? (isAdmin ? '관리자 대시보드' : '컨설턴트 대시보드') : (TITLES[view] && TITLES[view].crumb);
 
-  return (
-    <div className="app shell" data-density={t.density}>
-      {/* ── 모바일 — 사이드바 서랍 배경 ── */}
-      {navOpen && <div className="side-backdrop" onClick={() => setNavOpen(false)} />}
-      {/* ── 좌측 사이드바 (디자인 리뉴얼) ── */}
-      <aside className={'side' + (navOpen ? ' side--open' : '')}>
-        <div className="side__brand" onClick={() => { setView('home'); setNavOpen(false); }}>
-          <span className="side__ci"><BrandMark height={22} /></span>
-          <BltaMark height={40} className="side__blta" />
-        </div>
-        <nav className="side__nav">
-          {NAV.map(n => (
-            <button key={n.key} className="side__item" aria-current={view === n.key} onClick={() => { setView(n.key); setNavOpen(false); }}>
-              <MI n={n.icon} s={20} fill={view === n.key} />
-              <span className="side__label">{n.short || n.label}</span>
-              {n.key === 'listA' && <span className="side__count">{counts.listA}</span>}
-              {n.key === 'listB' && <span className="side__count">{counts.listB}</span>}
-              {n.key === 'retention' && <span className="side__count">{counts.retention}</span>}
-              {n.key === 'confirmed' && counts.confirmed > 0 && <span className="side__count">{counts.confirmed}</span>}
-            </button>
-          ))}
-        </nav>
-        <div className="side__foot">
-          <div className="branchchip" title={seeAll ? '전체 지사 조회' : '본인 지사만 조회'}>
-            <MI n={seeAll ? 'groups' : 'store'} s={18} />{seeAll ? '전체 지사' : user.branch}
-          </div>
-          <div className="side__userrow">
-            <button className="side__user" onClick={() => setUserOpen(v => !v)}>
-              <MI n="account_circle" s={28} />
-              <span className="side__usertxt"><b>{persona.name}</b><small>{persona.role}</small></span>
-            </button>
-            <button className="side__logout" title="로그아웃" onClick={logout}><MI n="logout" s={18} /></button>
-          </div>
-          {userOpen && (
-            <div className="side__menu">
-              <div style={{ padding: '10px', font: 'var(--type-12r)', color: 'var(--text-tertiary)' }}>{persona.name} · {isAdmin ? (seeAll ? '전체' : user.branch) : user.branch}<br />사번 {user.empno}</div>
-              {['내 정보', '환경 설정', '로그아웃'].map((x, i) => (
-                <div key={i} onMouseDown={e => e.preventDefault()} onClick={() => x === '로그아웃' ? logout() : setUserOpen(false)}
-                  style={{ padding: '10px', borderRadius: 'var(--radius-s)', cursor: 'pointer', font: 'var(--type-14r)', color: x === '로그아웃' ? 'var(--s1-red-500)' : 'var(--text-body)' }}>{x}</div>))}
-            </div>)}
-        </div>
-      </aside>
+  // 헤더 날짜 — 오늘(실행 시점) + 이달 영업일수 경과
+  const _now = new Date();
+  const p2 = (x) => String(x).padStart(2, '0');
+  const todayStr = `${_now.getFullYear()}.${p2(_now.getMonth() + 1)}.${p2(_now.getDate())}`;
+  const bizDay = businessDayOfMonth(_now);
 
-      {/* ── 우측 콘텐츠 컬럼 ── */}
-      <div className="content">
-        <header className="topbar">
-          <div className="topbar__crumb">
-            <button className="topbar__menu" aria-label="메뉴 열기" onClick={() => setNavOpen(true)}><MI n="menu" s={22} /></button>
-            {view !== 'home' && (<><span className="bc-link" onClick={() => setView('home')}>홈</span><MI n="chevron_right" s={16} /></>)}
-            <span className="topbar__cur">{pageTitle}</span>
+  return (
+    <div className="app appv2" data-density={t.density}>
+      {/* ── 상단 헤더 (브랜드 + 우측 날짜/알림/이름/로그아웃 + 탭 메뉴) ── */}
+      <header className="hdr">
+        <div className="hdr__row">
+          <div className="hdr__brand" onClick={() => setView('home')} title="홈으로">
+            <span className="hdr__logo">BTS</span>
+            <span className="hdr__word">블루스캔 <b>BTS</b></span>
           </div>
-          <div className="topbar__right">
-            <span className="topbar__date"><MI n="schedule" s={16} />2026.06.11</span>
-            <button className="topbar__points" title="이번 세션 활동 포인트 — 방문 결과 입력, 유지고객 리포트·감성터칭 발송 시 올라가요" onClick={() => setView('home')}>
-              <MI n="stars" s={18} fill />
-              <span className="tnum">{gamify.total}P</span>
-              {pointsFlash != null && <span className="topbar__points-flash">+{pointsFlash}</span>}
-            </button>
-            <div className="topbar__bellwrap">
-              <button className="topbar__icon" title="영업 알림" aria-expanded={view === 'home' ? alertOpen : bellOpen}
-                onClick={() => view === 'home' ? toggleAlert(!alertOpen) : setBellOpen(o => !o)}>
-                <MI n="notifications" s={20} fill={view !== 'home' && bellOpen} />{alerts.length > 0 && <span className="topbar__badge">{alerts.length}</span>}
+          <div className="hdr__right">
+            <span className="hdr__date" title="오늘 날짜 · 이달 영업일수 경과">
+              <MI n="calendar_month" s={18} />{todayStr} · 영업 {bizDay}일차
+            </span>
+            <div className="hdr__bellwrap">
+              <button className="hdr__icon" title="영업 알림" aria-expanded={bellOpen} onClick={() => setBellOpen(o => !o)}>
+                <MI n="notifications" s={20} fill={bellOpen} /><span className="hdr__iconlab">알림</span>
+                {alerts.length > 0 && <span className="hdr__badge">{alerts.length}</span>}
               </button>
-              {view !== 'home' && bellOpen && (
+              {bellOpen && (
                 <div className="topbar__alertpop">
                   <div className="topbar__alertpop-head">
                     <span className="topbar__alertpop-title"><MI n="notifications_active" s={18} fill />영업 알림 {alerts.length > 0 && <em>{alerts.length}</em>}</span>
@@ -281,60 +242,67 @@ export default function App() {
                   </div>
                 </div>)}
             </div>
-            <button className="topbar__icon" title="도움말"><MI n="help" s={20} /></button>
+            <span className="hdr__user" title={`사번 ${user.empno}`}><MI n="account_circle" s={22} />{persona.name}</span>
+            <button className="hdr__logout" onClick={logout}><MI n="logout" s={18} />로그아웃</button>
           </div>
-        </header>
+        </div>
+        <nav className="hdr__tabs">
+          {NAV.map(n => (
+            <button key={n.key} className="hdr__tab" aria-current={view === n.key} onClick={() => setView(n.key)}>
+              <MI n={n.icon} s={20} fill={view === n.key} />
+              <span>{n.short || n.label}</span>
+              {n.key === 'listA' && <span className="hdr__tabcount">{counts.listA}</span>}
+              {n.key === 'listB' && <span className="hdr__tabcount">{counts.listB}</span>}
+              {n.key === 'retention' && <span className="hdr__tabcount">{counts.retention}</span>}
+              {n.key === 'confirmed' && counts.confirmed > 0 && <span className="hdr__tabcount">{counts.confirmed}</span>}
+            </button>
+          ))}
+        </nav>
+      </header>
 
-      {view === 'home' && (alertOpen ? (
-        <div className="pc-alertbar"><div className="pc-wrap"><div className="pc-alertbar__inner">
-          <div className="pc-alertbar__bell">
-            <MI n="notifications_active" s={22} fill />
-            {alerts.length > 0 && <span className="pc-alertbar__count">{alerts.length}</span>}
-          </div>
-          <div className="pc-alertbar__title">영업 알림</div>
-          <div className="pc-alertbar__list">
-            {alerts.length === 0
-              ? <div className="alertitem alertitem--muted"><MI n="check_circle" s={18} /><span>지금 우선 처리할 영업 알림은 없어요. 신규 고객 후보·기존 고객 후보(업셀링)를 확인해 보세요.</span></div>
-              : alerts.map((a, i) => (
-                <button key={i} className={'alertitem alertitem--' + a.tone} onClick={() => setView(a.go)}>
-                  <MI n={a.icon} s={18} />
-                  <span className="alertitem__txt"><b>{a.title}</b><span>{a.desc}</span></span>
-                  <span className="alertitem__cta">{a.cta}<MI n="chevron_right" s={18} /></span>
-                </button>))}
-          </div>
-          <button className="pc-alertbar__x" onClick={() => toggleAlert(false)} title="접기"><MI n="expand_less" s={20} /></button>
-        </div></div></div>
-      ) : (
-        <div className="pc-alertbar pc-alertbar--collapsed"><div className="pc-wrap">
-          <button className="pc-alertbar__chip" onClick={() => toggleAlert(true)} title="영업 알림 펼치기">
-            <span className="pc-alertbar__bell pc-alertbar__bell--sm">
-              <MI n="notifications_active" s={18} fill />
-              {alerts.length > 0 && <span className="pc-alertbar__count">{alerts.length}</span>}
-            </span>
-            영업 알림 {alerts.length}건 <MI n="expand_more" s={18} />
-          </button>
-        </div></div>
-      ))}
-
-      <main className="pc-main">
+      <main className="appv2__main">
         <ErrorBoundary key={view}>
-          {view === 'home' && isAdmin && <AdminDash onNav={setView} user={user} seeAll={seeAll} listA={visibleA} listB={visibleB} recorded={visRecorded} />}
-          {view === 'home' && !isAdmin && <SalesDash persona={persona} onNav={setView} listA={visibleA} listB={visibleB} retention={retention} recorded={visRecorded} visits={visits} onResult={openResult} seasonPreview={seasonPreview} onSeasonPreview={setSeasonPreview} floodSeasonOn={floodSeasonOn} gamify={gamify} reportSentOverrides={reportSentOverrides} touchOverrides={touchOverrides} myEmpno={user.empno} myBranch={user.branch} />}
-          {view === 'listA' && <ListAScreen data={visibleA} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
-          {view === 'listB' && <ListBScreen data={visibleB} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} visits={visits} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
-          {view === 'retention' && <RetentionScreen data={retention} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)}
-            reportSentOverrides={reportSentOverrides} onMarkReportSent={markReportSent}
-            touchOverrides={touchOverrides} onMarkTouched={markTouched} />}
-          {view === 'confirmed' && <ConfirmedScreen confirmed={visRecorded} visits={visits} onVisit={saveVisit} onRemove={removeVisit} onDownload={download} onResult={openResult} />}
+          {view === 'home' ? (
+            <div className="homewrap">
+              {/* 좌측 요약 패널 — 활동 점수 + 핵심 요약(클릭 시 해당 화면으로) */}
+              <aside className="hsummary">
+                <div className="hsummary__score">
+                  <div className="hsummary__who">{persona.name} 님 · {seeAll ? '전체 지사' : user.branch}</div>
+                  <div className="hsummary__pts"><MI n="stars" s={22} fill /><span className="tnum">{gamify.total}P</span></div>
+                  <div className="hsummary__ptssub">오늘의 활동 점수</div>
+                </div>
+                <button className="hsummary__card" onClick={() => setView('listA')}>
+                  <span className="hsummary__k"><MI n="travel_explore" s={18} />신규 고객 찾기</span><b>{counts.listA}<i>곳</i></b>
+                </button>
+                <button className="hsummary__card" onClick={() => setView('listB')}>
+                  <span className="hsummary__k"><MI n="apartment" s={18} />기존 고객</span><b>{counts.listB}<i>곳</i></b>
+                </button>
+                <button className="hsummary__card hsummary__card--warn" onClick={() => setView('retention')}>
+                  <span className="hsummary__k"><MI n="shield_with_heart" s={18} />유지 고객 관리</span><b>{counts.retention}<i>곳</i></b>
+                </button>
+              </aside>
+              <div className="hcol">
+                {isAdmin
+                  ? <AdminDash onNav={setView} user={user} seeAll={seeAll} listA={visibleA} listB={visibleB} recorded={visRecorded} />
+                  : <SalesDash persona={persona} onNav={setView} listA={visibleA} listB={visibleB} retention={retention} recorded={visRecorded} visits={visits} onResult={openResult} seasonPreview={seasonPreview} onSeasonPreview={setSeasonPreview} floodSeasonOn={floodSeasonOn} gamify={gamify} reportSentOverrides={reportSentOverrides} touchOverrides={touchOverrides} myEmpno={user.empno} myBranch={user.branch} />}
+              </div>
+            </div>
+          ) : (
+            <>
+              {view === 'listA' && <ListAScreen data={visibleA} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
+              {view === 'listB' && <ListBScreen data={visibleB} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} visits={visits} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
+              {view === 'retention' && <RetentionScreen data={retention} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)}
+                reportSentOverrides={reportSentOverrides} onMarkReportSent={markReportSent}
+                touchOverrides={touchOverrides} onMarkTouched={markTouched} />}
+              {view === 'confirmed' && <ConfirmedScreen confirmed={visRecorded} visits={visits} onVisit={saveVisit} onRemove={removeVisit} onDownload={download} onResult={openResult} />}
+            </>
+          )}
         </ErrorBoundary>
       </main>
 
-      <footer className="pc-footer"><div className="pc-footer__inner">
-        <div className="pc-footer__links"><a className="strong">이용약관</a><a>개인정보 처리방침</a><a>위치기반 서비스 이용약관</a></div>
-        <div className="pc-footer__info">(주)에스원 · 블루스캔 타깃 발굴 (실습 버전) · 점수는 영업 우선순위 참고 신호이며 최종 판단은 담당자가 합니다.</div>
-        <div className="pc-footer__copy">© S-1 Corp. 데모 목업 — 실명·연락처·계약 등 민감정보는 포함하지 않습니다.</div>
-      </div></footer>
-      </div>{/* /.content */}
+      <footer className="appv2__footer">
+        (주)에스원 · 블루스캔 BTS · 점수는 영업 우선순위 참고 신호이며 최종 판단은 담당자가 합니다.
+      </footer>
 
       {resultItem && <VisitDialog item={resultItem} initial={visits[resultItem.id]}
         onClose={() => setResultItem(null)} onSave={(id, rec) => saveVisit(id, rec)} />}
