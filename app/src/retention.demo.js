@@ -78,7 +78,7 @@ function buildSignalHistory(i, productTier) {
 }
 
 export function buildRetentionDemo() {
-  const N = 40;
+  const N = 10;  // 시연 경량화: 40→10 (순환배열 길이=10 → 값 반복 없이 전부 distinct)
   const out = [];
   for (let i = 0; i < N; i++) {
     const region = REGIONS[i % REGIONS.length];

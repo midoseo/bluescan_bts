@@ -182,8 +182,12 @@ export default function App() {
   const logout = () => { try { sessionStorage.removeItem('bluescan.user'); } catch { /* ignore */ } setVisits({}); setUser(null); setView('home'); setUserOpen(false); setNavOpen(false); };
 
   // --- 지사 필터: 본사 전체 관리자만 전체 조회, 그 외(지사장·컨설턴트)는 본인 지사만 / 수주완료(방문상태=won) 건은 후보 리스트에서 제외 ---
-  const visibleA = (seeAll ? listA : listA.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won');
-  const visibleB = (seeAll ? listB : listB.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won');
+  // 시연 경량화 — 컨설턴트(본인 지사) 화면만 상위 N건으로 캡. 관리자 전체(seeAll) 집계는 그대로.
+  const DEMO_CAP_A = 10, DEMO_CAP_B = 12;
+  const _rawA = (seeAll ? listA : listA.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won');
+  const _rawB = (seeAll ? listB : listB.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won');
+  const visibleA = seeAll ? _rawA : _rawA.slice().sort((a, b) => (b.score ?? -1) - (a.score ?? -1)).slice(0, DEMO_CAP_A);
+  const visibleB = seeAll ? _rawB : _rawB.slice(0, DEMO_CAP_B);
   const visRecorded = seeAll ? recorded : recorded.filter(c => c.branch === user.branch);
 
   const counts = { listA: visibleA.filter(c => !c.excluded && !c.duplicate).length, listB: visibleB.filter(c => c.matchCount > 0).length, retention: retention.length, confirmed: visRecorded.length };
@@ -204,10 +208,12 @@ export default function App() {
   const _now = new Date();
   const p2 = (x) => String(x).padStart(2, '0');
   const todayStr = `${_now.getFullYear()}.${p2(_now.getMonth() + 1)}.${p2(_now.getDate())}`;
+  const dow = ['일', '월', '화', '수', '목', '금', '토'][_now.getDay()];
   const bizDay = businessDayOfMonth(_now);
   const bizTotal = businessDaysInMonth(_now);
   const bizLeft = Math.max(0, bizTotal - bizDay);
   const bizPct = bizTotal ? Math.round((bizDay / bizTotal) * 100) : 0;
+  const bizLeftPct = bizTotal ? Math.round((bizLeft / bizTotal) * 100) : 0;
 
   return (
     <div className="app appv2" data-density={t.density}>
@@ -219,8 +225,8 @@ export default function App() {
             <span className="hdr__word">블루스캔 <b>BTS</b></span>
           </div>
           <div className="hdr__right">
-            <span className="hdr__date" title="오늘 날짜 · 이달 영업일수(경과/전체) · 남은 영업일 · 진행률">
-              <MI n="calendar_month" s={18} />{todayStr} · 영업 {bizDay}/{bizTotal}일차 · 남은 {bizLeft}일 ({bizPct}%)
+            <span className="hdr__date" title="오늘 날짜(요일) · 이달 영업일수 · 경과 일차/진행률 · 남은 일수/비율">
+              <MI n="calendar_month" s={18} />{todayStr} ({dow}) · 영업일수 {bizTotal}일 {bizDay}일차({bizPct}%) · 남은일수 {bizLeft}일 ({bizLeftPct}%)
             </span>
             <div className="hdr__bellwrap">
               <button className="hdr__icon" title="영업 알림" aria-expanded={bellOpen} onClick={() => setBellOpen(o => !o)}>
