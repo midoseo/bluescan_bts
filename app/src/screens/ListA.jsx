@@ -207,13 +207,13 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               {guns.length > 12
                 ? <div style={{ width: 180 }}><DSSelect value={gun} onChange={(v) => { setGun(v); setDong('전체'); }} options={guns.map(g => ({ value: g, label: g }))} /></div>
                 : <div className="fb-chips">{guns.map(r => <AChip key={r} selected={gun === r} onClick={() => { setGun(r); setDong('전체'); }}>{r}</AChip>)}</div>}
+              <span className="fb-label" style={{ marginLeft: 8 }}><MI n="pin_drop" s={18} />읍·면·동</span>
+              <div style={{ width: 150 }}><DSSelect value={dong} onChange={setDong} options={dongs.map(d => ({ value: d, label: d }))} /></div>
             </div>
             <div className="fb-row">
               <span className="fb-label"><MI n="apartment" s={18} />용도</span>
               <div className="fb-chips">{uses.map(u => <AChip key={u} selected={use === u} onClick={() => setUse(u)}>{u}</AChip>)}</div>
               <div className="fb-spacer">
-                <span className="fb-label" style={{ marginRight: 0 }}><MI n="pin_drop" s={18} />읍·면·동</span>
-                <div style={{ width: 150 }}><DSSelect value={dong} onChange={setDong} options={dongs.map(d => ({ value: d, label: d }))} /></div>
                 <AChip selected={fireOnly} onClick={() => setFireOnly(f => !f)}>인근 화재 발생</AChip>
                 <div style={{ width: 140 }}><DSSelectSort sort={sort} setSort={setSort} /></div>
               </div>
