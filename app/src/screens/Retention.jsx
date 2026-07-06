@@ -1,0 +1,455 @@
+/* ===== Retention.jsx — 유지고객(블루스캔) 대시보드 =====
+ * 테마 B(유지고객 리텐션 보강) 1차 화면. R21(유지현황 지도+신호 표시), R23(월간 리포트 초안
+ * 자동생성), R25(감성터칭 메시지)까지 다룬다. 이탈 스코어·등급, 해약 방어 시나리오(R22)는
+ * 아직 후속 — 신호를 있는 그대로 보여주고 "주의 필요" 여부만 규칙 기반으로 표시한다(가중치
+ * 스코어 아님). 월간 리포트·감성터칭 메시지 모두 AI가 초안까지만 생성하고, "승인 발송"은
+ * 버튼 클릭으로 상태만 표시하는 모의(mock) 동작이다 — 실제 발송은 하지 않는다(PRD 원칙:
+ * 발송은 담당자 승인 필요).
+ */
+import React from 'react'
+import { createPortal } from 'react-dom'
+import { MI, won } from '../components.jsx'
+import { Donut } from '../charts.jsx'
+import { TargetMap } from '../map.jsx'
+import { useSectionOrder, SectionList } from './Dash.jsx'
+import { USE_TYPES, PRODUCT_TIERS } from '../retentionSchema.js'
+import { buildMonthlyReportData } from '../monthlyReport.js'
+import { buildEmpathyMessageDraft } from '../empathyMessage.js'
+import { exportElementToPdf } from '../pdfExport.js'
+import { currentSeasonKey } from '../season.js'
+const { useState, useRef } = React
+
+const { Card: RCard, Dialog: RDialog, Badge: RBadge, Button: RButton, TextField: RTextField, Textarea: RTextarea, Chip: RChip, Select: RSelect } = window.UXDesignSystem_59a60b;
+
+// 다른 대시보드(Dash.jsx의 DashCard)와 동일한 카드 헤더 마크업 — 글자 크기·여백을 그대로 맞추기 위해 재사용
+function RDashCard({ title, sub, action, children }) {
+  return (
+    <RCard variant="line">
+      <div className="dashhead">
+        <div><div className="dashhead__t">{title}</div>{sub && <div className="dashhead__s">{sub}</div>}</div>
+        {action && <div className="dashhead__a">{action}</div>}
+      </div>
+      {children}
+    </RCard>
+  );
+}
+
+const RETENTION_SECTIONS = ['alerts', 'kpis', 'list'];
+const RETENTION_SEC_TITLE = { alerts: '요약 알림', kpis: '핵심 지표', list: '유지고객 목록·지도' };
+
+// "주의 필요" 판정 — 스코어링이 아니라 raw 신호 중 하나라도 해당하면 표시하는 단순 규칙
+function needsAttention(c) {
+  const daysToEnd = Math.round((new Date(c.endDate) - new Date()) / 86400000);
+  const hasSevereSignal = c.signalHistory.some(s => s.severity === '심각');
+  return { flag: daysToEnd <= 60 || hasSevereSignal || c.unresolvedVOC > 0, daysToEnd };
+}
+
+function TierBadge({ tier }) {
+  return <RBadge tone={tier === 'dual' ? 'info' : 'neutral'} shape="pill">{PRODUCT_TIERS[tier]}</RBadge>;
+}
+
+// 생애가치(BEP/ROI) — "지금 해약하면 손해인가, 할인해줘도 남는 고객인가"를 숫자로 보여준다(스코어 아님)
+function LifetimeValueBox({ c }) {
+  const lossIfChurn = c.netValueToDate < 0;
+  return (
+    <div>
+      <div className="ld-h" style={{ marginTop: 14 }}>생애가치(BEP/ROI) <span className="faint" style={{ fontWeight: 400 }}>· 계약기간 3년 기준</span></div>
+      <dl className="ld-attrs">
+        <div><dt>공사비(정가 → 실청구)</dt><dd>{won(c.standardInstallCost)} → {won(c.installCost)} <span className="faint">(할인 {c.installCostDiscountRate}%)</span></dd></div>
+        <div><dt>손익분기(BEP)</dt><dd>{c.bepMonths}개월 <RBadge tone={c.bepReached ? 'positive' : 'warning'} shape="pill">{c.bepReached ? '도달' : '미도달'}</RBadge></dd></div>
+        <div><dt>3년 ROI</dt><dd>{c.roi3yr}%</dd></div>
+        <div><dt>누적 순가치(현재까지)</dt><dd style={{ color: lossIfChurn ? 'var(--s1-red-500,#e5484d)' : 'var(--s1-seagreen-700, #0f8f63)' }}>{won(Math.abs(c.netValueToDate))} {lossIfChurn ? '손실 상태' : '이익 확보'}</dd></div>
+      </dl>
+      <div className={'bnote' + (lossIfChurn ? '' : '')} style={{ marginTop: 8 }}>
+        <MI n={lossIfChurn ? 'priority_high' : 'thumb_up'} />
+        <div>{lossIfChurn
+          ? <><b>아직 손익분기 전</b>입니다 — 지금 해약되면 회사는 순손실이에요. 할인을 해서라도 반드시 유지시켜야 하는 고객입니다.</>
+          : <><b>이미 손익분기를 넘겼습니다</b> — 해약 시즌에 할인을 제공해도 회사 입장에서 이득이 남는 여유가 있는 고객입니다.</>}</div>
+      </div>
+    </div>
+  );
+}
+
+const SEVERITY_TONE = { 심각: 'danger', 주의: 'warning', 경미: 'neutral' };
+
+// 월간 리포트 팝업 — 통신사·카드사 청구서 느낌의 분석 리포트 레이아웃. RCard/RDialog 없이도
+// 그대로 캡처되도록 순수 마크업(app.css의 .mreport* 클래스)으로 구성했다.
+// 이 리포트는 고객사에 제출되는 자료라 생애가치(BEP/ROI, 할인율 등 내부 수익성 정보)는
+// 절대 포함하지 않는다 — 그 정보는 컨설턴트 전용인 LifetimeValueBox(행 상세)에만 남겨둔다.
+function MonthlyReportDialog({ c, allCustomers, sentDate, onMarkSent, onClose }) {
+  const [report] = useState(() => buildMonthlyReportData(c, currentSeasonKey(), allCustomers));
+  const reportRef = useRef(null);
+  const daysToEnd = Math.round((new Date(c.endDate) - new Date()) / 86400000);
+
+  const sevCount = { 경미: 0, 주의: 0, 심각: 0 };
+  report.signalHistory.forEach(s => { sevCount[s.severity] = (sevCount[s.severity] || 0) + 1; });
+  const totalSignals = report.signalHistory.length;
+
+  const downloadPdf = async () => { await exportElementToPdf(reportRef.current, `${c.name}_${report.monthLabel}_월간리포트.pdf`); };
+
+  // document.body에 직접 포털로 띄운다 — 목록 영역 안에서 렌더링되면 부모의 스크롤 컨테이너에
+  // 갇혀 팝업이 리스트와 같이 스크롤되는 문제가 있어, 화면 중앙에 독립적으로 고정되도록 분리했다.
+  return createPortal(
+    <RDialog title="월간 유지관리 리포트" subtitle={`${c.name} · ${report.monthLabel}`} closeButton width={760} onClose={onClose}
+      actions={[
+        { label: '닫기', variant: 'secondary', onClick: onClose },
+        { label: 'PDF로 다운로드', variant: 'line', onClick: downloadPdf },
+        { label: '승인 후 발송 처리(모의)', onClick: () => onMarkSent(c.id) },
+      ]}>
+      <div className="mreport" ref={reportRef}>
+
+        <div className="mreport__topband">
+          <div className="mreport__topband-row">
+            <div>
+              <div className="mreport__customer">{c.name}</div>
+              <div className="mreport__period">{report.monthLabel} 유지관리 리포트 · 담당 컨설턴트 {report.consultant}</div>
+            </div>
+            <span className="mreport__badge">{PRODUCT_TIERS[c.productTier]}</span>
+          </div>
+          <div className="mreport__hero">
+            <div className="mreport__herocard"><div className="n">{totalSignals}건</div><div className="l">이번달 신호</div></div>
+            <div className="mreport__herocard"><div className="n">{c.remoteControlUsage30d}회</div><div className="l">원격제어 사용</div></div>
+            <div className="mreport__herocard"><div className="n">{daysToEnd >= 0 ? `D-${daysToEnd}` : '만료'}</div><div className="l">계약 잔여</div></div>
+          </div>
+        </div>
+
+        <div className={'mreport__section' + (totalSignals === 0 ? ' mreport__section--ok' : sevCount['심각'] > 0 ? ' mreport__section--warn' : '')}>
+          <div className="mreport__sectitle"><MI n="sensors" s={18} />신호 발생 내역</div>
+          {totalSignals === 0
+            ? <div className="nodata-box"><MI n="check_circle" s={18} /><div>이번 달 특이 신호가 없었습니다. 안정적으로 운영되고 있어요.</div></div>
+            : <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+                <Donut labels={['경미', '주의', '심각']} values={[sevCount['경미'], sevCount['주의'], sevCount['심각']]} size={84} title="유형" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {['심각', '주의', '경미'].filter(sv => sevCount[sv] > 0).map(sv => (
+                    <RBadge key={sv} tone={SEVERITY_TONE[sv]} shape="pill">{sv} {sevCount[sv]}건</RBadge>
+                  ))}
+                </div>
+              </div>
+              {report.signalHistory.map((s, i) => (
+                <div className="mreport__row" key={i}>
+                  <span className="d">{s.date}</span>
+                  <span className="t">{s.type}{s.notifiedAuthority ? ' · 유관기관 통보' : ''}</span>
+                  <RBadge tone={SEVERITY_TONE[s.severity]} shape="pill">{s.severity}</RBadge>
+                </div>
+              ))}
+            </>}
+        </div>
+
+        <div className="mreport__section mreport__section--info">
+          <div className="mreport__sectitle"><MI n="settings_remote" s={18} />원격제어 이용 이력 <span className="faint" style={{ fontWeight: 400 }}>· 최근 30일</span></div>
+          {report.remoteControlLog.length === 0
+            ? <div className="nodata-box"><MI n="info" s={18} /><div>최근 원격제어 사용 이력이 없습니다.</div></div>
+            : report.remoteControlLog.map((r, i) => (
+              <div className="mreport__row" key={i}><span className="d">{r.date}</span><span className="t">{r.device}</span><span className="faint">{r.action}</span></div>
+            ))}
+        </div>
+
+        <div className="mreport__section mreport__section--info">
+          <div className="mreport__sectitle"><MI n="newspaper" s={18} />최근 인근 사건사고</div>
+          {report.nearbyFire.length === 0 && report.nearbySignals.length === 0
+            ? <div className="nodata-box"><MI n="info" s={18} /><div>최근 인근 사건사고 소식이 없습니다.</div></div>
+            : <>
+              {report.nearbyFire.map((f, i) => (
+                <div className="mreport__row" key={'f' + i}><span className="d">{f.time}</span><span className="t">{f.loc} · {f.type}</span><RBadge tone={f.scale === '대형' ? 'danger' : f.scale === '중형' ? 'warning' : 'neutral'} shape="pill">{f.scale}</RBadge></div>
+              ))}
+              {report.nearbySignals.map((s, i) => (
+                <div className="mreport__row" key={'s' + i}><span className="d">{s.date}</span><span className="t">인근({s.dong}) 사업장 · {s.type} <span className="faint">— 다른 건물 참고 사례(익명)</span></span><RBadge tone={SEVERITY_TONE[s.severity]} shape="pill">{s.severity}</RBadge></div>
+              ))}
+            </>}
+        </div>
+
+        <div className="mreport__tip"><MI n="calendar_month" s={18} /><div>{report.seasonTip}</div></div>
+
+        <div className="mreport__foot">본 리포트는 AI가 자동 생성한 초안입니다. 발송 전 담당자 검토가 필요합니다. · 발송 상태: {sentDate ? `${sentDate} 발송 처리됨` : '미발송'}</div>
+      </div>
+    </RDialog>,
+    document.body
+  );
+}
+
+// 감성터칭 메시지 팝업(R25) — AI가 신호 맥락 기반 초안을 만들고, 담당자가 톤·타이밍을 직접
+// 수정한 뒤 승인 발송한다(모의). MonthlyReportDialog와 같은 이유로 document.body에 포털로 띄운다.
+function EmpathyMessageDialog({ c, signal, onClose, onSent }) {
+  const [text, setText] = useState(() => buildEmpathyMessageDraft(c, signal));
+  const send = () => { onSent(c.id); onClose(); };
+  return createPortal(
+    <RDialog title="감성터칭 메시지" subtitle={`${c.name} · ${signal.date} ${signal.type} 신호`} closeButton width={520} onClose={onClose}
+      actions={[
+        { label: '닫기', variant: 'secondary', onClick: onClose },
+        { label: '승인 발송(모의)', onClick: send },
+      ]}>
+      <div style={{ padding: 4 }}>
+        <div className="faint" style={{ font: 'var(--type-13r)', marginBottom: 8 }}>
+          AI가 신호 맥락에 맞춰 초안을 만들었어요. 톤·타이밍을 확인하고 필요하면 직접 수정한 뒤 승인해 주세요.
+        </div>
+        <RTextarea value={text} onChange={e => setText(e.target.value)} rows={8} />
+      </div>
+    </RDialog>,
+    document.body
+  );
+}
+
+function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate, onOpenEmpathy }) {
+  const att = needsAttention(c);
+  return (
+    <div className={'lrow lrow--b' + (expanded ? ' open' : '') + (att.flag ? ' lrow-priority' : '')}>
+      <div className="lrow-main" onClick={onToggle}>
+        <div className="lrow-id">
+          <div className="lrow-name">{c.name} <span className="kw">{c.use}</span>
+            {att.flag && <RBadge tone="danger" shape="pill" dot>주의 필요</RBadge>}
+            <TierBadge tier={c.productTier} />
+          </div>
+          <div className="lrow-addr">{c.address} · 계약번호 {c.contractNo} · 담당 {c.assignedConsultant}</div>
+        </div>
+        <div style={{ flex: 'none', display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div className="faint" style={{ font: 'var(--type-12r)' }}>최근 30일 신호</div>
+            <div className="tnum" style={{ font: 'var(--type-15m)' }}>{c.signalCount30d}건 <span className="faint" style={{ font: 'var(--type-12r)' }}>({c.signalTrend})</span></div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div className="faint" style={{ font: 'var(--type-12r)' }}>계약 종료(예상)</div>
+            <div className="tnum" style={{ font: 'var(--type-15m)', color: att.daysToEnd <= 60 ? 'var(--s1-red-500,#e5484d)' : undefined }}>
+              {att.daysToEnd >= 0 ? `D-${att.daysToEnd}` : `만료 ${-att.daysToEnd}일 경과`}
+            </div>
+          </div>
+        </div>
+        <span className="lrow-chev" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}><MI n="expand_more" /></span>
+      </div>
+      {expanded && (
+        <div className="lrow-detail fadein">
+          <div className="ld-grid">
+            <div>
+              <div className="ld-h">계약 정보</div>
+              <dl className="ld-attrs">
+                <div><dt>지사</dt><dd>{c.branch}</dd></div>
+                <div><dt>계약일</dt><dd>{c.contractDate}</dd></div>
+                <div><dt>개시일</dt><dd>{c.startDate}</dd></div>
+                <div><dt>계약종료(예상)</dt><dd>{c.endDate}</dd></div>
+                <div><dt>누적 유지기간</dt><dd>{c.contractMonths}개월</dd></div>
+                <div><dt>월 서비스료(계약 당시)</dt><dd>{won(c.monthlyFee)}</dd></div>
+              </dl>
+              <div className="ld-h" style={{ marginTop: 14 }}>설비 구성</div>
+              <div className="brow-badges">
+                {c.sensorTypes.map(s => <RBadge key={s} tone="neutral" shape="pill">{s} 센서</RBadge>)}
+                {c.remoteControlDevices.map(d => <RBadge key={d} tone="info" shape="pill">원격제어 · {d}</RBadge>)}
+              </div>
+              <LifetimeValueBox c={c} />
+            </div>
+            <div>
+              <div className="ld-h">관제 신호 이력 <span className="faint" style={{ fontWeight: 400 }}>· 최근 {c.signalHistory.length}건</span></div>
+              {c.signalHistory.length === 0
+                ? <div className="nodata-box"><MI n="info" s={18} /><div>최근 신호 이력이 없어요.</div></div>
+                : <div className="kwtable">
+                  {c.signalHistory.map((s, i) => (
+                    <div className="kwt-row" key={i}>
+                      <span className="kwt-kw">{s.date} · {s.type}</span>
+                      <span className="kwt-cat"><RBadge tone={s.severity === '심각' ? 'danger' : s.severity === '주의' ? 'warning' : 'neutral'} shape="pill">{s.severity}</RBadge></span>
+                      <span className="kwt-freq faint" style={{ flex: 1, textAlign: 'right', fontVariantNumeric: 'normal' }}>
+                        {s.notifiedAuthority ? '유관기관 통보' : ''}
+                      </span>
+                      <button className="kwt-touch" title="감성터칭 메시지 생성" onClick={e => { e.stopPropagation(); onOpenEmpathy(c, s); }}>
+                        <MI n="favorite" s={16} />
+                      </button>
+                    </div>))}
+                </div>}
+              <div className="ld-h" style={{ marginTop: 14 }}>활성도·소통</div>
+              <dl className="ld-attrs">
+                <div><dt>원격제어 사용(30일)</dt><dd>{c.remoteControlUsage30d}회</dd></div>
+                <div><dt>앱·웹 마지막 접속</dt><dd>{c.lastAppAccessDate}</dd></div>
+                <div><dt>미해결 VOC</dt><dd>{c.unresolvedVOC}건</dd></div>
+                <div><dt>월간 리포트 최근 발송</dt><dd>{sentDate || <i className="nd">미발송</i>}</dd></div>
+                <div><dt>감성터칭 최근 발송</dt><dd>{touchDate || <i className="nd">없음</i>}</dd></div>
+              </dl>
+              <div className="ld-h" style={{ marginTop: 14 }}>월간 리포트 <span className="faint" style={{ fontWeight: 400 }}>· AI 자동생성 · 발송 전 검토 필요</span></div>
+              <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <RButton size="sm" variant="line" onClick={() => onOpenReport(c)} iconLeft={<MI n="description" s={18} />}>월간 리포트 보기</RButton>
+                <span className="faint" style={{ font: 'var(--type-12r)' }}>발송 상태: {sentDate || '미발송'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function RetentionScreen({ data, listMode, onListMode, reportSentOverrides: sentOverrides, onMarkReportSent: markSent, touchOverrides, onMarkTouched: markTouched }) {
+  const ctrl = useSectionOrder(RETENTION_SECTIONS, 'bluescan.retentionDashOrder');
+  const [branch, setBranch] = useState('전체');
+  const [use, setUse] = useState('전체');
+  const [tier, setTier] = useState('all');
+  const [q, setQ] = useState('');
+  const [expanded, setExpanded] = useState(null);
+  const [showAttentionOnly, setShowAttentionOnly] = useState(false);
+  const [reportFor, setReportFor] = useState(null); // 월간 리포트 팝업 대상 고객
+  const [empathyFor, setEmpathyFor] = useState(null); // { c, signal } — 감성터칭 메시지 팝업 대상
+  // 리포트·감성터칭 발송 상태는 App.jsx로 끌어올려졌다(게이미피케이션 포인트 계산에 필요해서) —
+  // sentOverrides/markSent/touchOverrides/markTouched는 위에서 props를 받아온 이름 그대로 재사용한다.
+
+  const branches = ['전체', ...Array.from(new Set(data.map(c => c.branch)))];
+  const qx = q.trim().toLowerCase();
+  const withAttention = data.map(c => ({ c, att: needsAttention(c) }));
+  const filtered = withAttention.filter(({ c, att }) =>
+    (branch === '전체' || c.branch === branch) &&
+    (use === '전체' || c.use === use) &&
+    (tier === 'all' || c.productTier === tier) &&
+    (!showAttentionOnly || att.flag) &&
+    (qx === '' || (`${c.name} ${c.contractNo}`).toLowerCase().includes(qx))
+  ).map(x => x.c);
+
+  const kpi = {
+    total: data.length,
+    attention: withAttention.filter(x => x.att.flag).length,
+    expiringSoon: withAttention.filter(x => x.att.daysToEnd <= 60 && x.att.daysToEnd >= 0).length,
+  };
+
+  const mapCands = filtered.map(c => ({ ...c, attention: needsAttention(c).flag }));
+
+  // 요약 알림 — 신호 발생 내역(전체 계약처, 최신순)과 계약 만료 임박 목록
+  const signalFeed = data
+    .flatMap(c => c.signalHistory.map(s => ({ ...s, customerName: c.name, customerId: c.id })))
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const expiringList = withAttention
+    .filter(x => x.att.daysToEnd <= 60 && x.att.daysToEnd >= 0)
+    .sort((a, b) => a.att.daysToEnd - b.att.daysToEnd);
+
+  const blocks = {
+    alerts: (
+      <RDashCard title="요약 알림" sub="신호 발생 내역 · 계약 만료 임박">
+        <div className="dash-2col">
+          <div>
+            <div className="faint" style={{ font: 'var(--type-13m)', margin: '2px 0 6px' }}>신호 발생 내역</div>
+            {signalFeed.length === 0
+              ? <div className="nodata-box"><MI n="info" s={18} /><div>최근 신호 내역이 없어요.</div></div>
+              : <div className="news-feed" style={{ maxHeight: 180, overflowY: 'auto' }}>
+                {signalFeed.map((s, i) => (
+                  <div className="news-item" key={i} style={{ cursor: 'default' }}>
+                    <div className="news-day">{s.date.slice(5)}</div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="news-title">{s.customerName} · {s.type}</div>
+                      <div className="news-meta">
+                        <RBadge tone={s.severity === '심각' ? 'danger' : s.severity === '주의' ? 'warning' : 'neutral'} shape="pill">{s.severity}</RBadge>
+                        {s.notifiedAuthority && <span className="news-src">유관기관 통보</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>}
+          </div>
+          <div>
+            <div className="faint" style={{ font: 'var(--type-13m)', margin: '2px 0 6px' }}>계약 만료 임박(60일 이내)</div>
+            {expiringList.length === 0
+              ? <div className="nodata-box"><MI n="info" s={18} /><div>임박한 계약 만료 건이 없어요.</div></div>
+              : <div className="news-feed" style={{ maxHeight: 180, overflowY: 'auto' }}>
+                {expiringList.map(({ c, att }) => (
+                  <div className="news-item" key={c.id} style={{ cursor: 'default' }}>
+                    <div className="news-day hot">D-{att.daysToEnd}</div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="news-title">{c.name}</div>
+                      <div className="news-meta">
+                        <span className="news-region"><MI n="location_on" s={14} />{c.address}</span>
+                        <span className="news-src">{c.endDate} 종료 예정</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>}
+          </div>
+        </div>
+      </RDashCard>
+    ),
+    kpis: (
+      <div className="bkpis">
+        <div className="bkpi"><div className="bkpi__label" style={{ marginBottom: 8 }}>전체 유지고객</div><div className="bkpi__val tnum" style={{ marginBottom: 8 }}>{kpi.total}곳</div></div>
+        <div className="bkpi"><div className="bkpi__label" style={{ marginBottom: 8 }}>주의 필요</div><div className="bkpi__val tnum" style={{ marginBottom: 8, color: 'var(--s1-red-500,#e5484d)' }}>{kpi.attention}곳</div></div>
+        <div className="bkpi"><div className="bkpi__label" style={{ marginBottom: 8 }}>계약 만료 임박(60일 이내)</div><div className="bkpi__val tnum" style={{ marginBottom: 8 }}>{kpi.expiringSoon}곳</div></div>
+      </div>
+    ),
+    list: (
+      <>
+        <div className="filterbar">
+          <div className="fb-row">
+            <span className="fb-label"><MI n="search" s={18} />계약처명</span>
+            <div style={{ width: 240 }}><RTextField value={q} onChange={e => setQ(e.target.value)} placeholder="계약처명·계약번호로 검색" iconLeft={<MI n="search" s={18} />} /></div>
+          </div>
+          <div className="fb-row">
+            <span className="fb-label"><MI n="apartment" s={18} />지사</span>
+            <div className="fb-chips">{branches.map(b => <RChip key={b} selected={branch === b} onClick={() => setBranch(b)}>{b}</RChip>)}</div>
+          </div>
+          <div className="fb-row">
+            <span className="fb-label"><MI n="category" s={18} />업종</span>
+            <div className="fb-chips">
+              <RChip selected={use === '전체'} onClick={() => setUse('전체')}>전체</RChip>
+              {USE_TYPES.map(u => <RChip key={u} selected={use === u} onClick={() => setUse(u)}>{u}</RChip>)}
+            </div>
+            <div className="fb-spacer">
+              <RChip selected={tier === 'all'} onClick={() => setTier('all')}>전체 상품</RChip>
+              <RChip selected={tier === 'dual'} onClick={() => setTier('dual')}>듀얼</RChip>
+              <RChip selected={tier === 'owner'} onClick={() => setTier('owner')}>오너</RChip>
+              <RChip selected={showAttentionOnly} onClick={() => setShowAttentionOnly(v => !v)}>주의 필요만</RChip>
+            </div>
+          </div>
+        </div>
+
+        <div className="pc-tabletoolbar" style={{ display: 'flex', justifyContent: 'space-between', margin: '8px 0 12px' }}>
+          <span className="muted"><b className="tnum" style={{ color: 'var(--accent)' }}>{filtered.length}</b>곳</span>
+        </div>
+
+        <div className="split">
+          <div className="split-list">
+            <div style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-m)', overflow: 'hidden', background: '#fff' }}>
+              {filtered.length === 0
+                ? <div className="nodata-box" style={{ margin: 12 }}><MI n="filter_alt_off" s={20} /><div>조건에 맞는 유지고객이 없어요.</div></div>
+                : <div className="rows" style={{ padding: '4px 12px 8px' }}>
+                  {filtered.map(c => (
+                    <div key={c.id}>
+                      <RetentionRow c={c} expanded={expanded === c.id} onToggle={() => setExpanded(expanded === c.id ? null : c.id)}
+                        sentDate={sentOverrides[c.id] ?? c.monthlyReportSent} onOpenReport={setReportFor}
+                        touchDate={touchOverrides[c.id] ?? c.lastTouchDate} onOpenEmpathy={(cust, signal) => setEmpathyFor({ c: cust, signal })} />
+                    </div>
+                  ))}
+                </div>}
+            </div>
+          </div>
+          <div className="split-map">
+            <div className="map-top">
+              <span className="eyebrow">유지현황 지도</span>
+              <span className="map-top__chips faint" style={{ font: 'var(--type-12r)' }}>🔴 주의 필요 · 🔵 안정</span>
+            </div>
+            <div style={{ flex: 1, position: 'relative' }}>
+              {mapCands.length > 0
+                ? <TargetMap candidates={mapCands} showFire={false} showFlood={false} selectedId={expanded} onSelect={setExpanded} fitKey={`${branch}|${use}|${tier}|${showAttentionOnly}|${qx}`} variant="C" />
+                : <div className="map-empty"><MI n="map" s={28} /><span>표시할 고객이 없어요</span></div>}
+            </div>
+          </div>
+        </div>
+      </>
+    ),
+  };
+
+  return (
+    <div className="pc-content pc-content--wide fadein" data-screen-label="유지고객 대시보드">
+      <div className="pc-pagehead">
+        <div>
+          <div className="pc-pagehead__title">유지고객(블루스캔) 대시보드</div>
+          <div className="pc-pagehead__desc">이미 블루스캔을 이용 중인 계약 고객의 관제 신호·계약 현황을 확인해요. 섹션 좌상단 <MI n="drag_indicator" s={16} style={{ verticalAlign: '-3px' }} />핸들을 드래그하면 순서를 바꿀 수 있어요.</div>
+        </div>
+        <div className="ph-right">
+          <RButton size="sm" variant="line" onClick={ctrl.resetOrder} iconLeft={<MI n="restart_alt" s={18} />}>구성 초기화</RButton>
+        </div>
+      </div>
+      <SectionList ctrl={ctrl} titles={RETENTION_SEC_TITLE} blocks={blocks} />
+      {reportFor && (
+        <MonthlyReportDialog c={reportFor} allCustomers={data}
+          sentDate={sentOverrides[reportFor.id] ?? reportFor.monthlyReportSent}
+          onMarkSent={(id) => { markSent(id); }}
+          onClose={() => setReportFor(null)} />
+      )}
+      {empathyFor && (
+        <EmpathyMessageDialog c={empathyFor.c} signal={empathyFor.signal}
+          onSent={markTouched} onClose={() => setEmpathyFor(null)} />
+      )}
+    </div>
+  );
+}

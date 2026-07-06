@@ -1,0 +1,16 @@
+# dependencies
+node_modules/
+app/node_modules/
+
+# build outputs (재생성 가능 — 소스에서 빌드)
+app/dist/
+app/standalone-dist/
+app/standalone-dist2/
+netlify_배포/
+
+# vite temp
+app/vite.config.js.timestamp-*.mjs
+
+# OS / editor
+.DS_Store
+*.log

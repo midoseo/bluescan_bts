@@ -1,0 +1,64 @@
+/* ===========================================================================
+   S-1 / 에스원 — Typography tokens
+   ---------------------------------------------------------------------------
+   Family: SamsungOne Korean (shipped) → Pretendard (guideline spec) → system.
+   Weights used: Regular 400 (R), Medium 500 (M), Bold 700 (B).
+   Scale (px / weight / line-height / letter-spacing):
+     32B  24B  20B  18B  18M     — Title
+     18M 18R 16M 16R 14M 14R     — Body  (-2% tracking)
+     12M 12R                     — Caption (140% lh, 0%)
+     10M 10R                     — Micro (PC only, 140% lh, +2%)
+   =========================================================================== */
+
+:root {
+  /* Families */
+  --font-base:
+    "SamsungOne Korean", "Pretendard Variable", Pretendard,
+    -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Malgun Gothic", "맑은 고딕", system-ui, Roboto, sans-serif;
+  --font-display: var(--font-base);
+
+  /* Weights */
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-bold:    700;
+
+  /* ---- Font sizes -------------------------------------------------------- */
+  --fs-32: 32px;   /* PC special-emphasis title */
+  --fs-24: 24px;   /* page title / process title */
+  --fs-20: 20px;   /* section / home main title */
+  --fs-18: 18px;   /* component title */
+  --fs-16: 16px;   /* main body / component title */
+  --fs-14: 14px;   /* sub body */
+  --fs-12: 12px;   /* caption */
+  --fs-10: 10px;   /* micro (PC) */
+
+  /* ---- Line heights ------------------------------------------------------ */
+  --lh-tight: 1.3;   /* @kind font */ /* 130% — titles & body 14–32 */
+  --lh-loose: 1.4;   /* @kind font */ /* 140% — caption / micro 10–12 */
+
+  /* ---- Letter spacing ---------------------------------------------------- */
+  --ls-bold:  0;        /* @kind font */ /* bold & 12px */
+  --ls-text:  -0.02em;  /* 14–18 medium/regular */
+  --ls-micro: 0.02em;   /* 10px */
+
+  /* =======================================================================
+     COMPOSED TEXT STYLES — apply as a single token via `font:` where useful.
+     Pattern: --type-<size><weight>  →  weight size/lh
+     ======================================================================= */
+  --type-32b: var(--weight-bold)    var(--fs-32) / var(--lh-tight) var(--font-base);
+  --type-24b: var(--weight-bold)    var(--fs-24) / var(--lh-tight) var(--font-base);
+  --type-20b: var(--weight-bold)    var(--fs-20) / var(--lh-tight) var(--font-base);
+  --type-18b: var(--weight-bold)    var(--fs-18) / var(--lh-tight) var(--font-base);
+  --type-18m: var(--weight-medium)  var(--fs-18) / var(--lh-tight) var(--font-base);
+  --type-18r: var(--weight-regular) var(--fs-18) / var(--lh-tight) var(--font-base);
+  --type-16b: var(--weight-bold)    var(--fs-16) / var(--lh-tight) var(--font-base);
+  --type-16m: var(--weight-medium)  var(--fs-16) / var(--lh-tight) var(--font-base);
+  --type-16r: var(--weight-regular) var(--fs-16) / var(--lh-tight) var(--font-base);
+  --type-14m: var(--weight-medium)  var(--fs-14) / var(--lh-tight) var(--font-base);
+  --type-14r: var(--weight-regular) var(--fs-14) / var(--lh-tight) var(--font-base);
+  --type-12m: var(--weight-medium)  var(--fs-12) / var(--lh-loose) var(--font-base);
+  --type-12r: var(--weight-regular) var(--fs-12) / var(--lh-loose) var(--font-base);
+  --type-10m: var(--weight-medium)  var(--fs-10) / var(--lh-loose) var(--font-base);
+  --type-10r: var(--weight-regular) var(--fs-10) / var(--lh-loose) var(--font-base);
+}

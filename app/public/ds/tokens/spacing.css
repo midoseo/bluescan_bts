@@ -1,0 +1,66 @@
+/* ===========================================================================
+   S-1 / 에스원 — Size tokens (radius · icon · gap/spacing)
+   ---------------------------------------------------------------------------
+   Spacing is built on multiples of 2. Radius values are auto-applied to
+   components and must not be changed ad-hoc.
+   =========================================================================== */
+
+:root {
+  /* ---- Radius ------------------------------------------------------------ */
+  --radius-xs:   2px;
+  --radius-s:    4px;
+  --radius-m:    8px;    /* default for cards / inputs / buttons */
+  --radius-l:    10px;
+  --radius-full: 999px;  /* chips, pills, circular buttons */
+
+  /* ---- Icon sizes -------------------------------------------------------- */
+  --icon-xxs: 16px;
+  --icon-xs:  18px;
+  --icon-s:   24px;   /* base icon grid */
+  --icon-m:   28px;
+  --icon-l:   32px;   /* >32px requires graphic icon / approval */
+
+  /* ---- Spacing scale (gap / padding / margin) ---------------------------- */
+  --space-2:   2px;
+  --space-4:   4px;
+  --space-6:   6px;
+  --space-8:   8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;   /* mobile screen side margin */
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-36: 36px;
+  --space-40: 40px;
+  --space-44: 44px;   /* min touch target */
+  --space-48: 48px;
+  --space-54: 54px;
+  --space-56: 56px;
+  --space-64: 64px;
+  --space-80: 80px;
+  --space-132: 132px;
+  --space-140: 140px;
+
+  /* ---- Layout (PC web) --------------------------------------------------- */
+  --layout-base-w: 1920px;
+  --layout-base-h: 1080px;
+  --content-1280:  1280px;   /* standard content width (320 side gutter) */
+  --content-1440:  1440px;   /* dense content width (240 side gutter) */
+
+  /* ---- Elevation / shadow ------------------------------------------------
+     Soft, low-contrast shadows on white surfaces. Cards lean on the gray
+     border + faint shadow rather than heavy drop shadows. */
+  --shadow-card:    0 1px 3px rgba(32, 32, 32, 0.06),
+                    0 1px 2px rgba(32, 32, 32, 0.04);
+  --shadow-raised:  0 2px 8px rgba(32, 32, 32, 0.08);
+  --shadow-overlay: 0 4px 20px rgba(32, 32, 32, 0.12);
+  --shadow-bottom-sheet: 0 -2px 16px rgba(32, 32, 32, 0.10);
+
+  /* ---- Motion ------------------------------------------------------------ */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);  /* @kind other */
+  --ease-out:      cubic-bezier(0.0, 0, 0.2, 1);  /* @kind other */
+  --dur-fast:   120ms;   /* @kind other */
+  --dur-normal: 200ms;   /* @kind other */
+  --dur-slow:   300ms;   /* @kind other */
+}

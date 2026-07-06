@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>블루스캔 타깃 발굴</title>
+
+  <!-- S-1 design system tokens + base (served from /public/ds) -->
+  <link rel="stylesheet" href="/ds/styles.css" />
+  <!-- Material Symbols (icon substitution per DS) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0" />
+
+  <!-- App seed data (sets window.APPDATA) — classic script, runs before module -->
+  <script src="/data/appdata.js?v=1781178765205"></script>
+  <!-- S-1 design-system component bundle (sets window.UXDesignSystem_59a60b) -->
+  <script src="/ds/_ds_bundle.js"></script>
+</head>
+<body style="background-color: rgb(229, 229, 229)">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

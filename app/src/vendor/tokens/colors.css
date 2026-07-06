@@ -1,0 +1,139 @@
+/* ===========================================================================
+   S-1 / 에스원 — Color tokens
+   ---------------------------------------------------------------------------
+   Three families only (do NOT introduce colors outside these):
+     1. MAIN     — Primary Blue (accent / positive / confirm),
+                   Secondary Red (error / caution / emphasis)
+     2. NEUTRAL  — backgrounds, text, components (the only grays for UI)
+     3. SUB/GRAPHIC — charts, color icons, illustrations ONLY
+   =========================================================================== */
+
+:root {
+  /* ---- Neutral (UI grays) ------------------------------------------------ */
+  --s1-black:    #000000;
+  --s1-gray-900: #202020;
+  --s1-gray-800: #353535;
+  --s1-gray-700: #434343;
+  --s1-gray-600: #555555;
+  --s1-gray-500: #757575;
+  --s1-gray-400: #9d9d9d;
+  --s1-gray-300: #c4c4c4;
+  --s1-gray-200: #d9d9d9;
+  --s1-gray-100: #e9e9e9;
+  --s1-gray-50:  #f5f5f5;
+  --s1-gray-bg:  #fafafa;
+  --s1-white:    #ffffff;
+
+  /* ---- Main · Primary Blue ---------------------------------------------- */
+  --s1-blue-600: #2453cc;   /* PC pressed/deep (mobile uses #2747b9) */
+  --s1-blue-500: #1d6ceb;   /* PRIMARY — main accent */
+  --s1-blue-400: #2b9eff;
+  --s1-blue-200: #8bc6ff;
+  --s1-blue-100: #c8e4ff;
+  --s1-blue-50:  #e2f1ff;
+  --s1-blue-bg:  #f5f6fb;   /* home / app primary background */
+
+  /* ---- Main · Secondary Red --------------------------------------------- */
+  --s1-red-600: #c8001e;
+  --s1-red-500: #e50533;    /* SECONDARY — error / caution */
+  --s1-red-400: #ff4554;
+  --s1-red-200: #f8979e;
+  --s1-red-100: #ffccd6;
+  --s1-red-50:  #ffebef;
+  --s1-red-bg:  #fff7f8;
+
+  /* ---- Sub / Graphic (charts · color icons · illustration only) --------- */
+  --s1-orange-600: #dd5900;
+  --s1-orange-500: #ff761a;
+  --s1-orange-400: #ffb482;
+  --s1-orange-200: #fdd8bf;
+  --s1-orange-50:  #ffede0;
+
+  --s1-yellow-800: #e2971e;
+  --s1-yellow-600: #ffc200;
+  --s1-yellow-400: #ffd53d;
+  --s1-yellow-200: #fee89a;
+  --s1-yellow-100: #fff4ce;
+
+  --s1-seagreen-700: #009e5e;
+  --s1-seagreen-600: #1fb279;
+  --s1-seagreen-400: #6fc4a2;
+  --s1-seagreen-200: #caecda;
+  --s1-seagreen-100: #e3f2ea;
+
+  --s1-turquoise-600: #159bbc;
+  --s1-turquoise-500: #25b9da;
+  --s1-turquoise-400: #51c7e1;
+  --s1-turquoise-200: #a5e5f3;
+  --s1-turquoise-100: #c4eef7;
+
+  --s1-purple-600: #3535a8;
+  --s1-purple-500: #6666dd;
+  --s1-purple-200: #b0b0ff;
+  --s1-purple-100: #cfd1f9;
+  --s1-purple-50:  #e8e9fc;
+
+  --s1-brown-700: #554435;
+  --s1-brown-500: #7c614a;
+  --s1-brown-200: #d1b69f;
+  --s1-brown-100: #e4d5c8;
+  --s1-brown-50:  #f6eee9;
+
+  /* graphic grays — kept separate so they don't read as UI neutrals */
+  --s1-ggray-700: #3e4347;
+  --s1-ggray-500: #808796;
+  --s1-ggray-200: #cdd2de;
+  --s1-ggray-100: #e8ebef;
+  --s1-ggray-50:  #f3f5f7;
+
+  /* ---- Launcher / splash brand reds & blue (distinct from UI blue) ------ */
+  --s1-brand-blue:     #0072ce;
+  --s1-brand-red:      #ff312c;
+  --s1-brand-red-dark: #be1e2c;
+
+  /* =======================================================================
+     SEMANTIC ALIASES — reference these in components, not raw scale values
+     ======================================================================= */
+
+  /* Text */
+  --text-title:        var(--s1-black);     /* title1 — top-level titles  */
+  --text-body:         var(--s1-gray-800);  /* body1 / subtitle1          */
+  --text-secondary:    var(--s1-gray-600);  /* body2                       */
+  --text-tertiary:     var(--s1-gray-500);  /* body3                       */
+  --text-placeholder:  var(--s1-gray-400);
+  --text-disabled:     var(--s1-gray-300);
+  --text-on-accent:    var(--s1-white);
+  --text-accent-blue:  var(--s1-blue-500);
+  --text-accent-red:   var(--s1-red-500);
+  --text-error:        var(--s1-red-500);
+
+  /* Surfaces */
+  --surface-page:      var(--s1-white);
+  --surface-home:      var(--s1-blue-bg);   /* app home / dashboard bg     */
+  --surface-card:      var(--s1-white);
+  --surface-sunken:    var(--s1-gray-50);   /* gray box                    */
+  --surface-raised:    var(--s1-gray-bg);
+  --surface-dim:       rgba(0, 0, 0, 0.30); /* modal / dialog scrim        */
+
+  /* Lines & borders */
+  --border-strong:     var(--s1-gray-300);
+  --border-default:    var(--s1-gray-200);
+  --border-subtle:     var(--s1-gray-100);
+  --divider:           var(--s1-gray-100);
+  --border-focus:      var(--s1-blue-500);
+
+  /* Interactive / accent */
+  --accent:            var(--s1-blue-500);
+  --accent-hover:      var(--s1-blue-600);
+  --accent-pressed:    var(--s1-blue-600);
+  --accent-subtle:     var(--s1-blue-50);
+  --danger:            var(--s1-red-500);
+  --danger-hover:      var(--s1-red-600);
+  --danger-subtle:     var(--s1-red-50);
+
+  /* Status / feedback (use semantic, not raw) */
+  --status-positive:   var(--s1-seagreen-600);
+  --status-warning:    var(--s1-yellow-600);
+  --status-info:       var(--s1-blue-500);
+  --status-error:      var(--s1-red-500);
+}

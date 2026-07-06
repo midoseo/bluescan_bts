@@ -1,0 +1,23 @@
+/* main.standalone.jsx — 단일 HTML 빌드 진입점 (모든 의존성을 모듈 그래프로 인라인) */
+import './setup-globals.js'        // window.React / ReactDOM / L
+import './vendor/ds-bundle.js'     // window.UXDesignSystem_59a60b (렌더 시 전역 React 사용)
+import './vendor/ds-tokens.css'    // DS CSS 변수 (+ Pretendard CDN)
+import './appData.generated.js'    // window.APPDATA / APP_ACCOUNTS / APP_DEMO (침수 GeoJSON 인라인)
+import './app.css'
+import './senior.css'          // 시니어 UI/UX 개편 테마
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import { injectBranchManagers } from './branchManagers.js'
+import { injectDemoConsultants } from './demoConsultants.js'
+
+// 지사장(관리자)·데모 컨설턴트 계정 주입 — appData 로드 이후, 첫 렌더 전
+injectBranchManagers()
+injectDemoConsultants()
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)

@@ -1,0 +1,68 @@
+/* ===========================================================================
+   S-1 / 에스원 — Base element defaults
+   ---------------------------------------------------------------------------
+   Light, opinionated resets + brand typographic defaults. Utility text
+   classes mirror the type scale so non-component markup stays on-system.
+   =========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font: var(--type-16r);
+  letter-spacing: var(--ls-text);
+  color: var(--text-body);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, p, figure {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--text-accent-blue);
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* ---- Type utility classes (match the scale) ----------------------------- */
+.s1-32b { font: var(--type-32b); letter-spacing: var(--ls-bold); color: var(--text-title); }
+.s1-24b { font: var(--type-24b); letter-spacing: var(--ls-bold); color: var(--text-title); }
+.s1-20b { font: var(--type-20b); letter-spacing: var(--ls-bold); color: var(--text-title); }
+.s1-18b { font: var(--type-18b); letter-spacing: var(--ls-bold); color: var(--text-title); }
+.s1-18m { font: var(--type-18m); letter-spacing: var(--ls-text); }
+.s1-18r { font: var(--type-18r); letter-spacing: var(--ls-text); }
+.s1-16b { font: var(--type-16b); letter-spacing: var(--ls-bold); }
+.s1-16m { font: var(--type-16m); letter-spacing: var(--ls-text); }
+.s1-16r { font: var(--type-16r); letter-spacing: var(--ls-text); }
+.s1-14m { font: var(--type-14m); letter-spacing: var(--ls-text); }
+.s1-14r { font: var(--type-14r); letter-spacing: var(--ls-text); }
+.s1-12m { font: var(--type-12m); letter-spacing: var(--ls-bold); }
+.s1-12r { font: var(--type-12r); letter-spacing: var(--ls-bold); }
+.s1-10m { font: var(--type-10m); letter-spacing: var(--ls-micro); }
+.s1-10r { font: var(--type-10r); letter-spacing: var(--ls-micro); }
