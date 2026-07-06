@@ -1268,3 +1268,9 @@ body{ background: var(--surface-home); }
 .pager__b:hover:not(:disabled){ background:#f2f4f6; border-color:#1d6ceb; color:#1d6ceb; }
 .pager__b.on{ background:#1d6ceb; border-color:#1d6ceb; color:#fff; }
 .pager__b:disabled{ opacity:.4; cursor:default; }
+
+/* 신규/기존 후보 — 검색 섹션 높이 축소 + 업체명 한 줄 고정 */
+.filterbar{ padding:2px 20px; }
+.fb-row{ padding:9px 0; gap:12px; }
+.lrow-id{ min-width:0; }
+.lrow-name{ flex-wrap:nowrap; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

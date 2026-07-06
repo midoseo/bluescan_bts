@@ -4,7 +4,7 @@ import { MI, Meter, Gauge, tierOf, num } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
 const { useState, useEffect } = React
-const PER_PAGE = 6  // 한 화면에 담기도록 페이지당 표시 건수 (스크롤 대신 페이지 번호)
+const PER_PAGE = 5  // 한 화면에 담기도록 페이지당 표시 건수 (스크롤 대신 페이지 번호)
 
 const { Chip: AChip, Badge: ABadge, Button: AButton, TextField: ATextField } = window.UXDesignSystem_59a60b;
 
@@ -191,7 +191,6 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
       <div className="pc-pagehead">
         <div>
           <div className="pc-pagehead__title">신규 후보 발굴</div>
-          <div className="pc-pagehead__desc">지역을 선택하면 도입 가능성 점수와 함께 후보 사업장이 우선순위순으로 보여요.</div>
         </div>
       </div>
 
@@ -206,27 +205,23 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
           <div className="filterbar">
             <div className="fb-row">
               <span className="fb-label"><MI n="search" s={18} />고객처명</span>
-              <div style={{ width: 280 }}>
-                <ATextField value={q} onChange={e => setQ(e.target.value)} placeholder="상호·건물명·주소로 검색" iconLeft={<MI n="search" s={18} />} />
+              <div style={{ width: 220 }}>
+                <ATextField value={q} onChange={e => setQ(e.target.value)} placeholder="상호·건물명 검색" iconLeft={<MI n="search" s={18} />} />
               </div>
-              {q && <AButton size="sm" variant="line" onClick={() => setQ('')} iconLeft={<MI n="close" s={16} />}>검색 해제</AButton>}
-            </div>
-            <div className="fb-row">
-              <span className="fb-label"><MI n="location_on" s={18} />군·구</span>
+              {q && <AButton size="sm" variant="line" onClick={() => setQ('')} iconLeft={<MI n="close" s={16} />}>해제</AButton>}
+              <span className="fb-label" style={{ marginLeft: 12 }}><MI n="location_on" s={18} />군·구</span>
               {guns.length > 12
-                ? <div style={{ width: 200 }}><DSSelect value={gun} onChange={(v) => { setGun(v); setDong('전체'); }} options={guns.map(g => ({ value: g, label: g }))} /></div>
+                ? <div style={{ width: 180 }}><DSSelect value={gun} onChange={(v) => { setGun(v); setDong('전체'); }} options={guns.map(g => ({ value: g, label: g }))} /></div>
                 : <div className="fb-chips">{guns.map(r => <AChip key={r} selected={gun === r} onClick={() => { setGun(r); setDong('전체'); }}>{r}</AChip>)}</div>}
-              <div className="fb-spacer">
-                <span className="fb-label" style={{ marginRight: 0 }}><MI n="pin_drop" s={18} />읍·면·동</span>
-                <div style={{ width: 168 }}><DSSelect value={dong} onChange={setDong} options={dongs.map(d => ({ value: d, label: d }))} /></div>
-              </div>
             </div>
             <div className="fb-row">
               <span className="fb-label"><MI n="apartment" s={18} />용도</span>
               <div className="fb-chips">{uses.map(u => <AChip key={u} selected={use === u} onClick={() => setUse(u)}>{u}</AChip>)}</div>
               <div className="fb-spacer">
-                <AChip selected={fireOnly} onClick={() => setFireOnly(f => !f)}>화재 신호만</AChip>
-                <div style={{ width: 148 }}><DSSelectSort sort={sort} setSort={setSort} /></div>
+                <span className="fb-label" style={{ marginRight: 0 }}><MI n="pin_drop" s={18} />읍·면·동</span>
+                <div style={{ width: 150 }}><DSSelect value={dong} onChange={setDong} options={dongs.map(d => ({ value: d, label: d }))} /></div>
+                <AChip selected={fireOnly} onClick={() => setFireOnly(f => !f)}>인근 화재 발생</AChip>
+                <div style={{ width: 140 }}><DSSelectSort sort={sort} setSort={setSort} /></div>
               </div>
             </div>
           </div>
