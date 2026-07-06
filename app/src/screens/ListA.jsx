@@ -206,7 +206,7 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               <span className="fb-label" style={{ marginLeft: 12 }}><MI n="location_on" s={18} />군·구</span>
               {guns.length > 12
                 ? <div style={{ width: 180 }}><DSSelect value={gun} onChange={(v) => { setGun(v); setDong('전체'); }} options={guns.map(g => ({ value: g, label: g }))} /></div>
-                : <div className="fb-chips">{guns.map(r => <AChip key={r} selected={gun === r} onClick={() => { setGun(r); setDong('전체'); }}>{r}</AChip>)}</div>}
+                : <div className="fb-chips" style={{ flex: '0 0 auto' }}>{guns.map(r => <AChip key={r} selected={gun === r} onClick={() => { setGun(r); setDong('전체'); }}>{r}</AChip>)}</div>}
               <span className="fb-label" style={{ marginLeft: 8 }}><MI n="pin_drop" s={18} />읍·면·동</span>
               <div style={{ width: 150 }}><DSSelect value={dong} onChange={setDong} options={dongs.map(d => ({ value: d, label: d }))} /></div>
             </div>
@@ -259,8 +259,8 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               <div className="map-top">
                 <span className="eyebrow">타깃 분포</span>
                 <span className="map-top__chips">
-                  <AChip selected={showFire} onClick={() => setShowFire(s => !s)}>화재 오버레이</AChip>
-                  <AChip selected={showFlood} onClick={() => setShowFlood(s => !s)}>침수 오버레이</AChip>
+                  <AChip selected={showFire} onClick={() => setShowFire(s => !s)}>최근 화재 위치</AChip>
+                  <AChip selected={showFlood} onClick={() => setShowFlood(s => !s)}>침수 위험 구역</AChip>
                 </span>
               </div>
               <div style={{ flex: 1, position: 'relative' }}>
