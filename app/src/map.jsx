@@ -9,7 +9,9 @@ const TIER_HEX = { S: '#0f8f63', A: '#1fb279', B: '#1d6ceb', C: '#e2971e', D: '#
 // 방문 결과 상태별 핀 색 (방문완료-초록 / 재방문필요-노랑 / 거절-빨강 / 수주완료-파랑)
 const STATUS_HEX = { done: '#1fb279', revisit: '#e2971e', reject: '#e5484d', won: '#1d6ceb' };
 const STATUS_LABEL = { done: '방문완료', revisit: '재방문필요', reject: '거절', won: '수주완료' };
-const FLOOD_FILL = '#7dd3fc'; // 침수 예상구역 — 반투명 하늘색
+const FLOOD_FILL = '#2b9eff'; // 침수 위험 구역 — 선명한 파랑 (아이폰 강수량 느낌)
+const FIRE_FILL = '#ff3b30';  // 최근 화재 지역 — 선명한 빨강
+const BRANCH_LINE = '#7c3aed'; // 관할 경계 — 보라(침수/화재와 구분)
 const floodCache = new Map(); // path -> geojson
 
 // 마커 색/툴팁 — A(점수 티어) / B(방문 결과 상태, 미방문은 중립색) / C(유지고객 — 주의필요 여부, 스코어 아님)
@@ -27,9 +29,9 @@ function markerInfo(c, variant, visits) {
   return { col: TIER_HEX[t.key] || TIER_HEX.nodata, big: c.score >= 81, label: `${c.name} · ${c.score == null ? 'N/A' : c.score + '점 (' + t.key + ')'}` };
 }
 
-export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints, showFire, showFlood = true, floodLayers, visits, selectedId, onSelect, focusId, fitKey, variant = 'A' }) {
+export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints, showFire, showFlood = true, floodLayers, branchBoundary, visits, selectedId, onSelect, focusId, fitKey, variant = 'A' }) {
   const elRef = useRef(null), mapRef = useRef(null);
-  const candLayer = useRef(null), fireLayer = useRef(null), floodLayer = useRef(null), liveFireLayer = useRef(null), markers = useRef({});
+  const candLayer = useRef(null), fireLayer = useRef(null), floodLayer = useRef(null), liveFireLayer = useRef(null), branchLayer = useRef(null), markers = useRef({});
 
   useEffect(() => {
     if (mapRef.current || !L || !elRef.current) return;
@@ -39,6 +41,13 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
         center: [37.49, 126.90], zoom: 11, scrollWheelZoom: true });
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, subdomains: 'abcd' }).addTo(map);
       L.control.attribution({ prefix: false }).addAttribution('© OpenStreetMap, © CARTO').addTo(map);
+      // feather(아이폰 강수량) 효과용 blur pane + 관할 경계 pane (마커 pane=600보다 아래)
+      try {
+        map.createPane('branchPane'); map.getPane('branchPane').style.zIndex = 383; map.getPane('branchPane').style.filter = 'blur(1.5px)';
+        map.createPane('floodPane'); map.getPane('floodPane').style.zIndex = 385; map.getPane('floodPane').style.filter = 'blur(8px)';
+        map.createPane('firePane'); map.getPane('firePane').style.zIndex = 390; map.getPane('firePane').style.filter = 'blur(8px)';
+      } catch (e) { /* ignore */ }
+      branchLayer.current = L.layerGroup().addTo(map);
       floodLayer.current = L.layerGroup().addTo(map);
       candLayer.current = L.layerGroup().addTo(map);
       fireLayer.current = L.layerGroup().addTo(map);
@@ -49,7 +58,7 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
     } catch (e) { /* Leaflet init failed — keep the rest of the screen alive */ }
     return () => {
       try { map && map.remove(); } catch (e) { /* ignore */ }
-      mapRef.current = null; candLayer.current = null; fireLayer.current = null; floodLayer.current = null; liveFireLayer.current = null; markers.current = {};
+      mapRef.current = null; candLayer.current = null; fireLayer.current = null; floodLayer.current = null; liveFireLayer.current = null; branchLayer.current = null; markers.current = {};
     };
   }, []);
 
@@ -62,8 +71,8 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
     floodLayers.forEach(layer => {
       const draw = (data) => {
         if (cancelled || !floodLayer.current) return;
-        L.geoJSON(data, { style: { stroke: false, fill: true, fillColor: FLOOD_FILL, fillOpacity: 0.45 } })
-          .bindPopup(`<b style="color:#0284c7">💧 도시침수 예상구역 (기왕최대)</b><br><span style="color:#555">${layer.label}</span>`)
+        L.geoJSON(data, { pane: 'floodPane', style: { stroke: false, fill: true, fillColor: FLOOD_FILL, fillOpacity: 0.6 } })
+          .bindPopup(`<b style="color:#0284c7">💧 침수 위험 구역 (기왕최대)</b><br><span style="color:#555">${layer.label}</span>`)
           .addTo(floodLayer.current);
       };
       if (layer.geo) draw(layer.geo);                                  // 데이터에 인라인된 GeoJSON (단일 HTML 대응)
@@ -86,7 +95,7 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
     const inView = regions.filter(r => { if (!bb || !r.bbox) return true; const [a, b, c, d] = r.bbox; return !(c < bb[0] || a > bb[2] || d < bb[1] || b > bb[3]); });
     inView.forEach(r => {
       const recent = r.minDays < 30;
-      L.geoJSON(r.geo, { style: { color: '#dc2626', weight: recent ? 2.4 : 1.8, opacity: .95, dashArray: '6 5', fill: true, fillColor: '#dc2626', fillOpacity: recent ? 0.08 : 0.04 } })
+      L.geoJSON(r.geo, { pane: 'firePane', style: { stroke: false, fill: true, fillColor: FIRE_FILL, fillOpacity: recent ? 0.6 : 0.42 } })
         .bindPopup(`<b style="color:#dc2626">🔥 ${r.name} · 최근 화재 ${r.count}건</b><br><span style="color:#555">${r.fires.map(x => `· ${x.days}일 전 ${x.scale} — ${x.title || ''}`).join('<br>')}</span>`)
         .addTo(fireLayer.current);
       if (Array.isArray(r.bbox)) { const [a, b, c, d] = r.bbox;
@@ -106,6 +115,16 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
         .addTo(liveFireLayer.current);
     });
   }, [showFire, liveFirePoints]);
+
+  // 지사 관할 경계 — 보라 점선(feather) + 옅은 채움
+  useEffect(() => {
+    const bl = branchLayer.current; if (!bl) return;
+    bl.clearLayers();
+    if (!branchBoundary) return;
+    L.geoJSON(branchBoundary, { pane: 'branchPane', style: { color: BRANCH_LINE, weight: 3, opacity: .9, dashArray: '3 7', lineCap: 'round', lineJoin: 'round', fill: true, fillColor: BRANCH_LINE, fillOpacity: 0.05 } })
+      .bindPopup(`<b style="color:${BRANCH_LINE}">${branchBoundary.properties?.branch || ''} 관할 경계</b><br><span style="color:#555">담당 사업장 분포 기준 근사 영역</span>`)
+      .addTo(bl);
+  }, [branchBoundary]);
 
   useEffect(() => {
     if (!candLayer.current) return;
@@ -133,6 +152,12 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
     const run = () => {
       try {
         try { map.invalidateSize(); } catch (e) { /* ignore */ }
+        // 관할 경계가 있으면 그 경계에 고정 (필터·페이지가 바뀌어도 지도 뷰 유지)
+        if (branchBoundary && branchBoundary.geometry) {
+          const ring = branchBoundary.geometry.coordinates[0].map(([lng, lat]) => [lat, lng]);
+          map.fitBounds(L.latLngBounds(ring), { padding: [26, 26], maxZoom: 15 });
+          return;
+        }
         if (pts.length === 0) { map.setView([37.49, 126.90], 11); return; }
         if (pts.length === 1) { map.setView(pts[0], 15); return; }
         map.fitBounds(L.latLngBounds(pts), { padding: [44, 44], maxZoom: 16 });
@@ -145,7 +170,7 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
   useEffect(() => {
     if (!mapRef.current || !focusId) return;
     const c = candidates.find(x => x.id === focusId);
-    if (c && c.lat != null) { try { mapRef.current.invalidateSize(); } catch (e) { /* ignore */ } mapRef.current.flyTo([c.lat, c.lng], 17, { duration: .7 }); const m = markers.current[focusId]; if (m) m.openTooltip(); }
+    if (c && c.lat != null) { try { mapRef.current.invalidateSize(); } catch (e) { /* ignore */ } const m = markers.current[focusId]; if (m) { try { m.openTooltip(); } catch (e) { /* ignore */ } if (m.bringToFront) m.bringToFront(); } }
   }, [focusId]);
 
   return (
@@ -164,9 +189,10 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
             <div className="row"><span className="dot" style={{ background: STATUS_HEX.reject }} />거절</div>
             <div className="row"><span className="dot" style={{ background: STATUS_HEX.won }} />수주완료</div>
             <div className="row"><span className="dot" style={{ background: TIER_HEX.nodata }} />미방문</div>
-            <div className="row"><span className="lg-dash" />최근 화재 발생 구역</div>
+            <div className="row"><span className="dot dot--flood" style={{ background: FIRE_FILL }} />최근 화재 지역</div>
             <div className="row">🚒 소방청 실시간 화재출동</div>
-            <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />도시침수 예상구역</div>
+            <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />침수 위험 구역</div>
+            {branchBoundary && <div className="row"><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: `3px dashed ${BRANCH_LINE}`, flex: 'none' }} />관할 경계</div>}
           </>
         ) : (
           <>
@@ -175,9 +201,10 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
             <div className="row"><span className="dot" style={{ background: TIER_HEX.B }} />B 71–80 · 관계형성</div>
             <div className="row"><span className="dot" style={{ background: TIER_HEX.C }} />C 51–70 · 모니터링</div>
             <div className="row"><span className="dot" style={{ background: TIER_HEX.D }} />D 50↓ / NO_DATA</div>
-            <div className="row"><span className="lg-dash" />최근 화재 발생 구역</div>
+            <div className="row"><span className="dot dot--flood" style={{ background: FIRE_FILL }} />최근 화재 지역</div>
             <div className="row">🚒 소방청 실시간 화재출동</div>
-            <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />도시침수 예상구역</div>
+            <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />침수 위험 구역</div>
+            {branchBoundary && <div className="row"><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: `3px dashed ${BRANCH_LINE}`, flex: 'none' }} />관할 경계</div>}
           </>
         )}
       </div>

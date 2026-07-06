@@ -3,6 +3,7 @@ import React from 'react'
 import { MI, Meter, Gauge, tierOf, num } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
+import { getBranchBoundary } from '../branchBoundary.js'
 const { useState, useEffect } = React
 const PER_PAGE = 5  // 한 화면에 담기도록 페이지당 표시 건수 (스크롤 대신 페이지 번호)
 
@@ -140,6 +141,8 @@ function ACard({ c, rank, onResult, recorded, onOpen, logCount = 0, floodSeasonO
 export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listMode, onListMode, floodSeasonOn = true }) {
   const D = window.APPDATA;
   const fireDispatch = buildFireDispatchDemo();
+  const branchName = (data[0] || {}).branch;
+  const branchBoundary = getBranchBoundary(branchName);
   const [gun, setGun] = useState('전체');
   const [dong, setDong] = useState('전체');
   const [use, setUse] = useState('전체');
@@ -264,7 +267,7 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               </div>
               <div style={{ flex: 1, position: 'relative' }}>
                 {filtered.length > 0
-                  ? <TargetMap candidates={pageItems} firePoints={D.firePoints} fireRegions={D.fireRegions} liveFirePoints={fireDispatch.liveItems} showFire={showFire} showFlood={showFlood} floodLayers={floodForView} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={`${gun}|${dong}|${qx}|${curPage}`} variant="A" />
+                  ? <TargetMap candidates={filtered} firePoints={D.firePoints} fireRegions={D.fireRegions} liveFirePoints={fireDispatch.liveItems} showFire={showFire} showFlood={showFlood} floodLayers={floodForView} branchBoundary={branchBoundary} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={branchName || 'all'} variant="A" />
                   : <div className="map-empty"><MI n="map" s={28} /><span>표시할 후보가 없어요</span></div>}
               </div>
             </div>
