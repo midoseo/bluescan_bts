@@ -79,8 +79,8 @@ export function Login({ onLogin }) {
             <LTextField type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="비밀번호"
               iconLeft={<MI n="lock" s={18} />} />
             {err && <div className="login-err"><MI n="error" s={16} />{err}</div>}
-            <LButton type="submit" block size="lg" onClick={submit} iconLeft={<MI n="login" s={20} />}
-              style={{ marginTop: 16 }}>{role === 'admin' ? '관리자' : '컨설턴트'}로 로그인</LButton>
+            <LButton type="submit" block size="lg" onClick={submit} iconLeft={<MI n="login" s={22} />}
+              style={{ marginTop: 16 }}>로그인</LButton>
           </form>
 
           {rec && (
