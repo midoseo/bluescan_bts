@@ -245,38 +245,9 @@ function EmpathyMessageDialog({ c, signal, onClose, onSent }) {
   );
 }
 
-function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate, onOpenEmpathy }) {
-  const att = needsAttention(c);
+function RetentionDetail({ c, sentDate, onOpenReport, touchDate, onOpenEmpathy }) {
   return (
-    <div className={'lrow lrow--b' + (expanded ? ' open' : '') + (att.flag ? ' lrow-priority' : '')}>
-      <div className="lrow-main" onClick={onToggle}>
-        <div className="lrow-id">
-          <div className="lrow-name">{c.name} <span className="kw">{c.use}</span>
-            {c.terminated && <RBadge tone="danger" shape="pill">해지</RBadge>}
-            {c.unresolvedVOC > 0 ? <RBadge tone="danger" shape="pill">미해결 VOC</RBadge> : (c.vocTotal > 0 && <RBadge tone="warning" shape="pill">VOC</RBadge>)}
-            {c.expirySoon && <RBadge tone="warning" shape="pill">만료 D-{c._daysToEnd}</RBadge>}
-            {c.openThisMonth && <RBadge tone="info" shape="pill">이번달 개시</RBadge>}
-            {att.flag && !c.terminated && <RBadge tone="danger" shape="pill" dot>주의 필요</RBadge>}
-            <TierBadge tier={c.productTier} />
-          </div>
-          <div className="lrow-addr">{c.address} · 계약번호 {c.contractNo} · 담당 {c.assignedConsultant}</div>
-        </div>
-        <div style={{ flex: 'none', display: 'flex', gap: 16, alignItems: 'center' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div className="faint" style={{ font: 'var(--type-12r)' }}>최근 30일 신호</div>
-            <div className="tnum" style={{ font: 'var(--type-15m)' }}>{c.signalCount30d}건 <span className="faint" style={{ font: 'var(--type-12r)' }}>({c.signalTrend})</span></div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div className="faint" style={{ font: 'var(--type-12r)' }}>계약 종료(예상)</div>
-            <div className="tnum" style={{ font: 'var(--type-15m)', color: att.daysToEnd <= 60 ? 'var(--s1-red-500,#e5484d)' : undefined }}>
-              {att.daysToEnd >= 0 ? `D-${att.daysToEnd}` : `만료 ${-att.daysToEnd}일 경과`}
-            </div>
-          </div>
-        </div>
-        <span className="lrow-more" aria-hidden="true">{expanded ? '닫기' : '자세히'}<MI n="expand_more" s={18} style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} /></span>
-      </div>
-      {expanded && (
-        <div className="lrow-detail fadein">
+    <>
           <div className="ld-grid">
             <div>
               <div className="ld-h">계약 정보</div>
@@ -347,8 +318,40 @@ function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate
               </div>
             </div>
           ); })()}
+    </>
+  );
+}
+
+function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate, onOpenEmpathy }) {
+  const att = needsAttention(c);
+  return (
+    <div className={'lrow lrow--b' + (expanded ? ' open' : '') + (att.flag ? ' lrow-priority' : '')}>
+      <div className="lrow-main" onClick={onToggle}>
+        <div className="lrow-id">
+          <div className="lrow-name">{c.name} <span className="kw">{c.use}</span>
+            {c.terminated && <RBadge tone="danger" shape="pill">해지</RBadge>}
+            {c.unresolvedVOC > 0 ? <RBadge tone="danger" shape="pill">미해결 VOC</RBadge> : (c.vocTotal > 0 && <RBadge tone="warning" shape="pill">VOC</RBadge>)}
+            {c.expirySoon && <RBadge tone="warning" shape="pill">만료 D-{c._daysToEnd}</RBadge>}
+            {c.openThisMonth && <RBadge tone="info" shape="pill">이번달 개시</RBadge>}
+            {att.flag && !c.terminated && <RBadge tone="danger" shape="pill" dot>주의 필요</RBadge>}
+            <TierBadge tier={c.productTier} />
+          </div>
+          <div className="lrow-addr">{c.address} · 계약번호 {c.contractNo} · 담당 {c.assignedConsultant}</div>
         </div>
-      )}
+        <div style={{ flex: 'none', display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div className="faint" style={{ font: 'var(--type-12r)' }}>최근 30일 신호</div>
+            <div className="tnum" style={{ font: 'var(--type-15m)' }}>{c.signalCount30d}건 <span className="faint" style={{ font: 'var(--type-12r)' }}>({c.signalTrend})</span></div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div className="faint" style={{ font: 'var(--type-12r)' }}>계약 종료(예상)</div>
+            <div className="tnum" style={{ font: 'var(--type-15m)', color: att.daysToEnd <= 60 ? 'var(--s1-red-500,#e5484d)' : undefined }}>
+              {att.daysToEnd >= 0 ? `D-${att.daysToEnd}` : `만료 ${-att.daysToEnd}일 경과`}
+            </div>
+          </div>
+        </div>
+        <span className="lrow-more" aria-hidden="true">자세히<MI n="chevron_right" s={18} /></span>
+      </div>
     </div>
   );
 }
@@ -446,7 +449,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
                 <div className="rows" style={{ padding: '4px 12px 12px' }}>
                   {pageItems.map(c => (
                     <div key={c.id}>
-                      <RetentionRow c={c} expanded={expanded === c.id} onToggle={() => { if (expanded === c.id) setExpanded(null); else { setExpanded(c.id); setFocusId(c.id); } }}
+                      <RetentionRow c={c} expanded={expanded === c.id} onToggle={() => { setExpanded(c.id); setFocusId(c.id); }}
                         sentDate={sentOverrides[c.id] ?? c.monthlyReportSent} onOpenReport={setReportFor}
                         touchDate={touchOverrides[c.id] ?? c.lastTouchDate} onOpenEmpathy={(cust, signal) => setEmpathyFor({ c: cust, signal })} />
                     </div>
@@ -483,6 +486,11 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
     <div className="pc-content pc-content--wide fadein" data-screen-label="유지관리현황">
       {blocks.kpis}
       {blocks.list}
+      {expanded != null && (() => { const c = filtered.find(x => x.id === expanded); if (!c) return null; return (
+        <RDialog title={c.name} subtitle={`${c.use} · 계약 ${c.contractNo}`} closeButton width={900} onClose={() => setExpanded(null)}>
+          <RetentionDetail c={c} sentDate={sentOverrides[c.id] ?? c.monthlyReportSent} onOpenReport={setReportFor}
+            touchDate={touchOverrides[c.id] ?? c.lastTouchDate} onOpenEmpathy={(cust, signal) => setEmpathyFor({ c: cust, signal })} />
+        </RDialog>); })()}
       {reportFor && (
         <MonthlyReportDialog c={reportFor} allCustomers={data}
           sentDate={sentOverrides[reportFor.id] ?? reportFor.monthlyReportSent}

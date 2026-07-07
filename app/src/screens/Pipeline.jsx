@@ -13,7 +13,7 @@ import { todayCompact } from '../dateUtil.js'
 const { useState, useEffect } = React
 const PER_PAGE = 6
 
-const { Chip, Badge, Button, TextField, Select } = window.UXDesignSystem_59a60b;
+const { Chip, Badge, Button, TextField, Select, Dialog } = window.UXDesignSystem_59a60b;
 
 // 구분(신규/기존) 배지 — 목록에서 두 성격을 한눈에 구분
 function TrackBadge({ track }) {
@@ -147,13 +147,8 @@ function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount
             {logCount > 0 && <span className="btnbadge">{logCount}</span>}
           </span>
         </div>
-        <span className="lrow-more" aria-hidden="true">{expanded ? '닫기' : '자세히'}<MI n="expand_more" s={18} style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} /></span>
+        <span className="lrow-more" aria-hidden="true">자세히<MI n="chevron_right" s={18} /></span>
       </div>
-      {expanded && (
-        <div className="lrow-detail fadein">
-          {isB ? <ExistingDetail c={c} /> : <NewDetail c={c} t={t} />}
-        </div>
-      )}
     </div>
   );
 }
@@ -205,8 +200,8 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, fl
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `신규진행현황_${todayCompact()}.csv`; a.click();
   };
 
-  const select = (id) => { setExpanded(id); setFocusId(id);
-    setTimeout(() => { const el = document.getElementById('row-' + id); if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60); };
+  const select = (id) => { setExpanded(id); setFocusId(id); };
+  const openItem = expanded != null ? filtered.find(c => c.id === expanded) : null;
 
   return (
     <div className="pc-content pc-content--wide fadein" data-screen-label="신규진행현황">
@@ -269,6 +264,11 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, fl
           </div>
         </div>
       </div>
+      {openItem && (
+        <Dialog title={openItem.name} subtitle={openItem.track === 'B' ? '기존 고객 · 업셀링' : '신규 후보'} closeButton width={840} onClose={() => setExpanded(null)}>
+          {openItem.track === 'B' ? <ExistingDetail c={openItem} /> : <NewDetail c={openItem} t={tierOf(openItem.score)} />}
+        </Dialog>
+      )}
     </div>
   );
 }
