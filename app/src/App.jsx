@@ -52,9 +52,9 @@ const homeNav = (role) => role === 'admin'
   ? { key: 'home', label: '관리자 대시보드', short: '홈', icon: 'space_dashboard' }
   : { key: 'home', label: '컨설턴트 대시보드', short: '홈', icon: 'space_dashboard' };
 const BASE_NAV = [
-  { key: 'pipeline', label: '신규진행현황', short: '신규진행현황', icon: 'travel_explore' },
   { key: 'retention', label: '유지관리현황', short: '유지관리현황', icon: 'shield_with_heart' },
-  { key: 'confirmed', label: '방문 기록', short: '방문 기록', icon: 'fact_check' },
+  { key: 'pipeline', label: '신규진행현황', short: '신규진행현황', icon: 'travel_explore' },
+  { key: 'confirmed', label: '영업활동관리', short: '영업활동관리', icon: 'fact_check' },
   { key: 'activity', label: '미션 & 랭킹', short: '미션 & 랭킹', icon: 'military_tech' },
   { key: 'insight', label: '인사이트', short: '인사이트', icon: 'insights' },
 ];
@@ -63,7 +63,7 @@ const TITLES = {
   listA: { crumb: '신규 고객 후보' },
   listB: { crumb: '기존 고객 후보(업셀링)' },
   retention: { crumb: '유지관리현황' },
-  confirmed: { crumb: '방문 결과 기록' },
+  confirmed: { crumb: '영업활동관리' },
   activity: { crumb: '미션 & 랭킹' },
   insight: { crumb: '인사이트' },
 };
