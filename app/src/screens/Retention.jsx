@@ -283,6 +283,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
   const [tier, setTier] = useState('all');
   const [q, setQ] = useState('');
   const [expanded, setExpanded] = useState(null);
+  const [focusId, setFocusId] = useState(null); // 선택 고객 — 지도 핀 focus+zoom 대상
   const [showAttentionOnly, setShowAttentionOnly] = useState(false);
   const [reportFor, setReportFor] = useState(null); // 월간 리포트 팝업 대상 고객
   const [empathyFor, setEmpathyFor] = useState(null); // { c, signal } — 감성터칭 메시지 팝업 대상
@@ -422,7 +423,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
                 <div className="rows" style={{ padding: '4px 12px 12px' }}>
                   {pageItems.map(c => (
                     <div key={c.id}>
-                      <RetentionRow c={c} expanded={expanded === c.id} onToggle={() => setExpanded(expanded === c.id ? null : c.id)}
+                      <RetentionRow c={c} expanded={expanded === c.id} onToggle={() => { if (expanded === c.id) setExpanded(null); else { setExpanded(c.id); setFocusId(c.id); } }}
                         sentDate={sentOverrides[c.id] ?? c.monthlyReportSent} onOpenReport={setReportFor}
                         touchDate={touchOverrides[c.id] ?? c.lastTouchDate} onOpenEmpathy={(cust, signal) => setEmpathyFor({ c: cust, signal })} />
                     </div>
@@ -446,7 +447,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
             </div>
             <div style={{ flex: 1, position: 'relative' }}>
               {mapCands.length > 0
-                ? <TargetMap candidates={mapCands} showFire={false} showFlood={false} selectedId={expanded} onSelect={setExpanded} fitKey={`${branch}|${use}|${tier}|${showAttentionOnly}|${qx}`} variant="C" />
+                ? <TargetMap candidates={mapCands} showFire={false} showFlood={false} selectedId={expanded} onSelect={(id) => { setExpanded(id); setFocusId(id); }} focusId={focusId} fitKey={`${branch}|${use}|${tier}|${showAttentionOnly}|${qx}`} variant="C" />
                 : <div className="map-empty"><MI n="map" s={28} /><span>표시할 고객이 없어요</span></div>}
             </div>
           </div>
