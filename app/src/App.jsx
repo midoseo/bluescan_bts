@@ -5,12 +5,14 @@ import { MI, VISIT, BrandMark, BltaMark } from './components.jsx'
 import { AdminDash, SalesDash } from './screens/Dash.jsx'
 import { ListAScreen } from './screens/ListA.jsx'
 import { ListBScreen } from './screens/ListB.jsx'
+import { PipelineScreen } from './screens/Pipeline.jsx'
 import { ConfirmedScreen } from './screens/Confirmed.jsx'
 import { RetentionScreen } from './screens/Retention.jsx'
 import { ActivityScreen } from './screens/Activity.jsx'
 import { InsightScreen } from './screens/Insight.jsx'
 import { VisitDialog } from './screens/Visit.jsx'
 import { Login } from './screens/Login.jsx'
+import { scoreExisting } from './upsellScore.js'
 import { buildDemoVisits } from './demoVisits.js'
 import { currentSeasonKey } from './season.js'
 import { buildRetentionDemo } from './retention.demo.js'
@@ -50,17 +52,17 @@ const homeNav = (role) => role === 'admin'
   ? { key: 'home', label: '관리자 대시보드', short: '홈', icon: 'space_dashboard' }
   : { key: 'home', label: '컨설턴트 대시보드', short: '홈', icon: 'space_dashboard' };
 const BASE_NAV = [
-  { key: 'listA', label: '신규 고객 찾기', short: '신규 고객 찾기', icon: 'travel_explore' },
-  { key: 'listB', label: '기존 고객 (추가 제안)', short: '기존 고객', icon: 'apartment' },
-  { key: 'retention', label: '유지 고객 관리', short: '유지 고객 관리', icon: 'shield_with_heart' },
+  { key: 'pipeline', label: '신규진행현황', short: '신규진행현황', icon: 'travel_explore' },
+  { key: 'retention', label: '유지관리현황', short: '유지관리현황', icon: 'shield_with_heart' },
   { key: 'confirmed', label: '방문 기록', short: '방문 기록', icon: 'fact_check' },
   { key: 'activity', label: '미션 & 랭킹', short: '미션 & 랭킹', icon: 'military_tech' },
   { key: 'insight', label: '인사이트', short: '인사이트', icon: 'insights' },
 ];
 const TITLES = {
+  pipeline: { crumb: '신규진행현황' },
   listA: { crumb: '신규 고객 후보' },
   listB: { crumb: '기존 고객 후보(업셀링)' },
-  retention: { crumb: '유지고객 대시보드' },
+  retention: { crumb: '유지관리현황' },
   confirmed: { crumb: '방문 결과 기록' },
   activity: { crumb: '미션 & 랭킹' },
   insight: { crumb: '인사이트' },
@@ -198,7 +200,18 @@ export default function App() {
   const visibleB = seeAll ? _rawB : _rawB.slice(0, DEMO_CAP_B);
   const visRecorded = seeAll ? recorded : recorded.filter(c => c.branch === user.branch);
 
-  const counts = { listA: visibleA.filter(c => !c.excluded && !c.duplicate).length, listB: visibleB.filter(c => c.matchCount > 0).length, retention: retention.length, confirmed: visRecorded.length };
+  const cntA = visibleA.filter(c => !c.excluded && !c.duplicate).length;
+  const counts = { listA: cntA, listB: visibleB.filter(c => c.matchCount > 0).length, pipeline: cntA + visibleB.length, retention: retention.length, confirmed: visRecorded.length };
+  // 신규진행현황용 통합 데이터 — 신규(track A)는 그대로, 기존(track B)은 우선접촉=100 / 단일유형=92 점수 부여
+  const pipelineData = [
+    ...visibleA.map(c => ({ ...c, track: 'A' })),
+    // 기존 고객: 데이터에 score가 있으면 그대로, 없으면 규칙 기반 스코어링(계약만료·경비규모·중요실·매칭)으로 점수+구성 산출
+    ...visibleB.map(c => {
+      if (c.score != null) return { ...c, track: 'B' };
+      const { score, comps } = scoreExisting(c);
+      return { ...c, track: 'B', score, comps };
+    }),
+  ];
   const persona = { name: user.name, role: seeAll ? '영업 관리자' : (isAdmin ? '지사장' : '영업 컨설턴트'), greet: isAdmin ? '팀 영업 현황과 방문 결과를 한눈에 확인해 봐요.' : '오늘 방문할 타깃을 함께 정해 봐요.' };
   const NAV = [homeNav(role), ...BASE_NAV];
   const crumb = view !== 'home' ? TITLES[view].crumb : (isAdmin ? '관리자 대시보드' : null);
@@ -207,8 +220,8 @@ export default function App() {
   const alerts = [];
   const floodN = visibleA.filter(c => c.flood && c.flood.level === '주의').length;
   const expiryN = visibleB.filter(c => c.expirySoon).length;
-  if (floodSeasonOn && floodN) alerts.push({ icon: 'water_drop', tone: 'flood', title: `[혹서기·풍수해기] 침수 위험구역 ${floodN}곳 우선 영업`, desc: '장마철 도시침수 예상구역 내 사업장이에요. 재해 대비 보안·관리 수요가 높은 시점 — 우선 방문을 권장해요.', cta: '신규 고객 후보 보기', go: 'listA' });
-  if (expiryN) alerts.push({ icon: 'schedule', tone: 'expiry', title: `경비원 계약 만료 임박 ${expiryN}곳`, desc: '인력경비 계약 만료가 도래한 고객처예요. 블루스캔 원격 전환을 제안할 적기 — 기존 고객 후보(업셀링)를 확인하세요.', cta: '기존 고객 후보(업셀링) 보기', go: 'listB' });
+  if (floodSeasonOn && floodN) alerts.push({ icon: 'water_drop', tone: 'flood', title: `[혹서기·풍수해기] 침수 위험구역 ${floodN}곳 우선 영업`, desc: '장마철 도시침수 예상구역 내 사업장이에요. 재해 대비 보안·관리 수요가 높은 시점 — 우선 방문을 권장해요.', cta: '신규진행현황 보기', go: 'pipeline' });
+  if (expiryN) alerts.push({ icon: 'schedule', tone: 'expiry', title: `경비원 계약 만료 임박 ${expiryN}곳`, desc: '인력경비 계약 만료가 도래한 고객처예요. 블루스캔 원격 전환을 제안할 적기 — 신규진행현황에서 기존 고객을 확인하세요.', cta: '신규진행현황 보기', go: 'pipeline' });
 
   const pageTitle = view === 'home' ? (isAdmin ? '관리자 대시보드' : '컨설턴트 대시보드') : (TITLES[view] && TITLES[view].crumb);
 
@@ -267,8 +280,7 @@ export default function App() {
             <button key={n.key} className="hdr__tab" aria-current={view === n.key} onClick={() => setView(n.key)}>
               <MI n={n.icon} s={20} fill={view === n.key} />
               <span>{n.short || n.label}</span>
-              {n.key === 'listA' && <span className="hdr__tabcount">{counts.listA}</span>}
-              {n.key === 'listB' && <span className="hdr__tabcount">{counts.listB}</span>}
+              {n.key === 'pipeline' && <span className="hdr__tabcount">{counts.pipeline}</span>}
               {n.key === 'retention' && <span className="hdr__tabcount">{counts.retention}</span>}
               {n.key === 'confirmed' && counts.confirmed > 0 && <span className="hdr__tabcount">{counts.confirmed}</span>}
             </button>
@@ -287,14 +299,14 @@ export default function App() {
                   <div className="hsummary__pts"><MI n="stars" s={22} fill /><span className="tnum">{gamify.total}P</span></div>
                   <div className="hsummary__ptssub">오늘의 활동 점수</div>
                 </div>
-                <button className="hsummary__card" onClick={() => setView('listA')}>
+                <button className="hsummary__card" onClick={() => setView('pipeline')}>
                   <span className="hsummary__k"><MI n="travel_explore" s={18} />신규 고객 찾기</span><b>{counts.listA}<i>곳</i></b>
                 </button>
-                <button className="hsummary__card" onClick={() => setView('listB')}>
+                <button className="hsummary__card" onClick={() => setView('pipeline')}>
                   <span className="hsummary__k"><MI n="apartment" s={18} />기존 고객</span><b>{counts.listB}<i>곳</i></b>
                 </button>
                 <button className="hsummary__card hsummary__card--warn" onClick={() => setView('retention')}>
-                  <span className="hsummary__k"><MI n="shield_with_heart" s={18} />유지 고객 관리</span><b>{counts.retention}<i>곳</i></b>
+                  <span className="hsummary__k"><MI n="shield_with_heart" s={18} />유지관리현황</span><b>{counts.retention}<i>곳</i></b>
                 </button>
               </aside>
               <div className="hcol">
@@ -305,6 +317,7 @@ export default function App() {
             </div>
           ) : (
             <>
+              {view === 'pipeline' && <PipelineScreen data={pipelineData} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} floodSeasonOn={floodSeasonOn} />}
               {view === 'listA' && <ListAScreen data={visibleA} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
               {view === 'listB' && <ListBScreen data={visibleB} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} visits={visits} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
               {view === 'retention' && <RetentionScreen data={retention} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)}
