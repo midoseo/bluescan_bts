@@ -17,7 +17,9 @@ import { buildMonthlyReportData } from '../monthlyReport.js'
 import { buildEmpathyMessageDraft } from '../empathyMessage.js'
 import { exportElementToPdf } from '../pdfExport.js'
 import { currentSeasonKey } from '../season.js'
-const { useState, useRef } = React
+import { todayCompact } from '../dateUtil.js'
+const { useState, useRef, useEffect } = React
+const RETENTION_PER_PAGE = 8   // 신규진행현황과 동일하게 페이지네이션
 
 const { Card: RCard, Dialog: RDialog, Badge: RBadge, Button: RButton, TextField: RTextField, Textarea: RTextarea, Chip: RChip, Select: RSelect } = window.UXDesignSystem_59a60b;
 
@@ -284,6 +286,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
   const [showAttentionOnly, setShowAttentionOnly] = useState(false);
   const [reportFor, setReportFor] = useState(null); // 월간 리포트 팝업 대상 고객
   const [empathyFor, setEmpathyFor] = useState(null); // { c, signal } — 감성터칭 메시지 팝업 대상
+  const [page, setPage] = useState(1);
   // 리포트·감성터칭 발송 상태는 App.jsx로 끌어올려졌다(게이미피케이션 포인트 계산에 필요해서) —
   // sentOverrides/markSent/touchOverrides/markTouched는 위에서 props를 받아온 이름 그대로 재사용한다.
 
@@ -297,6 +300,21 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
     (!showAttentionOnly || att.flag) &&
     (qx === '' || (`${c.name} ${c.contractNo}`).toLowerCase().includes(qx))
   ).map(x => x.c);
+
+  // 페이지네이션 (신규진행현황과 동일) — 필터/검색이 바뀌면 1페이지로
+  useEffect(() => { setPage(1); }, [branch, use, tier, q, showAttentionOnly]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / RETENTION_PER_PAGE));
+  const curPage = Math.min(page, totalPages);
+  const pageBase = (curPage - 1) * RETENTION_PER_PAGE;
+  const pageItems = filtered.slice(pageBase, pageBase + RETENTION_PER_PAGE);
+
+  const downloadCsv = () => {
+    const head = ['계약처', '지사', '업종', '상품', '계약번호', '계약종료(예상)', '최근30일신호', '주의필요'];
+    const rows = filtered.map(c => { const att = needsAttention(c); return [c.name, c.branch, c.use, PRODUCT_TIERS[c.productTier], c.contractNo, c.endDate, c.signalCount30d, att.flag ? 'Y' : '']; });
+    const csv = '﻿' + [head, ...rows].map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `유지관리현황_${todayCompact()}.csv`; a.click();
+  };
 
   const kpi = {
     total: data.length,
@@ -392,25 +410,34 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
           </div>
         </div>
 
-        <div className="pc-tabletoolbar" style={{ display: 'flex', justifyContent: 'space-between', margin: '8px 0 12px' }}>
-          <span className="muted"><b className="tnum" style={{ color: 'var(--accent)' }}>{filtered.length}</b>곳</span>
-        </div>
-
         <div className="split">
           <div className="split-list">
-            <div style={{ border: '1px solid var(--border-default)', borderRadius: 'var(--radius-m)', overflow: 'hidden', background: '#fff' }}>
-              {filtered.length === 0
-                ? <div className="nodata-box" style={{ margin: 12 }}><MI n="filter_alt_off" s={20} /><div>조건에 맞는 유지고객이 없어요.</div></div>
-                : <div className="rows" style={{ padding: '4px 12px 8px' }}>
-                  {filtered.map(c => (
+            <div className="list-meta">
+              <span className="muted"><b className="tnum">{filtered.length}</b>곳</span>
+              <RButton size="sm" variant="line" onClick={downloadCsv} iconLeft={<MI n="download" s={18} />}>엑셀 다운로드</RButton>
+            </div>
+            {filtered.length === 0
+              ? <div className="nodata-box" style={{ margin: 12 }}><MI n="filter_alt_off" s={20} /><div>조건에 맞는 유지고객이 없어요.</div></div>
+              : <>
+                <div className="rows" style={{ padding: '4px 12px 12px' }}>
+                  {pageItems.map(c => (
                     <div key={c.id}>
                       <RetentionRow c={c} expanded={expanded === c.id} onToggle={() => setExpanded(expanded === c.id ? null : c.id)}
                         sentDate={sentOverrides[c.id] ?? c.monthlyReportSent} onOpenReport={setReportFor}
                         touchDate={touchOverrides[c.id] ?? c.lastTouchDate} onOpenEmpathy={(cust, signal) => setEmpathyFor({ c: cust, signal })} />
                     </div>
                   ))}
-                </div>}
-            </div>
+                </div>
+                {totalPages > 1 && (
+                  <div className="pager">
+                    <button className="pager__b" disabled={curPage === 1} onClick={() => setPage(curPage - 1)} aria-label="이전 페이지"><MI n="chevron_left" s={20} /></button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                      <button key={n} className={'pager__b' + (n === curPage ? ' on' : '')} onClick={() => setPage(n)}>{n}</button>
+                    ))}
+                    <button className="pager__b" disabled={curPage === totalPages} onClick={() => setPage(curPage + 1)} aria-label="다음 페이지"><MI n="chevron_right" s={20} /></button>
+                  </div>
+                )}
+              </>}
           </div>
           <div className="split-map">
             <div className="map-top">
@@ -429,16 +456,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
   };
 
   return (
-    <div className="pc-content pc-content--wide fadein" data-screen-label="유지고객 대시보드">
-      <div className="pc-pagehead">
-        <div>
-          <div className="pc-pagehead__title">유지고객(블루스캔) 대시보드</div>
-          <div className="pc-pagehead__desc">이미 블루스캔을 이용 중인 계약 고객의 관제 신호·계약 현황을 확인해요. 섹션 좌상단 <MI n="drag_indicator" s={16} style={{ verticalAlign: '-3px' }} />핸들을 드래그하면 순서를 바꿀 수 있어요.</div>
-        </div>
-        <div className="ph-right">
-          <RButton size="sm" variant="line" onClick={ctrl.resetOrder} iconLeft={<MI n="restart_alt" s={18} />}>구성 초기화</RButton>
-        </div>
-      </div>
+    <div className="pc-content pc-content--wide fadein" data-screen-label="유지관리현황">
       <SectionList ctrl={ctrl} titles={RETENTION_SEC_TITLE} blocks={blocks} />
       {reportFor && (
         <MonthlyReportDialog c={reportFor} allCustomers={data}
