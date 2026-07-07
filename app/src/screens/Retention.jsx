@@ -18,7 +18,7 @@ import { exportElementToPdf } from '../pdfExport.js'
 import { currentSeasonKey } from '../season.js'
 import { todayCompact } from '../dateUtil.js'
 const { useState, useRef, useEffect } = React
-const RETENTION_PER_PAGE = 8   // 신규진행현황과 동일하게 페이지네이션
+const RETENTION_PER_PAGE = 5   // 페이지당 5개 + 페이지네이션
 
 const { Card: RCard, Dialog: RDialog, Badge: RBadge, Button: RButton, TextField: RTextField, Textarea: RTextarea, Chip: RChip, Select: RSelect } = window.UXDesignSystem_59a60b;
 
