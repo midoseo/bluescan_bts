@@ -4,6 +4,8 @@ import { MI, Meter, Gauge, tierOf, num } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
 import { getBranchBoundary } from '../branchBoundary.js'
+import { FIRE_OVERLAY } from '../fireOverlay.js'
+import { todayCompact } from '../dateUtil.js'
 const { useState, useEffect } = React
 const PER_PAGE = 5  // 한 화면에 담기도록 페이지당 표시 건수 (스크롤 대신 페이지 번호)
 
@@ -70,38 +72,45 @@ function ListARow({ c, rank, expanded, onToggle, onResult, recorded, logCount = 
       </div>
       {expanded && (
         <div className="lrow-detail fadein">
-          <div className="ld-grid">
-            <div>
-              <div className="ld-h">도입 가능성 점수 구성 <span className="faint" style={{ fontWeight: 400 }}>· 규칙 기반</span></div>
-              <div className="ld-bars">{c.comps.map((cc, i) => <CompBar key={i} c={cc} />)}</div>
-              <div className="ld-total">
-                <span className="faint">규모·용도·복잡도·노후화 합산</span>
-                <span style={{ marginLeft: 'auto' }} className="faint">합계</span>
-                <span className="score-num" style={{ fontSize: 24, color: t.color }}>{c.score}</span>
-              </div>
-            </div>
-            <div>
-              <div className="ld-h">건축물대장 속성</div>
-              <dl className="ld-attrs">
-                <div><dt>연면적</dt><dd>{c.gfa ? num(c.gfa) + '㎡' : <i className="nd">NO_DATA</i>}</dd></div>
-                <div><dt>건축면적</dt><dd>{c.bldgArea ? num(c.bldgArea) + '㎡' : <i className="nd">NO_DATA</i>}</dd></div>
-                <div><dt>부속동수</dt><dd>{c.annex != null ? c.annex + '개동' : <i className="nd">NO_DATA</i>}</dd></div>
-                <div><dt>주차</dt><dd>{c.parking != null ? c.parking + '면' : <i className="nd">NO_DATA</i>}</dd></div>
-                <div><dt>소유구분</dt><dd>{c.owner}</dd></div>
-                <div><dt>사용승인</dt><dd>{c.approvalDate ? `${c.approvalDate} (${c.approvalYrAgo}년)` : <i className="nd">NO_DATA</i>}</dd></div>
-              </dl>
-            </div>
-          </div>
+          <CandDetail c={c} t={t} />
         </div>
       )}
     </div>
   );
 }
 
-function ACard({ c, rank, onResult, recorded, onOpen, logCount = 0, floodSeasonOn = true }) {
+// 후보 상세(점수 구성 + 건축물대장 속성) — 목록·카드 공용
+function CandDetail({ c, t }) {
+  return (
+    <div className="ld-grid">
+      <div>
+        <div className="ld-h">도입 가능성 점수 구성 <span className="faint" style={{ fontWeight: 400 }}>· 규칙 기반</span></div>
+        <div className="ld-bars">{c.comps.map((cc, i) => <CompBar key={i} c={cc} />)}</div>
+        <div className="ld-total">
+          <span className="faint">규모·용도·복잡도·노후화 합산</span>
+          <span style={{ marginLeft: 'auto' }} className="faint">합계</span>
+          <span className="score-num" style={{ fontSize: 24, color: t.color }}>{c.score}</span>
+        </div>
+      </div>
+      <div>
+        <div className="ld-h">건축물대장 속성</div>
+        <dl className="ld-attrs">
+          <div><dt>연면적</dt><dd>{c.gfa ? num(c.gfa) + '㎡' : <i className="nd">NO_DATA</i>}</dd></div>
+          <div><dt>건축면적</dt><dd>{c.bldgArea ? num(c.bldgArea) + '㎡' : <i className="nd">NO_DATA</i>}</dd></div>
+          <div><dt>부속동수</dt><dd>{c.annex != null ? c.annex + '개동' : <i className="nd">NO_DATA</i>}</dd></div>
+          <div><dt>주차</dt><dd>{c.parking != null ? c.parking + '면' : <i className="nd">NO_DATA</i>}</dd></div>
+          <div><dt>소유구분</dt><dd>{c.owner}</dd></div>
+          <div><dt>사용승인</dt><dd>{c.approvalDate ? `${c.approvalDate} (${c.approvalYrAgo}년)` : <i className="nd">NO_DATA</i>}</dd></div>
+        </dl>
+      </div>
+    </div>
+  );
+}
+
+function ACard({ c, rank, onResult, recorded, onOpen, logCount = 0, floodSeasonOn = true, selected = false }) {
   const t = tierOf(c.score);
   return (
-    <div className="acard" onClick={onOpen}>
+    <div className={'acard' + (selected ? ' acard--on' : '')} onClick={onOpen}>
       <div className="acard-top"><span className="acard-rank">#{rank}</span><Gauge score={c.score} size={40} /></div>
       <div className="acard-name">{c.name}</div>
       <div className="acard-addr">{c.address}</div>
@@ -168,6 +177,14 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
     return a != null && filtered.some(x => x.lat != null && x.lng != null && x.lng >= a - 0.02 && x.lng <= c + 0.02 && x.lat >= b - 0.02 && x.lat <= d + 0.02);
   });
 
+  const downloadCsv = () => {
+    const head = ['순위', '건물명', '주소', '용도', '소유구분', '점수', '등급', '연면적(㎡)', '사용승인'];
+    const rows = filtered.map((c, i) => [i + 1, c.name, c.address, c.use, c.owner, c.score == null ? 'NO_DATA' : c.score, tierOf(c.score).label, c.gfa || '', c.approvalDate || '']);
+    const csv = '﻿' + [head, ...rows].map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `신규후보_${branchName || '전체'}_${todayCompact()}.csv`; a.click();
+  };
+
   const select = (id) => { setExpanded(id); setFocusId(id);
     setTimeout(() => { const el = document.getElementById('row-' + id); if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60); };
 
@@ -210,17 +227,27 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
                 <span style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <span className="muted"><b className="tnum">{filtered.length}</b>개 후보 · {sort === 'score' ? '점수순' : sort === 'age' ? '노후화순' : '규모순'}</span>
                 </span>
-                {onListMode && (
-                  <div className="seg seg--sm">
-                    <button className={listMode !== 'card' ? 'on' : ''} onClick={() => onListMode('table')}><MI n="view_list" s={16} />목록</button>
-                    <button className={listMode === 'card' ? 'on' : ''} onClick={() => onListMode('card')}><MI n="grid_view" s={16} />카드</button>
-                  </div>)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <AButton size="sm" variant="line" onClick={downloadCsv} iconLeft={<MI n="download" s={18} />}>엑셀 다운로드</AButton>
+                  {onListMode && (
+                    <div className="seg seg--sm">
+                      <button className={listMode !== 'card' ? 'on' : ''} onClick={() => onListMode('table')}><MI n="view_list" s={16} />목록</button>
+                      <button className={listMode === 'card' ? 'on' : ''} onClick={() => onListMode('card')}><MI n="grid_view" s={16} />카드</button>
+                    </div>)}
+                </div>
               </div>
               {filtered.length === 0
                 ? <div className="nodata-box" style={{ margin: 12 }}><MI n="filter_alt_off" s={20} /><div>{q ? <>‘{q}’ 검색 결과가 없어요. 고객처명을 다시 확인하거나 검색을 해제해 보세요.</> : '선택한 조건에 맞는 후보가 없어요. 군·구·동·용도 필터를 조정해 보세요.'}</div></div>
                 : <>
                   {listMode === 'card'
-                    ? <div className="cardgrid">{pageItems.map((c, i) => <ACard key={c.id} c={c} rank={pageBase + i + 1} onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} onOpen={() => select(c.id)} floodSeasonOn={floodSeasonOn} />)}</div>
+                    ? <>
+                      <div className="cardgrid">{pageItems.map((c, i) => <ACard key={c.id} c={c} rank={pageBase + i + 1} selected={expanded === c.id} onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} onOpen={() => { if (expanded === c.id) setExpanded(null); else select(c.id); }} floodSeasonOn={floodSeasonOn} />)}</div>
+                      {expanded && (() => { const sel = filtered.find(x => x.id === expanded); return sel ? (
+                        <div className="lrow-detail fadein acard-detail" id={'row-' + sel.id}>
+                          <div className="acard-detail__name"><MI n="apartment" s={20} />{sel.name}</div>
+                          <CandDetail c={sel} t={tierOf(sel.score)} />
+                        </div>) : null; })()}
+                    </>
                     : <div className="rows" style={{ padding: '4px 12px 12px' }}>
                       {pageItems.map((c, i) => (
                         <div id={'row-' + c.id} key={c.id}>
@@ -242,12 +269,13 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               <div className="map-top">
                 <span className="eyebrow">타깃 분포</span>
                 <span className="map-top__chips">
+                  <AChip selected={showFire} onClick={() => setShowFire(s => !s)}>최근 화재 위치</AChip>
                   <AChip selected={showFlood} onClick={() => setShowFlood(s => !s)}>침수 위험 구역</AChip>
                 </span>
               </div>
               <div style={{ flex: 1, position: 'relative' }}>
                 {filtered.length > 0
-                  ? <TargetMap candidates={filtered} showFlood={showFlood} floodLayers={floodForView} branchBoundary={branchBoundary} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={branchName || 'all'} variant="A" />
+                  ? <TargetMap candidates={filtered} firePointsLive={FIRE_OVERLAY.points} showFire={showFire} showFlood={showFlood} floodLayers={floodForView} branchBoundary={branchBoundary} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={branchName || 'all'} variant="A" />
                   : <div className="map-empty"><MI n="map" s={28} /><span>표시할 후보가 없어요</span></div>}
               </div>
             </div>

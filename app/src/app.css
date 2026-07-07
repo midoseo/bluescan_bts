@@ -1281,3 +1281,11 @@ body{ background: var(--surface-home); }
 /* 신규/기존 후보 — 지도·리스트 높이 축소(페이지네이션과 함께 한 화면에) */
 .split-map{ height:460px; min-height:420px; top:96px; }
 .split-list{ max-height:none; }
+
+/* 신규 후보 — 카드뷰 상세 패널 + 선택 하이라이트 + 시니어 대비 보강 */
+.acard--on{ border-color:#1d6ceb !important; box-shadow:0 0 0 2px rgba(29,108,235,.18); }
+.acard-detail{ margin-top:12px; background:#fff; border:1px solid #eaecf0; border-radius:14px; padding:16px 18px; }
+.acard-detail__name{ display:flex; align-items:center; gap:8px; font-size:18px; font-weight:700; color:#191f28; margin-bottom:12px; }
+.acard-detail__name .material-symbols-rounded{ color:#1d6ceb; }
+/* 보조 텍스트 대비 상향(시니어) — 흰 배경 4.5:1↑ */
+.lrow-addr, .acard-addr, .cbar .cbar-note, .ld-attrs dt{ color:var(--s1-gray-700); }

@@ -191,7 +191,12 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
   useEffect(() => {
     if (!mapRef.current || !focusId) return;
     const c = candidates.find(x => x.id === focusId);
-    if (c && c.lat != null) { try { mapRef.current.invalidateSize(); } catch (e) { /* ignore */ } const m = markers.current[focusId]; if (m) { try { m.openTooltip(); } catch (e) { /* ignore */ } if (m.bringToFront) m.bringToFront(); } }
+    if (c && c.lat != null) {
+      try { mapRef.current.invalidateSize(); } catch (e) { /* ignore */ }
+      try { mapRef.current.flyTo([c.lat, c.lng], 16, { duration: .6 }); } catch (e) { /* ignore */ }  // 선택한 핀을 정중앙으로 줌인
+      const m = markers.current[focusId];
+      if (m) { setTimeout(() => { try { m.openTooltip(); } catch (e) { /* ignore */ } }, 650); if (m.bringToFront) m.bringToFront(); }
+    }
   }, [focusId]);
 
   return (
