@@ -8,10 +8,16 @@ export function MI({ n, s, fill, style, cls }) {
     style={{ fontSize: s ? s + 'px' : undefined, ...style }}>{n}</span>;
 }
 
-/* 에스원 CI 로고 — 공식 워드마크 이미지(s1.co.kr /images/ko/common/h1_logo.png) */
-import s1logo from './assets/s1-logo.png'
+/* 에스원 CI — 빨간 정사각형 블록 + 흰색 '에스원' (제공 CI 재현, 벡터) */
 export function BrandMark({ height = 28 }) {
-  return <img src={s1logo} alt="에스원" style={{ display: 'block', height: height + 'px', width: 'auto' }} />;
+  return (
+    <svg height={height} viewBox="0 0 120 120" role="img" aria-label="에스원" style={{ display: 'block' }}>
+      <rect width="120" height="120" rx="6" fill="#ED1C24" />
+      <text x="60" y="65" fill="#fff" fontWeight="800" fontSize="41" textAnchor="middle" dominantBaseline="central"
+        textLength="94" lengthAdjust="spacingAndGlyphs"
+        fontFamily="'SamsungOne Korean','Pretendard Variable',Pretendard,system-ui,sans-serif">에스원</text>
+    </svg>
+  );
 }
 
 // 블루스캔 타깃 브랜드 마크 (BLTA 붓글씨 로고) — 영문 단일 사용

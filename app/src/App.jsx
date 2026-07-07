@@ -229,7 +229,7 @@ export default function App() {
       <header className="hdr">
         <div className="hdr__row">
           <div className="hdr__brand" onClick={() => setView('home')} title="홈으로">
-            <span className="hdr__logo">BTS</span>
+            <BrandMark height={34} />
             <span className="hdr__word">블루스캔 <b>BTS</b></span>
           </div>
           <div className="hdr__right">
