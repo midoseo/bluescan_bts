@@ -29,9 +29,9 @@ function markerInfo(c, variant, visits) {
   return { col: TIER_HEX[t.key] || TIER_HEX.nodata, big: c.score >= 81, label: `${c.name} · ${c.score == null ? 'N/A' : c.score + '점 (' + t.key + ')'}` };
 }
 
-export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints, showFire, showFlood = true, floodLayers, branchBoundary, visits, selectedId, onSelect, focusId, fitKey, variant = 'A' }) {
+export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints, firePointsLive, showFire, showFlood = true, floodLayers, branchBoundary, visits, selectedId, onSelect, focusId, fitKey, variant = 'A' }) {
   const elRef = useRef(null), mapRef = useRef(null);
-  const candLayer = useRef(null), fireLayer = useRef(null), floodLayer = useRef(null), liveFireLayer = useRef(null), branchLayer = useRef(null), markers = useRef({});
+  const candLayer = useRef(null), fireLayer = useRef(null), floodLayer = useRef(null), liveFireLayer = useRef(null), fireGlowLayer = useRef(null), branchLayer = useRef(null), markers = useRef({});
 
   useEffect(() => {
     if (mapRef.current || !L || !elRef.current) return;
@@ -51,6 +51,7 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
       floodLayer.current = L.layerGroup().addTo(map);
       candLayer.current = L.layerGroup().addTo(map);
       fireLayer.current = L.layerGroup().addTo(map);
+      fireGlowLayer.current = L.layerGroup().addTo(map);
       liveFireLayer.current = L.layerGroup().addTo(map);
       mapRef.current = map;
       setTimeout(() => { try { map.invalidateSize(); } catch (e) { /* ignore */ } }, 60);
@@ -58,7 +59,7 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
     } catch (e) { /* Leaflet init failed — keep the rest of the screen alive */ }
     return () => {
       try { map && map.remove(); } catch (e) { /* ignore */ }
-      mapRef.current = null; candLayer.current = null; fireLayer.current = null; floodLayer.current = null; liveFireLayer.current = null; branchLayer.current = null; markers.current = {};
+      mapRef.current = null; candLayer.current = null; fireLayer.current = null; floodLayer.current = null; liveFireLayer.current = null; fireGlowLayer.current = null; branchLayer.current = null; markers.current = {};
     };
   }, []);
 
@@ -102,6 +103,24 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
         L.marker([(b + d) / 2, (a + c) / 2], { icon: L.divIcon({ className: 'fire-pin', html: `<span>🔥 ${r.name} ${r.count}건</span>`, iconSize: null }), interactive: false, keyboard: false }).addTo(fireLayer.current); }
     });
   }, [showFire, fireRegions, candidates]);
+
+  // 실데이터 화재 포인트 글로우 — firePane blur로 feather(아이폰 강수량 느낌), 최근일수록 진하게
+  useEffect(() => {
+    const g = fireGlowLayer.current; if (!g) return;
+    g.clearLayers();
+    if (!showFire || !firePointsLive || !firePointsLive.length) return;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    firePointsLive.forEach(f => {
+      if (f.lat == null || f.lng == null) return;
+      let daysAgo = 0;
+      if (f.date) { const d = new Date(f.date + 'T00:00:00'); daysAgo = Math.max(0, Math.round((today - d) / 86400000)); }
+      const fade = Math.max(0.28, 0.7 - daysAgo * 0.02);   // 최근=진하게, 오래될수록 옅게
+      L.circleMarker([f.lat, f.lng], { pane: 'firePane', radius: 17, stroke: false, fillColor: FIRE_FILL, fillOpacity: fade * 0.55 }).addTo(g);
+      L.circleMarker([f.lat, f.lng], { pane: 'firePane', radius: 7, stroke: false, fillColor: FIRE_FILL, fillOpacity: fade })
+        .bindTooltip(`🔥 ${f.time || ''} · ${f.loc || ''}${f.type ? ' · ' + f.type : ''}`, { direction: 'top', offset: [0, -6] })
+        .addTo(g);
+    });
+  }, [showFire, firePointsLive]);
 
   // 소방청(국민안전24) 실시간 화재 출동 지점 — 개별 마커 (같은 "화재 오버레이" 토글로 함께 켜짐)
   useEffect(() => {
