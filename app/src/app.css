@@ -1311,3 +1311,104 @@ body{ background: var(--surface-home); }
   will-change:transform, opacity;
 }
 @media (prefers-reduced-motion: reduce){ .tap-ripple{ animation-duration:1ms; } }
+
+/* ===== 인사이트 탭 — 신호 리포트 / 화재 사례 ===== */
+.ins-seg{ flex-wrap:wrap; }
+.ins-src{ display:flex; align-items:center; gap:7px; font-size:13px; color:#8b95a1; margin-bottom:12px; }
+.ins-src .material-symbols-rounded{ font-size:16px; color:#adb5bd; }
+
+/* KPI */
+.ins-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.ins-kpi{ display:flex; align-items:flex-start; gap:12px; background:#fff; border:1px solid #eaecf0; border-radius:14px; padding:16px 18px; }
+.ins-kpi__ico{ width:40px; height:40px; flex:none; border-radius:11px; display:flex; align-items:center; justify-content:center; background:var(--s1-blue-50); color:var(--accent); }
+.ins-kpi__val{ font-size:26px; font-weight:800; color:#191f28; line-height:1.1; letter-spacing:-.02em; }
+.ins-kpi__val span{ font-size:14px; font-weight:700; color:#6b7684; margin-left:2px; }
+.ins-kpi__label{ font-size:14px; font-weight:600; color:#191f28; margin-top:4px; }
+.ins-kpi__note{ font-size:12px; color:#8b95a1; margin-top:2px; }
+
+/* 계절 증감 칩 */
+.ins-growth{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.ins-growth__chip{ font-size:13px; color:#4b5563; background:#f2f4f6; border-radius:999px; padding:5px 12px; }
+.ins-growth__chip b{ color:#1d6ceb; margin-left:2px; }
+.ins-growth__chip.hot{ background:#fff0ea; color:#b23b12; }
+.ins-growth__chip.hot b{ color:#e5502b; }
+
+/* 고객 3분류 */
+.ins-segs{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.ins-seg-card{ border:1px solid #eaecf0; border-radius:14px; padding:14px 16px; background:#fff; }
+.ins-seg-card__head{ display:flex; align-items:center; gap:7px; font-size:15px; font-weight:700; color:#191f28; margin-bottom:8px; }
+.ins-seg-card__desc{ font-size:13px; color:#6b7684; line-height:1.5; margin-bottom:12px; }
+.ins-seg-card__list{ display:flex; flex-direction:column; gap:7px; }
+.ins-cust{ display:flex; flex-direction:column; gap:1px; padding:8px 10px; border-radius:9px; background:#f8f9fa; }
+.ins-cust__name{ font-size:14px; font-weight:600; color:#191f28; }
+.ins-cust__trend{ font-size:12px; color:#6b7684; }
+.ins-seg-card--red{ border-top:3px solid #e5502b; }
+.ins-seg-card--red .ins-seg-card__head .material-symbols-rounded{ color:#e5502b; }
+.ins-seg-card--amber{ border-top:3px solid #e2971e; }
+.ins-seg-card--amber .ins-seg-card__head .material-symbols-rounded{ color:#e2971e; }
+.ins-seg-card--blue{ border-top:3px solid #1d6ceb; }
+.ins-seg-card--blue .ins-seg-card__head .material-symbols-rounded{ color:#1d6ceb; }
+
+/* 제안 활용 */
+.ins-proposal{ background:linear-gradient(180deg,#f7faff 0%,#fff 60%); }
+.ins-props{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+.ins-prop{ display:flex; gap:12px; }
+.ins-prop__ico{ width:40px; height:40px; flex:none; border-radius:11px; display:flex; align-items:center; justify-content:center; background:#fff; border:1px solid #dbe6ff; color:var(--accent); }
+.ins-prop__title{ font-size:15px; font-weight:700; color:#191f28; margin-bottom:3px; }
+.ins-prop__body{ font-size:13px; color:#5c6570; line-height:1.55; }
+
+.ins-badge-dummy{ font-size:12px; font-weight:700; color:#8b6d00; background:#fff4d6; border-radius:999px; padding:3px 10px; }
+
+/* 실 화재 사례 카드 */
+.firecases{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.firecase{ border:1px solid #eaecf0; border-left:3px solid #c4c4c4; border-radius:11px; padding:12px 14px; background:#fff; }
+.firecase--red{ border-left-color:#e5502b; }
+.firecase--orange{ border-left-color:#ff761a; }
+.firecase__top{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+.firecase__type{ font-size:12px; font-weight:700; border-radius:999px; padding:3px 9px; background:#f2f4f6; color:#5c6570; }
+.firecase__type--red{ background:#ffe9e2; color:#c0341a; }
+.firecase__type--orange{ background:#fff0e2; color:#c25a12; }
+.firecase__time{ font-size:12px; color:#8b95a1; font-variant-numeric:tabular-nums; }
+.firecase__loc{ display:flex; align-items:center; gap:5px; font-size:14px; color:#191f28; word-break:keep-all; }
+.firecase__loc .material-symbols-rounded{ color:#adb5bd; flex:none; }
+
+/* 범위 스위치 (전국/서강지사) */
+.ins-scope{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.ins-scope__label{ font-size:13px; color:#6b7684; font-weight:600; }
+.ins-scope__seg{ background:#e7ebf5; border-color:#d3daea; }
+.ins-scope__seg button.on{ background:var(--accent); color:#fff; box-shadow:0 1px 3px rgba(29,108,235,.35); }
+
+/* 범위 배지 + 서강 제목 톤 */
+.scope-badge{ display:inline-flex; align-items:center; gap:5px; font-size:13px; font-weight:700; padding:4px 12px; border-radius:999px; margin-bottom:14px; }
+.scope-badge.nat{ background:#eef4ff; color:#1d55c4; }
+.scope-badge.sg{ background:#fff0ea; color:#c0451f; }
+.insight-card__title.ins-title--sg .material-symbols-rounded{ color:var(--accent); }
+
+/* 업종 칩 */
+.ins-uchips{ display:flex; flex-wrap:wrap; gap:8px; }
+.ins-uchip{ font-size:13px; background:#f2f4f6; border-radius:999px; padding:6px 13px; color:#3a4048; }
+.ins-uchip b{ color:var(--accent); margin-left:4px; }
+
+/* 가로 막대 (서강 카테고리) */
+.ins-hbar{ display:flex; flex-direction:column; gap:9px; }
+.ins-hbar__row{ display:grid; grid-template-columns:104px 1fr 48px; align-items:center; gap:10px; }
+.ins-hbar__name{ font-size:13px; color:#3a4048; text-align:right; }
+.ins-hbar__track{ background:#f1f3f5; border-radius:6px; height:20px; overflow:hidden; }
+.ins-hbar__fill{ height:100%; border-radius:6px; background:#8fb4f0; }
+.ins-hbar__fill.hot{ background:#1d6ceb; }
+.ins-hbar__val{ font-size:12px; color:#5c6570; font-variant-numeric:tabular-nums; }
+
+/* 관제 고객 리스트 */
+.ins-clist{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.ins-crow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 12px; border:1px solid #eef0f2; border-radius:10px; }
+.ins-crow__n{ font-size:14px; font-weight:600; color:#191f28; }
+.ins-crow__v{ font-size:13px; color:#6b7684; font-variant-numeric:tabular-nums; }
+
+@media (max-width:900px){
+  .ins-kpis{ grid-template-columns:repeat(2,1fr); }
+  .ins-segs{ grid-template-columns:1fr; }
+  .ins-props{ grid-template-columns:1fr; }
+  .firecases{ grid-template-columns:1fr; }
+  .ins-clist{ grid-template-columns:1fr; }
+  .ins-hbar__row{ grid-template-columns:88px 1fr 44px; }
+}
