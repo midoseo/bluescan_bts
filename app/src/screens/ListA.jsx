@@ -4,7 +4,6 @@ import { MI, Meter, Gauge, tierOf, num } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
 import { getBranchBoundary } from '../branchBoundary.js'
-import { FIRE_OVERLAY } from '../fireOverlay.js'
 const { useState, useEffect } = React
 const PER_PAGE = 5  // 한 화면에 담기도록 페이지당 표시 건수 (스크롤 대신 페이지 번호)
 
@@ -243,13 +242,12 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
               <div className="map-top">
                 <span className="eyebrow">타깃 분포</span>
                 <span className="map-top__chips">
-                  <AChip selected={showFire} onClick={() => setShowFire(s => !s)}>최근 화재 위치</AChip>
                   <AChip selected={showFlood} onClick={() => setShowFlood(s => !s)}>침수 위험 구역</AChip>
                 </span>
               </div>
               <div style={{ flex: 1, position: 'relative' }}>
                 {filtered.length > 0
-                  ? <TargetMap candidates={filtered} firePointsLive={FIRE_OVERLAY.points} showFire={showFire} showFlood={showFlood} floodLayers={floodForView} branchBoundary={branchBoundary} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={branchName || 'all'} variant="A" />
+                  ? <TargetMap candidates={filtered} showFlood={showFlood} floodLayers={floodForView} branchBoundary={branchBoundary} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={branchName || 'all'} variant="A" />
                   : <div className="map-empty"><MI n="map" s={28} /><span>표시할 후보가 없어요</span></div>}
               </div>
             </div>

@@ -177,9 +177,11 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
           map.fitBounds(L.latLngBounds(ring), { padding: [26, 26], maxZoom: 15 });
           return;
         }
-        if (pts.length === 0) { map.setView([37.49, 126.90], 11); return; }
-        if (pts.length === 1) { map.setView(pts[0], 15); return; }
-        map.fitBounds(L.latLngBounds(pts), { padding: [44, 44], maxZoom: 16 });
+        // 후보가 없으면 화재 포인트 범위로 맞춘다 (인사이트 전국 화재 지도)
+        const base = pts.length ? pts : (firePointsLive || []).filter(f => f.lat != null && f.lng != null).map(f => [f.lat, f.lng]);
+        if (base.length === 0) { map.setView([36.5, 127.8], 7); return; }
+        if (base.length === 1) { map.setView(base[0], 12); return; }
+        map.fitBounds(L.latLngBounds(base), { padding: [40, 40], maxZoom: pts.length ? 16 : 12 });
       } catch (e) { /* ignore */ }
     };
     const id = setTimeout(run, 80);
@@ -196,7 +198,12 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={elRef} style={{ position: 'absolute', inset: 0 }} />
       <div className="map-legend">
-        {variant === 'C' ? (
+        {variant === 'fire' ? (
+          <>
+            <div className="row"><span className="dot dot--flood" style={{ background: FIRE_FILL }} />최근 화재 위치</div>
+            <div className="row faint" style={{ fontSize: 12 }}>최근일수록 진하게</div>
+          </>
+        ) : variant === 'C' ? (
           <>
             <div className="row"><span className="dot" style={{ background: STATUS_HEX.reject }} />주의 필요</div>
             <div className="row"><span className="dot" style={{ background: STATUS_HEX.won }} />안정</div>
