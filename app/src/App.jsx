@@ -15,7 +15,7 @@ import { Login } from './screens/Login.jsx'
 import { scoreExisting } from './upsellScore.js'
 import { buildDemoVisits } from './demoVisits.js'
 import { currentSeasonKey } from './season.js'
-import { buildRetentionDemo } from './retention.demo.js'
+import { buildSeogangRetention } from './retentionSeogang.generated.js'
 import { computeSessionPoints, questProgress, badgeStatus } from './gamification.js'
 import { pointToast, badgeToast, questToast } from './toastMessages.js'
 import { todayCompact, businessDayOfMonth, businessDaysInMonth } from './dateUtil.js'
@@ -80,7 +80,7 @@ export default function App() {
   const floodSeasonOn = seasonPreview === 'flood';
   const [listA] = useState(() => window.APPDATA.listA);
   const [listB] = useState(() => window.APPDATA.listB);
-  const [retention] = useState(() => buildRetentionDemo());
+  const [retention] = useState(() => buildSeogangRetention());
   // 유지고객 리포트·감성터칭 발송 상태 — Retention.jsx 로컬 state였던 걸 게이미피케이션 포인트 계산을
   // 위해 App.jsx로 끌어올렸다(다른 화면(대시보드)에서도 참조해야 해서 visits와 같은 위치에 둔다)
   const [reportSentOverrides, setReportSentOverrides] = useState({});
