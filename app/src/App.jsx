@@ -326,7 +326,8 @@ export default function App() {
               {view === 'retention' && <RetentionScreen data={retention} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)}
                 reportSentOverrides={reportSentOverrides} onMarkReportSent={markReportSent}
                 touchOverrides={touchOverrides} onMarkTouched={markTouched} />}
-              {view === 'confirmed' && <ConfirmedScreen confirmed={visRecorded} visits={visits} onVisit={saveVisit} onRemove={removeVisit} onDownload={download} onResult={openResult} />}
+              {view === 'confirmed' && <ConfirmedScreen confirmed={visRecorded} visits={visits} onVisit={saveVisit} onRemove={removeVisit} onDownload={download} onResult={openResult}
+                retention={retention} reportSentOverrides={reportSentOverrides} touchOverrides={touchOverrides} />}
               {view === 'activity' && <ActivityScreen gamify={gamify} visits={visits} listA={visibleA} listB={visibleB} retention={retention} reportSentOverrides={reportSentOverrides} touchOverrides={touchOverrides} myEmpno={user.empno} myBranch={user.branch} />}
               {view === 'insight' && <InsightScreen />}
             </>

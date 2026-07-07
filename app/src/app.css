@@ -1516,3 +1516,35 @@ body{ background: var(--surface-home); }
 .bnews--win{ color:#ffe08a; } .bnews--big{ color:#ffd84d; } .bnews--badge{ color:#c7b3ff; } .bnews--rank{ color:#ffd0a3; } .bnews--mission{ color:#a7e8c4; }
 @media (prefers-reduced-motion: reduce){ .bcast__track{ animation:none; } .bcast__view{ overflow-x:auto; } }
 @media (max-width:560px){ .bcast__gm{ font-size:13px; padding:0 10px; } }
+
+/* ===== 영업활동관리 — 통합 활동 로그 ===== */
+.alog-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+.alog-kpi{ background:#fff; border:1px solid var(--border-default); border-radius:12px; padding:13px 15px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
+.alog-kpi:hover{ border-color:#b9cdf3; }
+.alog-kpi.on{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(29,108,235,.15); }
+.alog-kpi__n{ display:block; font-size:22px; font-weight:800; line-height:1; }
+.alog-kpi__n i{ font-size:13px; color:var(--text-tertiary); font-weight:700; font-style:normal; margin-left:2px; }
+.alog-kpi__lab{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text-body); margin-top:4px; }
+.alog-dot{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; }
+.alog-dot--all{ background:#98a2b3; } .alog-dot--visit{ background:#1d6ceb; } .alog-dot--report{ background:#0f9d63; } .alog-dot--msg{ background:#8b5cf6; }
+.alog-bar{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.alog-feed{ display:flex; flex-direction:column; }
+.alog-day{ font-size:13px; font-weight:700; color:var(--text-tertiary); margin:12px 2px 8px; }
+.alog-item{ display:flex; gap:13px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:9px; }
+.alog-ico{ width:40px; height:40px; border-radius:11px; flex:none; display:grid; place-items:center; color:#fff; }
+.alog-item--visit .alog-ico{ background:#1d6ceb; } .alog-item--report .alog-ico{ background:#0f9d63; } .alog-item--msg .alog-ico{ background:#8b5cf6; }
+.alog-body{ flex:1; min-width:0; }
+.alog-top{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:3px; }
+.alog-type{ font-size:12px; font-weight:800; padding:2px 9px; border-radius:999px; }
+.alog-item--visit .alog-type{ background:#eaf2ff; color:#1d55c4; }
+.alog-item--report .alog-type{ background:#e6f6ee; color:#0b7a4b; }
+.alog-item--msg .alog-type{ background:#f1eaff; color:#6b3fd4; }
+.alog-name{ font-size:16px; font-weight:700; color:#191f28; }
+.alog-track{ font-size:12px; font-weight:700; color:#8b95a1; background:#f2f4f6; border-radius:6px; padding:2px 7px; }
+.alog-desc{ font-size:14px; color:#4b5563; line-height:1.5; word-break:break-word; }
+.alog-actions{ flex:none; display:flex; gap:6px; align-items:flex-start; }
+@media (max-width:720px){
+  .alog-kpis{ grid-template-columns:1fr 1fr; }
+  .alog-item{ flex-wrap:wrap; }
+  .alog-actions{ width:100%; justify-content:flex-end; }
+}
