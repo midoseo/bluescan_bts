@@ -1575,3 +1575,6 @@ body{ background: var(--surface-home); }
   cursor:pointer; display:grid; place-items:center; color:#4e5968; }
 .dmodal__pos:hover, .dmodal__x:hover{ background:#e6e9ee; color:#191f28; }
 .dmodal__body{ padding:18px 20px 22px; overflow-y:auto; }
+
+/* 영업활동관리 — 활동 시각 (우측) */
+.alog-time{ margin-left:auto; font-size:13px; color:#9aa4b0; white-space:nowrap; flex:none; }

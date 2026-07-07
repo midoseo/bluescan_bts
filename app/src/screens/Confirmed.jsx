@@ -7,6 +7,7 @@ import React from 'react'
 import { MI, VISIT } from '../components.jsx'
 import { VisitDialog } from './Visit.jsx'
 import { todayYMD } from '../dateUtil.js'
+import { SAMPLE_ACTIVITY } from '../sampleActivity.js'
 const { useState } = React
 
 const { Badge: CBadge, Button: CButton, Textarea: CTextarea } = window.UXDesignSystem_59a60b;
@@ -37,15 +38,17 @@ export function ConfirmedScreen({ confirmed, visits, onVisit, onRemove, onDownlo
   const entries = [];
   confirmed.forEach(c => {
     const v = visits[c.id];
-    if (v) entries.push({ key: 'v-' + c.id, kind: 'visit', c, v, date: v.date || todayYMD(), status: v.status, desc: v.memo || `방문 상태 · ${VISIT[v.status]?.label || v.status}` });
+    if (v) entries.push({ key: 'v-' + c.id, kind: 'visit', c, trackText: trackLabel(c), v, date: v.date || todayYMD(), time: v.time, status: v.status, desc: v.memo || `방문 상태 · ${VISIT[v.status]?.label || v.status}` });
   });
   retention.forEach(c => {
-    const rd = reportSentOverrides[c.id] ?? c.monthlyReportSent;
-    if (rd) entries.push({ key: 'r-' + c.id, kind: 'report', c: { ...c, track: '유지' }, date: rd, desc: `${c.name} 월간 유지관리 리포트 발송` });
-    const td = touchOverrides[c.id] ?? c.lastTouchDate;
-    if (td) entries.push({ key: 'm-' + c.id, kind: 'msg', c: { ...c, track: '유지' }, date: td, desc: `${c.name} 감성터칭 문자 발송` });
+    const rd = reportSentOverrides[c.id];   // 세션 중 실제 발송분만 (시드 리포트는 샘플 로그로 대체)
+    if (rd) entries.push({ key: 'r-' + c.id, kind: 'report', c: { ...c }, trackText: '유지', date: rd, desc: `${c.name} 월간 유지관리 리포트 발송` });
+    const td = touchOverrides[c.id];
+    if (td) entries.push({ key: 'm-' + c.id, kind: 'msg', c: { ...c }, trackText: '유지', date: td, desc: `${c.name} 감성터칭 문자 발송` });
   });
-  entries.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  // 시연용 샘플 활동 로그 (previews/activity_log_preview.html 기준) — 읽기 전용
+  SAMPLE_ACTIVITY.forEach((sa, i) => entries.push({ key: 'sa-' + i, kind: sa.kind, c: { id: 'sample-' + i, name: sa.name }, trackText: sa.track, date: sa.date, time: sa.time, status: sa.status, desc: sa.desc, readOnly: true }));
+  entries.sort((a, b) => { const d = String(b.date).localeCompare(String(a.date)); return d !== 0 ? d : String(b.time || '').localeCompare(String(a.time || '')); });
 
   const cnt = { all: entries.length, visit: 0, report: 0, msg: 0 };
   entries.forEach(e => { cnt[e.kind]++; });
@@ -113,8 +116,9 @@ export function ConfirmedScreen({ confirmed, visits, onVisit, onRemove, onDownlo
                   <div className="alog-top">
                     <span className="alog-type">{meta.label}</span>
                     <span className="alog-name">{e.c.name}</span>
-                    <span className="alog-track">{trackLabel(e.c)}</span>
+                    <span className="alog-track">{e.trackText || trackLabel(e.c)}</span>
                     {vm && <CBadge tone={vm.tone} dot>{vm.label}</CBadge>}
+                    {e.time && <span className="alog-time">{e.time}</span>}
                   </div>
                   <div className="alog-desc">{e.desc}</div>
                   {editing && (
@@ -139,7 +143,7 @@ export function ConfirmedScreen({ confirmed, visits, onVisit, onRemove, onDownlo
                     </div>
                   )}
                 </div>
-                {e.kind === 'visit' && (
+                {e.kind === 'visit' && !e.readOnly && (
                   <div className="alog-actions">
                     <CButton size="sm" variant={editing ? 'primary' : 'line'} onClick={() => editing ? cancelEdit() : startEdit(e.c)} iconLeft={<MI n={editing ? 'close' : 'edit'} s={16} />}>{editing ? '닫기' : '수정'}</CButton>
                     <CButton size="sm" variant="line" onClick={() => setModal(e.c)} iconLeft={<MI n="mic" s={16} />}>상세</CButton>
