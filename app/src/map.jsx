@@ -17,24 +17,6 @@ const STATUS_LABEL = { done: '방문완료', revisit: '재방문필요', reject:
 const FLOOD_FILL = '#7dd3fc';
 const floodCache = new Map();
 
-// SDK 준비 대기 — index.html에서 autoload=false로 실었으므로 kakao.maps.load 호출 필요
-function whenKakaoReady(cb) {
-  let done = false;
-  const attempt = () => {
-    if (done) return true;
-    const k = window.kakao;
-    if (k && k.maps && typeof k.maps.load === 'function') {
-      k.maps.load(() => { if (!done) cb(); });
-      done = true;
-      return true;
-    }
-    return false;
-  };
-  if (attempt()) return () => { done = true; };
-  const t = setInterval(() => { if (attempt()) clearInterval(t); }, 60);
-  return () => { done = true; clearInterval(t); };
-}
-
 // GeoJSON(Feature/FeatureCollection/Polygon/MultiPolygon) → 카카오 LatLng 경로 배열(외곽 링만)
 function geoToKakaoPaths(geo) {
   const kakao = window.kakao;
@@ -71,21 +53,35 @@ export function TargetMap({ candidates, fireRegions, showFire, showFlood = true,
   const markerMap = useRef({});
   const [ready, setReady] = useState(false);
 
-  // 초기화 (SDK 로드 후)
+  // 초기화 — SDK/컨테이너가 준비될 때까지 재시도(탭을 먼저 열든 나중에 열든 확실히 렌더).
+  // autoload=false 이므로 kakao.maps.load 로 로딩을 시작하고, kakao.maps.Map(생성자)과 elRef가
+  // 모두 준비된 순간 지도를 만든다. (한 번만 시도하면 첫 로드 타이밍에 빈 지도가 되는 문제를 방지)
   useEffect(() => {
-    let cancelled = false;
-    const cleanup = whenKakaoReady(() => {
-      if (cancelled || mapRef.current || !elRef.current) return;
-      try {
-        const kakao = window.kakao;
-        const map = new kakao.maps.Map(elRef.current, { center: new kakao.maps.LatLng(37.49, 126.90), level: 6 });
-        mapRef.current = map;
-        infoRef.current = new kakao.maps.InfoWindow({ removable: true, zIndex: 5 });
-        setReady(true);
-        setTimeout(() => { try { map.relayout(); } catch (e) { /* ignore */ } }, 200);
-      } catch (e) { /* SDK 인증 실패(미등록 도메인 등) — 화면 나머지는 유지 */ }
-    });
-    return () => { cancelled = true; cleanup && cleanup(); mapRef.current = null; };
+    let cancelled = false, ro = null, t = null, loadAsked = false;
+    const finish = (map) => {
+      mapRef.current = map;
+      infoRef.current = new window.kakao.maps.InfoWindow({ removable: true, zIndex: 5 });
+      setReady(true);
+      [60, 200, 500, 1000].forEach(ms => setTimeout(() => { try { map.relayout(); } catch (e) { /* ignore */ } }, ms));
+      if (typeof ResizeObserver !== 'undefined' && elRef.current) {
+        ro = new ResizeObserver(() => { try { map.relayout(); } catch (e) { /* ignore */ } });
+        ro.observe(elRef.current);
+      }
+    };
+    const tryCreate = () => {
+      if (cancelled || mapRef.current) return true;
+      const k = window.kakao;
+      if (!k || !k.maps) return false;
+      if (typeof k.maps.Map !== 'function') {          // 아직 maps 라이브러리 로딩 전 → 로딩 시작
+        if (!loadAsked && typeof k.maps.load === 'function') { loadAsked = true; k.maps.load(() => { }); }
+        return false;
+      }
+      if (!elRef.current) return false;
+      try { finish(new k.maps.Map(elRef.current, { center: new k.maps.LatLng(37.49, 126.90), level: 6 })); return true; }
+      catch (e) { return false; }                       // 인증 실패 등 — 계속 재시도(무해)
+    };
+    if (!tryCreate()) t = setInterval(() => { if (tryCreate()) { clearInterval(t); t = null; } }, 100);
+    return () => { cancelled = true; if (t) clearInterval(t); if (ro) { try { ro.disconnect(); } catch (e) { /* ignore */ } } mapRef.current = null; };
   }, []);
 
   const openInfo = (html, pos) => {
