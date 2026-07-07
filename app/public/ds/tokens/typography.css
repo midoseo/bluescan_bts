@@ -30,7 +30,7 @@
   --fs-18: 18px;   /* component title */
   --fs-16: 16px;   /* main body / component title */
   --fs-14: 14px;   /* sub body */
-  --fs-12: 12px;   /* caption */
+  --fs-12: 13px;   /* 시니어: 본문 최소 13px */   /* caption */
   --fs-10: 10px;   /* micro (PC) */
 
   /* ---- Line heights ------------------------------------------------------ */

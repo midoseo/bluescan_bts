@@ -147,7 +147,7 @@ function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount
             {logCount > 0 && <span className="btnbadge">{logCount}</span>}
           </span>
         </div>
-        <span className="lrow-chev" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}><MI n="expand_more" /></span>
+        <span className="lrow-more" aria-hidden="true">{expanded ? '닫기' : '자세히'}<MI n="expand_more" s={18} style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} /></span>
       </div>
       {expanded && (
         <div className="lrow-detail fadein">

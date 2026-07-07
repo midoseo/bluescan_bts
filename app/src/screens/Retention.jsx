@@ -216,7 +216,7 @@ function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate
             </div>
           </div>
         </div>
-        <span className="lrow-chev" style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}><MI n="expand_more" /></span>
+        <span className="lrow-more" aria-hidden="true">{expanded ? '닫기' : '자세히'}<MI n="expand_more" s={18} style={{ transform: expanded ? 'rotate(180deg)' : 'none' }} /></span>
       </div>
       {expanded && (
         <div className="lrow-detail fadein">
@@ -443,7 +443,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
           <div className="split-map">
             <div className="map-top">
               <span className="eyebrow">유지현황 지도</span>
-              <span className="map-top__chips faint" style={{ font: 'var(--type-12r)' }}>🔴 주의 필요 · 🔵 안정</span>
+              <span className="map-top__chips faint" style={{ font: 'var(--type-12r)' }}>🔺 주의 필요 · 🔵 안정</span>
             </div>
             <div style={{ flex: 1, position: 'relative' }}>
               {mapCands.length > 0

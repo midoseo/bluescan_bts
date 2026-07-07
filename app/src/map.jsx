@@ -14,9 +14,9 @@ const TIER_HEX = { S: '#0f8f63', A: '#1fb279', B: '#1d6ceb', C: '#e2971e', D: '#
 // 방문 결과 상태별 핀 색
 const STATUS_HEX = { done: '#1fb279', revisit: '#e2971e', reject: '#e5484d', won: '#1d6ceb' };
 const STATUS_LABEL = { done: '방문완료', revisit: '재방문필요', reject: '거절', won: '수주완료' };
-// 도시침수 예상구역 — 강수량(레이더) 지도 느낌의 진한 색으로, 카카오 강 색과 확실히 구분되게
-const FLOOD_FILL = '#4f46e5';    // 진한 인디고(채움)
-const FLOOD_STROKE = '#312e81';  // 더 진한 남보라(테두리) — 구역 경계를 또렷하게
+// 도시침수 예상구역 — 시니어 식별력이 높은 장파장(경고 주황) 계열로. 강 색과도, 단파장 대비 시인성도↑
+const FLOOD_FILL = '#f97316';    // 경고 주황(채움) — 장파장, 위험 강조
+const FLOOD_STROKE = '#c2410c';  // 진한 주황(테두리) — 구역 경계를 또렷하게
 const floodCache = new Map();
 
 // GeoJSON(Feature/FeatureCollection/Polygon/MultiPolygon) → 카카오 LatLng 경로 배열(외곽 링만)
@@ -215,7 +215,7 @@ export function TargetMap({ candidates, fireRegions, showFire, showFlood = true,
           </>
         ) : variant === 'C' ? (
           <>
-            <div className="row"><span className="dot" style={{ background: '#e5484d' }} />주의 필요</div>
+            <div className="row"><span className="dot dot--tri" />주의 필요</div>
             <div className="row"><span className="dot" style={{ background: '#1d6ceb' }} />안정</div>
           </>
         ) : (

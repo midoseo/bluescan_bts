@@ -229,6 +229,12 @@ body{background:var(--s1-gray-50);color:var(--text-body);font:var(--type-14r);le
 .lrow-tags{flex:none;}
 .lrow-score{display:flex;align-items:center;gap:10px;flex:none;}
 .lrow-chev{color:var(--text-placeholder);display:flex;flex:none;transition:transform var(--dur-normal) var(--ease-standard);}
+/* 시니어: 클릭 진입점을 '자세히/닫기' 외곽선 버튼으로 명시 (꺾쇠 단독 인지 오류 방지) */
+.lrow-more{flex:none;display:inline-flex;align-items:center;gap:3px;padding:6px 11px;border:1px solid var(--border-default);
+  border-radius:var(--radius-full);font:var(--type-13m);letter-spacing:-.02em;color:var(--text-secondary);background:var(--surface-raised);white-space:nowrap;}
+.lrow-more .material-symbols-rounded{transition:transform var(--dur-normal) var(--ease-standard);}
+.lrow.open .lrow-more{border-color:var(--accent);color:var(--accent);}
+.lrow-main:hover .lrow-more{border-color:var(--s1-blue-200);}
 /* 업셀링(B) 행 — 배지는 이름 아래 한 줄(들), 방문 결과 버튼·화살표는 우측 상단 그룹 */
 .lrow--b .lrow-main{align-items:flex-start;}
 .lrow--b .brow-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
@@ -486,7 +492,10 @@ body{background:var(--s1-gray-50);color:var(--text-body);font:var(--type-14r);le
   border:1px solid var(--border-default);border-radius:var(--radius-m);box-shadow:var(--shadow-raised);padding:9px 12px;}
 .map-legend .row{display:flex;align-items:center;gap:8px;margin:3px 0;font:var(--type-12r);color:var(--text-secondary);}
 .map-legend .dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 2px #fff;}
-.map-legend .dot--flood{border-radius:3px;opacity:.65;box-shadow:none;}
+.map-legend .dot--flood{border-radius:3px;opacity:.65;box-shadow:none;background:#f97316;}
+/* 색상만으로 구분하지 않도록 '주의'는 삼각형 형태로 (그레이스케일에서도 식별) */
+.map-legend .dot--tri{width:0;height:0;border-radius:0;background:transparent!important;box-shadow:none;
+  border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #e5484d;}
 /* 지도 마커 클릭 시 브라우저 포커스 외곽선(고리처럼 보임) 제거 */
 .leaflet-interactive:focus{outline:none;}
 
@@ -545,7 +554,7 @@ body{background:var(--s1-gray-50);color:var(--text-body);font:var(--type-14r);le
 .mapnotice__in .material-symbols-rounded{color:var(--accent);}
 .mapnotice__in b{font:var(--type-16m);font-weight:var(--weight-bold);color:var(--text-body);}
 .mapnotice__in span{font:var(--type-14r);letter-spacing:-.02em;color:var(--text-secondary);line-height:1.6;}
-.leaflet-container .leaflet-control-attribution,.ol-attribution{font-size:10px!important;}
+.leaflet-container .leaflet-control-attribution,.ol-attribution{font-size:13px!important;}
 
 /* heatmap grid */
 .heat-card{background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--radius-m);padding:16px;}
@@ -659,7 +668,7 @@ body{background:var(--s1-gray-50);color:var(--text-body);font:var(--type-14r);le
 .btype-tab{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:0;border-radius:8px;
   background:transparent;cursor:pointer;font:var(--type-14m,600 14px/1 sans-serif);color:var(--text-tertiary);transition:all .14s;}
 .btype-tab.on{background:#fff;color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12);}
-.btype-tab__n{font:var(--type-12m,600 12px/1 sans-serif);background:var(--s1-gray-100);color:var(--text-secondary);
+.btype-tab__n{font:var(--type-12m,600 13px/1 sans-serif);background:var(--s1-gray-100);color:var(--text-secondary);
   padding:1px 7px;border-radius:999px;min-width:20px;text-align:center;}
 .btype-tab.on .btype-tab__n{background:var(--accent-subtle,#e8f0fe);color:var(--accent);}
 .lrow-priority{box-shadow:inset 3px 0 0 var(--s1-red-500);}
@@ -667,14 +676,14 @@ body{background:var(--s1-gray-50);color:var(--text-body);font:var(--type-14r);le
 
 /* ===== 방문결과 입력 폼 (정형 필드 + AI 초안 + 히스토리) ===== */
 .vf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;}
-.field-label.sm{font:var(--type-12m,600 12px/1.4 sans-serif);margin-bottom:5px;}
+.field-label.sm{font:var(--type-12m,600 13px/1.4 sans-serif);margin-bottom:5px;}
 .vf-input{box-sizing:border-box;width:100%;height:38px;padding:0 12px;border:1px solid var(--border-default);
   border-radius:var(--radius-m);font:var(--type-14r);color:var(--text-body);background:#fff;outline:none;}
 .vf-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-subtle,#e8f0fe);}
 .vhist{border-top:1px dashed var(--border-default);margin-top:16px;}
 .vhist-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
 .vhist-item{display:flex;gap:12px;padding:10px 12px;background:var(--s1-gray-50,#f6f7f9);border-radius:var(--radius-m);}
-.vhist-date{flex:none;font:var(--type-12m,600 12px/1.5 sans-serif);color:var(--text-tertiary);width:78px;}
+.vhist-date{flex:none;font:var(--type-12m,600 13px/1.5 sans-serif);color:var(--text-tertiary);width:78px;}
 .vhist-stage{font:var(--type-13m,600 13px/1.4 sans-serif);color:var(--text-body);}
 .vhist-memo{font:var(--type-13r);color:var(--text-tertiary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 @media (max-width:640px){ .vf-grid{grid-template-columns:1fr;} }
@@ -731,11 +740,11 @@ body.dash-dragging{user-select:none;cursor:grabbing;}
 
 /* ===== 방문 결과 AI 분석 — 추천 상품/장비 ===== */
 .ai-rec{display:flex;align-items:center;gap:10px;margin-top:12px;}
-.ai-rec__label{font:var(--type-12m,600 12px/1 sans-serif);color:var(--text-tertiary);}
+.ai-rec__label{font:var(--type-12m,600 13px/1 sans-serif);color:var(--text-tertiary);}
 .ai-rec__product{display:inline-flex;align-items:center;gap:5px;font:var(--type-15m,600 15px/1 sans-serif);
   color:#fff;background:var(--accent);border-radius:999px;padding:5px 12px;}
 .ai-eq{display:flex;align-items:flex-start;gap:10px;margin-top:10px;}
-.ai-eq__label{flex:none;font:var(--type-12m,600 12px/1 sans-serif);color:var(--text-tertiary);padding-top:5px;}
+.ai-eq__label{flex:none;font:var(--type-12m,600 13px/1 sans-serif);color:var(--text-tertiary);padding-top:5px;}
 
 /* ===== 방문 결과 입력 버튼 — 우상단 로그 건수 배지 ===== */
 .btnbadge-wrap{position:relative;display:inline-flex;}
@@ -864,7 +873,7 @@ body{ background: var(--surface-home); }
 .side__item[aria-current="true"]{ background:var(--accent-subtle,#ecefff); color:var(--accent); font-weight:700; }
 .side__item .material-symbols-rounded{ font-size:20px; flex:none; }
 .side__label{ flex:1; min-width:0; word-break:keep-all; line-height:1.25; }
-.side__count{ flex:none; font:var(--weight-bold) 12px var(--font-base); background:var(--s1-gray-100);
+.side__count{ flex:none; font:var(--weight-bold) 13px var(--font-base); background:var(--s1-gray-100);
   color:var(--text-secondary); border-radius:999px; padding:1px 8px; min-width:22px; text-align:center; }
 .side__item[aria-current="true"] .side__count{ background:var(--accent); color:#fff; }
 .side__foot{ margin-top:auto; padding:12px; border-top:1px solid var(--divider); display:flex; flex-direction:column; gap:10px; position:relative; }
@@ -969,7 +978,7 @@ body{ background: var(--surface-home); }
 @media (max-width:640px){
   .topbar__date{ display:none; }
   .topbar__points{ padding:0 9px; gap:3px; }
-  .topbar__points .tnum{ font-size:12px; }
+  .topbar__points .tnum{ font-size:13px; }
   .topbar__icon{ width:32px; height:32px; }
   .bkpis{ grid-template-columns:1fr 1fr; }
   .mreport__hero{ grid-template-columns:1fr 1fr; }
@@ -997,15 +1006,15 @@ body{ background: var(--surface-home); }
 .goalbar__pct{ font-weight:800; font-size:20px; line-height:1; }
 .goalbar__track{ height:10px; border-radius:999px; background:#eceef1; overflow:hidden; }
 .goalbar__fill{ height:100%; border-radius:999px; transition:width .4s ease; }
-.goalbar__sub{ margin-top:6px; font-size:12px; color:var(--text-tertiary,#888); }
+.goalbar__sub{ margin-top:6px; font-size:13px; color:var(--text-tertiary,#888); }
 
 /* ── 소속 컨설턴트 실적 — 순위·비교막대 ── */
-.perf-rank{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:7px; font-size:12px; font-weight:800; background:#eceef1; color:var(--text-tertiary,#888); }
+.perf-rank{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:7px; font-size:13px; font-weight:800; background:#eceef1; color:var(--text-tertiary,#888); }
 .perf-rank--top{ background:#1d6ceb; color:#fff; }
 .perf-num{ font-weight:700; color:#1d6ceb; }
 .perf-bar{ display:inline-block; width:100%; min-width:90px; height:8px; border-radius:999px; background:#eceef1; vertical-align:middle; overflow:hidden; }
 .perf-bar__fill{ height:100%; border-radius:999px; background:#1d6ceb; transition:width .4s ease; }
-.perf-hint{ margin-top:12px; font-size:12px; color:var(--text-tertiary,#999); }
+.perf-hint{ margin-top:12px; font-size:13px; color:var(--text-tertiary,#999); }
 
 /* ── 월간 리포트 팝업 — 통신사·카드사 청구서 느낌의 분석 리포트 레이아웃 ── */
 .mreport{ background:#fff; }
@@ -1013,7 +1022,7 @@ body{ background: var(--surface-home); }
 .mreport__topband-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 .mreport__customer{ font:var(--type-18b,700 18px/1.3 sans-serif); }
 .mreport__period{ opacity:.85; font:var(--type-13r); margin-top:2px; }
-.mreport__badge{ background:rgba(255,255,255,.18); border-radius:999px; padding:4px 12px; font:var(--type-12m,600 12px/1 sans-serif); }
+.mreport__badge{ background:rgba(255,255,255,.18); border-radius:999px; padding:4px 12px; font:var(--type-12m,600 13px/1 sans-serif); }
 .mreport__hero{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px; }
 .mreport__herocard{ background:rgba(255,255,255,.14); border-radius:var(--radius-m); padding:10px 12px; }
 .mreport__herocard .n{ font:var(--type-20b,800 22px/1.2 sans-serif); }
@@ -1138,7 +1147,7 @@ body{ background: var(--surface-home); }
 .hdr__icon[aria-expanded="true"]{ background:#e8f0fe; color:#1d6ceb; }
 .hdr__iconlab{ line-height:1; }
 .hdr__badge{ position:absolute; top:-4px; right:-4px; min-width:20px; height:20px; padding:0 5px;
-  border-radius:999px; background:#e5484d; color:#fff; font-size:12px; font-weight:700;
+  border-radius:999px; background:#e5484d; color:#fff; font-size:13px; font-weight:700;
   display:grid; place-items:center; border:2px solid #fff; }
 .hdr__user{ display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 14px;
   border-radius:11px; background:#f2f4f6; color:#191f28; font-size:15px; font-weight:600; white-space:nowrap; }
@@ -1192,7 +1201,7 @@ body{ background: var(--surface-home); }
 .insight-card__head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
 .insight-card__title{ display:inline-flex; align-items:center; gap:8px; font-size:19px; font-weight:700; color:#191f28; }
 .insight-card__title .material-symbols-rounded{ color:#ff6b1a; }
-.insight-live{ font-size:12px; font-weight:700; color:#0f8f63; background:#e1f5ee; border-radius:999px; padding:3px 10px; }
+.insight-live{ font-size:13px; font-weight:700; color:#0f8f63; background:#e1f5ee; border-radius:999px; padding:3px 10px; }
 .insight-open{ display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 15px; border:1px solid #1d6ceb;
   border-radius:11px; color:#1d6ceb; font-size:15px; font-weight:600; }
 .insight-open:hover{ background:#eef4ff; }
@@ -1312,6 +1321,14 @@ body{ background: var(--surface-home); }
 }
 @media (prefers-reduced-motion: reduce){ .tap-ripple{ animation-duration:1ms; } }
 
+/* ===== 시니어 스크롤 어포던스 힌트 ===== */
+.scroll-hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1200;
+  display:inline-flex;align-items:center;gap:5px;padding:10px 18px;border:none;cursor:pointer;
+  border-radius:var(--radius-full);background:var(--accent);color:#fff;font:var(--type-14m);letter-spacing:-.02em;
+  box-shadow:0 4px 14px rgba(29,108,235,.4);animation:scrollHintBob 1.6s var(--ease-standard) infinite;}
+@keyframes scrollHintBob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
+@media (prefers-reduced-motion: reduce){ .scroll-hint{ animation:none; } }
+
 /* ===== 인사이트 탭 — 신호 리포트 / 화재 사례 ===== */
 .ins-seg{ flex-wrap:wrap; }
 .ins-src{ display:flex; align-items:center; gap:7px; font-size:13px; color:#8b95a1; margin-bottom:12px; }
@@ -1324,7 +1341,7 @@ body{ background: var(--surface-home); }
 .ins-kpi__val{ font-size:26px; font-weight:800; color:#191f28; line-height:1.1; letter-spacing:-.02em; }
 .ins-kpi__val span{ font-size:14px; font-weight:700; color:#6b7684; margin-left:2px; }
 .ins-kpi__label{ font-size:14px; font-weight:600; color:#191f28; margin-top:4px; }
-.ins-kpi__note{ font-size:12px; color:#8b95a1; margin-top:2px; }
+.ins-kpi__note{ font-size:13px; color:#8b95a1; margin-top:2px; }
 
 /* 계절 증감 칩 */
 .ins-growth{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
@@ -1341,7 +1358,7 @@ body{ background: var(--surface-home); }
 .ins-seg-card__list{ display:flex; flex-direction:column; gap:7px; }
 .ins-cust{ display:flex; flex-direction:column; gap:1px; padding:8px 10px; border-radius:9px; background:#f8f9fa; }
 .ins-cust__name{ font-size:14px; font-weight:600; color:#191f28; }
-.ins-cust__trend{ font-size:12px; color:#6b7684; }
+.ins-cust__trend{ font-size:13px; color:#6b7684; }
 .ins-seg-card--red{ border-top:3px solid #e5502b; }
 .ins-seg-card--red .ins-seg-card__head .material-symbols-rounded{ color:#e5502b; }
 .ins-seg-card--amber{ border-top:3px solid #e2971e; }
@@ -1357,7 +1374,7 @@ body{ background: var(--surface-home); }
 .ins-prop__title{ font-size:15px; font-weight:700; color:#191f28; margin-bottom:3px; }
 .ins-prop__body{ font-size:13px; color:#5c6570; line-height:1.55; }
 
-.ins-badge-dummy{ font-size:12px; font-weight:700; color:#8b6d00; background:#fff4d6; border-radius:999px; padding:3px 10px; }
+.ins-badge-dummy{ font-size:13px; font-weight:700; color:#8b6d00; background:#fff4d6; border-radius:999px; padding:3px 10px; }
 
 /* 실 화재 사례 카드 */
 .firecases{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
@@ -1365,10 +1382,10 @@ body{ background: var(--surface-home); }
 .firecase--red{ border-left-color:#e5502b; }
 .firecase--orange{ border-left-color:#ff761a; }
 .firecase__top{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
-.firecase__type{ font-size:12px; font-weight:700; border-radius:999px; padding:3px 9px; background:#f2f4f6; color:#5c6570; }
+.firecase__type{ font-size:13px; font-weight:700; border-radius:999px; padding:3px 9px; background:#f2f4f6; color:#5c6570; }
 .firecase__type--red{ background:#ffe9e2; color:#c0341a; }
 .firecase__type--orange{ background:#fff0e2; color:#c25a12; }
-.firecase__time{ font-size:12px; color:#8b95a1; font-variant-numeric:tabular-nums; }
+.firecase__time{ font-size:13px; color:#8b95a1; font-variant-numeric:tabular-nums; }
 .firecase__loc{ display:flex; align-items:center; gap:5px; font-size:14px; color:#191f28; word-break:keep-all; }
 .firecase__loc .material-symbols-rounded{ color:#adb5bd; flex:none; }
 
@@ -1396,7 +1413,7 @@ body{ background: var(--surface-home); }
 .ins-hbar__track{ background:#f1f3f5; border-radius:6px; height:20px; overflow:hidden; }
 .ins-hbar__fill{ height:100%; border-radius:6px; background:#8fb4f0; }
 .ins-hbar__fill.hot{ background:#1d6ceb; }
-.ins-hbar__val{ font-size:12px; color:#5c6570; font-variant-numeric:tabular-nums; }
+.ins-hbar__val{ font-size:13px; color:#5c6570; font-variant-numeric:tabular-nums; }
 
 /* 관제 고객 리스트 */
 .ins-clist{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
