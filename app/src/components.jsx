@@ -8,6 +8,34 @@ export function MI({ n, s, fill, style, cls }) {
     style={{ fontSize: s ? s + 'px' : undefined, ...style }}>{n}</span>;
 }
 
+/* 상세 모달 — 화면 고정(스크롤 무관) · 기본 상단 정렬 · 위/아래 토글 · 본문 내부 스크롤(노트북에서 안 잘림) */
+export function DetailModal({ title, subtitle, badge, onClose, children }) {
+  const [pos, setPos] = useState('top'); // top | bottom
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose && onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div className="dmodal__scrim" onClick={onClose}>
+      <div className={'dmodal dmodal--' + pos} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="dmodal__head">
+          <div className="dmodal__titles">
+            <div className="dmodal__title">{title}{badge}</div>
+            {subtitle && <div className="dmodal__sub">{subtitle}</div>}
+          </div>
+          <button className="dmodal__pos" title={pos === 'top' ? '아래로 이동' : '위로 이동'} aria-label="모달 위치 이동"
+            onClick={() => setPos(p => (p === 'top' ? 'bottom' : 'top'))}>
+            <MI n={pos === 'top' ? 'keyboard_double_arrow_down' : 'keyboard_double_arrow_up'} s={22} />
+          </button>
+          <button className="dmodal__x" title="닫기" aria-label="닫기" onClick={onClose}><MI n="close" s={24} /></button>
+        </div>
+        <div className="dmodal__body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 /* 에스원 CI — 공식 시그니처 마크 이미지(빨간 정사각형 + 흰색 '에스원') */
 import s1ci from './assets/s1-ci.png'
 export function BrandMark({ height = 28 }) {

@@ -1554,3 +1554,24 @@ body{ background: var(--surface-home); }
   .alog-item{ flex-wrap:wrap; }
   .alog-actions{ width:100%; justify-content:flex-end; }
 }
+
+/* ===========================================================================
+   상세 모달(DetailModal) — 고정 오버레이 · 상단 정렬 · 위/아래 토글 · 내부 스크롤
+   =========================================================================== */
+.dmodal__scrim{ position:fixed; inset:0; z-index:1200; background:rgba(20,24,33,.45);
+  display:flex; flex-direction:column; align-items:center; padding:16px; overflow:auto; }
+.dmodal{ background:#fff; border-radius:16px; width:100%; max-width:900px; flex:none;
+  display:flex; flex-direction:column; max-height:calc(100vh - 32px);
+  box-shadow:0 20px 60px rgba(0,0,0,.32); animation:dmodalpop .18s ease-out; }
+.dmodal--top{ margin-top:8px; }
+.dmodal--bottom{ margin-top:auto; }
+@keyframes dmodalpop{ from{ opacity:0; transform:translateY(10px) scale(.99); } to{ opacity:1; transform:none; } }
+.dmodal__head{ display:flex; align-items:flex-start; gap:8px; padding:16px 18px; border-bottom:1px solid #eaecf0;
+  position:sticky; top:0; background:#fff; border-radius:16px 16px 0 0; z-index:1; }
+.dmodal__titles{ flex:1; min-width:0; }
+.dmodal__title{ font-size:20px; font-weight:700; color:#191f28; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.dmodal__sub{ font-size:14px; color:#6b7684; margin-top:4px; }
+.dmodal__pos, .dmodal__x{ flex:none; width:40px; height:40px; border:0; background:#f2f4f6; border-radius:10px;
+  cursor:pointer; display:grid; place-items:center; color:#4e5968; }
+.dmodal__pos:hover, .dmodal__x:hover{ background:#e6e9ee; color:#191f28; }
+.dmodal__body{ padding:18px 20px 22px; overflow-y:auto; }

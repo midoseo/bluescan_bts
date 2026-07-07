@@ -5,7 +5,7 @@
  *  - 기존 고객은 펼치면 계약정보(계약번호·경비형태·계약유지·월경비)와 매칭 근거를 보여준다
  */
 import React from 'react'
-import { MI, Meter, Gauge, tierOf, num, won } from '../components.jsx'
+import { MI, Meter, Gauge, tierOf, num, won, DetailModal } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { getBranchBoundary } from '../branchBoundary.js'
 import { FIRE_OVERLAY } from '../fireOverlay.js'
@@ -265,9 +265,9 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, fl
         </div>
       </div>
       {openItem && (
-        <Dialog title={openItem.name} subtitle={openItem.track === 'B' ? '기존 고객 · 업셀링' : '신규 후보'} closeButton width={840} onClose={() => setExpanded(null)}>
+        <DetailModal title={openItem.name} subtitle={openItem.track === 'B' ? '기존 고객 · 업셀링' : '신규 후보'} onClose={() => setExpanded(null)}>
           {openItem.track === 'B' ? <ExistingDetail c={openItem} /> : <NewDetail c={openItem} t={tierOf(openItem.score)} />}
-        </Dialog>
+        </DetailModal>
       )}
     </div>
   );

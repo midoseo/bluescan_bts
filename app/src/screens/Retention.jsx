@@ -8,7 +8,7 @@
  */
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { MI, won } from '../components.jsx'
+import { MI, won, DetailModal } from '../components.jsx'
 import { Donut } from '../charts.jsx'
 import { TargetMap } from '../map.jsx'
 import { USE_TYPES, PRODUCT_TIERS } from '../retentionSchema.js'
@@ -487,10 +487,10 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
       {blocks.kpis}
       {blocks.list}
       {expanded != null && (() => { const c = filtered.find(x => x.id === expanded); if (!c) return null; return (
-        <RDialog title={c.name} subtitle={`${c.use} · 계약 ${c.contractNo}`} closeButton width={900} onClose={() => setExpanded(null)}>
+        <DetailModal title={c.name} subtitle={`${c.use} · 계약 ${c.contractNo}`} onClose={() => setExpanded(null)}>
           <RetentionDetail c={c} sentDate={sentOverrides[c.id] ?? c.monthlyReportSent} onOpenReport={setReportFor}
             touchDate={touchOverrides[c.id] ?? c.lastTouchDate} onOpenEmpathy={(cust, signal) => setEmpathyFor({ c: cust, signal })} />
-        </RDialog>); })()}
+        </DetailModal>); })()}
       {reportFor && (
         <MonthlyReportDialog c={reportFor} allCustomers={data}
           sentDate={sentOverrides[reportFor.id] ?? reportFor.monthlyReportSent}
