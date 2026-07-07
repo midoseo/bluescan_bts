@@ -14,7 +14,9 @@ const TIER_HEX = { S: '#0f8f63', A: '#1fb279', B: '#1d6ceb', C: '#e2971e', D: '#
 // 방문 결과 상태별 핀 색
 const STATUS_HEX = { done: '#1fb279', revisit: '#e2971e', reject: '#e5484d', won: '#1d6ceb' };
 const STATUS_LABEL = { done: '방문완료', revisit: '재방문필요', reject: '거절', won: '수주완료' };
-const FLOOD_FILL = '#7dd3fc';
+// 도시침수 예상구역 — 강수량(레이더) 지도 느낌의 진한 색으로, 카카오 강 색과 확실히 구분되게
+const FLOOD_FILL = '#4f46e5';    // 진한 인디고(채움)
+const FLOOD_STROKE = '#312e81';  // 더 진한 남보라(테두리) — 구역 경계를 또렷하게
 const floodCache = new Map();
 
 // GeoJSON(Feature/FeatureCollection/Polygon/MultiPolygon) → 카카오 LatLng 경로 배열(외곽 링만)
@@ -145,7 +147,7 @@ export function TargetMap({ candidates, fireRegions, showFire, showFlood = true,
     });
   }, [ready, showFire, fireRegions, candidates]);
 
-  // 침수 예상구역 — 테두리 없이 반투명 하늘색 채움
+  // 침수 예상구역 — 강수량 지도처럼 진한 인디고 채움 + 또렷한 테두리로 강조
   useEffect(() => {
     if (!ready) return;
     const map = mapRef.current, kakao = window.kakao; if (!map) return;
@@ -155,7 +157,7 @@ export function TargetMap({ candidates, fireRegions, showFire, showFlood = true,
     const draw = (data) => {
       if (cancelled) return;
       geoToKakaoPaths(data).forEach(path => {
-        const poly = new kakao.maps.Polygon({ path, strokeWeight: 1, strokeOpacity: 0, fillColor: FLOOD_FILL, fillOpacity: 0.45 });
+        const poly = new kakao.maps.Polygon({ path, strokeWeight: 2, strokeColor: FLOOD_STROKE, strokeOpacity: 0.9, strokeStyle: 'solid', fillColor: FLOOD_FILL, fillOpacity: 0.55 });
         poly.setMap(map); floodOverlays.current.push(poly);
       });
     };
