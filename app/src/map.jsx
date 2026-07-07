@@ -1,20 +1,55 @@
-/* ===== map.jsx — Leaflet target map (S-1 sub/graphic palette) ===== */
+/* ===== map.jsx — Kakao Maps target map (S-1 sub/graphic palette) =====
+ * Leaflet → 카카오맵 이식. 현재 화면이 그리던 것만 이식한다:
+ *  후보 마커(등급/상태/주의 색), 화재 구역(빨간 점선 폴리곤 + 이름 핀), 침수 구역(하늘색 채움),
+ *  후보 범위로 자동 확대(fitBounds), 선택 시 포커스(panTo).
+ * (branchBoundary·firePointsLive·firePoints prop은 기존 Leaflet 버전에서도 미사용이라 그대로 무시한다.)
+ * SDK는 index.html에서 autoload=false로 로드 → 여기서 kakao.maps.load 로 초기화한다.
+ */
 import React from 'react'
-import L from 'leaflet'
 import { tierOf } from './components.jsx'
-const { useRef, useEffect } = React
+const { useRef, useEffect, useState } = React
 
 // PRD 등급별 핀 색 (S/A/B/C/D) + 미방문/NO_DATA
 const TIER_HEX = { S: '#0f8f63', A: '#1fb279', B: '#1d6ceb', C: '#e2971e', D: '#9aa0a6', nodata: '#9d9d9d', visit: '#1d6ceb' };
-// 방문 결과 상태별 핀 색 (방문완료-초록 / 재방문필요-노랑 / 거절-빨강 / 수주완료-파랑)
+// 방문 결과 상태별 핀 색
 const STATUS_HEX = { done: '#1fb279', revisit: '#e2971e', reject: '#e5484d', won: '#1d6ceb' };
 const STATUS_LABEL = { done: '방문완료', revisit: '재방문필요', reject: '거절', won: '수주완료' };
-const FLOOD_FILL = '#2b9eff'; // 침수 위험 구역 — 선명한 파랑 (아이폰 강수량 느낌)
-const FIRE_FILL = '#ff3b30';  // 최근 화재 지역 — 선명한 빨강
-const BRANCH_LINE = '#7c3aed'; // 관할 경계 — 보라(침수/화재와 구분)
-const floodCache = new Map(); // path -> geojson
+const FLOOD_FILL = '#7dd3fc';
+const floodCache = new Map();
 
-// 마커 색/툴팁 — A(점수 티어) / B(방문 결과 상태, 미방문은 중립색) / C(유지고객 — 주의필요 여부, 스코어 아님)
+// SDK 준비 대기 — index.html에서 autoload=false로 실었으므로 kakao.maps.load 호출 필요
+function whenKakaoReady(cb) {
+  let done = false;
+  const attempt = () => {
+    if (done) return true;
+    const k = window.kakao;
+    if (k && k.maps && typeof k.maps.load === 'function') {
+      k.maps.load(() => { if (!done) cb(); });
+      done = true;
+      return true;
+    }
+    return false;
+  };
+  if (attempt()) return () => { done = true; };
+  const t = setInterval(() => { if (attempt()) clearInterval(t); }, 60);
+  return () => { done = true; clearInterval(t); };
+}
+
+// GeoJSON(Feature/FeatureCollection/Polygon/MultiPolygon) → 카카오 LatLng 경로 배열(외곽 링만)
+function geoToKakaoPaths(geo) {
+  const kakao = window.kakao;
+  const out = [];
+  if (!geo) return out;
+  const ring = (coords) => coords.map(([lng, lat]) => new kakao.maps.LatLng(lat, lng));
+  const g = geo.type === 'Feature' ? geo.geometry : geo;
+  if (!g) return out;
+  if (g.type === 'Polygon') { if (g.coordinates && g.coordinates[0]) out.push(ring(g.coordinates[0])); }
+  else if (g.type === 'MultiPolygon') { (g.coordinates || []).forEach(poly => { if (poly[0]) out.push(ring(poly[0])); }); }
+  else if (g.type === 'FeatureCollection') { (g.features || []).forEach(f => geoToKakaoPaths(f).forEach(p => out.push(p))); }
+  return out;
+}
+
+// 마커 색/라벨 — A(점수 티어) / B(방문 상태) / C(유지 주의여부)
 function markerInfo(c, variant, visits) {
   if (variant === 'B') {
     const st = visits && visits[c.id] && visits[c.id].status;
@@ -22,208 +57,168 @@ function markerInfo(c, variant, visits) {
     return { col: TIER_HEX.nodata, big: false, label: `${c.name} · 미방문` };
   }
   if (variant === 'C') {
-    const attention = !!c.attention;
-    return { col: attention ? STATUS_HEX.reject : STATUS_HEX.won, big: attention, label: `${c.name} · ${attention ? '주의 필요' : '안정'}` };
+    return c.attention
+      ? { col: '#e5484d', big: true, label: `${c.name} · 주의 필요` }
+      : { col: '#1d6ceb', big: false, label: `${c.name} · 안정` };
   }
   const t = tierOf(c.score);
   return { col: TIER_HEX[t.key] || TIER_HEX.nodata, big: c.score >= 81, label: `${c.name} · ${c.score == null ? 'N/A' : c.score + '점 (' + t.key + ')'}` };
 }
 
-export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints, firePointsLive, showFire, showFlood = true, floodLayers, branchBoundary, visits, selectedId, onSelect, focusId, fitKey, variant = 'A' }) {
-  const elRef = useRef(null), mapRef = useRef(null);
-  const candLayer = useRef(null), fireLayer = useRef(null), floodLayer = useRef(null), liveFireLayer = useRef(null), fireGlowLayer = useRef(null), branchLayer = useRef(null), markers = useRef({});
+export function TargetMap({ candidates, fireRegions, showFire, showFlood = true, floodLayers, visits, selectedId, onSelect, focusId, fitKey, variant = 'A' }) {
+  const elRef = useRef(null), mapRef = useRef(null), infoRef = useRef(null);
+  const candOverlays = useRef([]), fireOverlays = useRef([]), floodOverlays = useRef([]);
+  const markerMap = useRef({});
+  const [ready, setReady] = useState(false);
 
+  // 초기화 (SDK 로드 후)
   useEffect(() => {
-    if (mapRef.current || !L || !elRef.current) return;
-    let map;
-    try {
-      map = L.map(elRef.current, { zoomControl: true, attributionControl: false,
-        center: [37.49, 126.90], zoom: 11, scrollWheelZoom: true });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, subdomains: 'abcd' }).addTo(map);
-      L.control.attribution({ prefix: false }).addAttribution('© OpenStreetMap, © CARTO').addTo(map);
-      // feather(아이폰 강수량) 효과용 blur pane + 관할 경계 pane (마커 pane=600보다 아래)
+    let cancelled = false;
+    const cleanup = whenKakaoReady(() => {
+      if (cancelled || mapRef.current || !elRef.current) return;
       try {
-        map.createPane('branchPane'); map.getPane('branchPane').style.zIndex = 383; map.getPane('branchPane').style.filter = 'blur(1.5px)';
-        map.createPane('floodPane'); map.getPane('floodPane').style.zIndex = 385; map.getPane('floodPane').style.filter = 'blur(8px)';
-        map.createPane('firePane'); map.getPane('firePane').style.zIndex = 390; map.getPane('firePane').style.filter = 'blur(8px)';
-      } catch (e) { /* ignore */ }
-      branchLayer.current = L.layerGroup().addTo(map);
-      floodLayer.current = L.layerGroup().addTo(map);
-      candLayer.current = L.layerGroup().addTo(map);
-      fireLayer.current = L.layerGroup().addTo(map);
-      fireGlowLayer.current = L.layerGroup().addTo(map);
-      liveFireLayer.current = L.layerGroup().addTo(map);
-      mapRef.current = map;
-      setTimeout(() => { try { map.invalidateSize(); } catch (e) { /* ignore */ } }, 60);
-      setTimeout(() => { try { map.invalidateSize(); } catch (e) { /* ignore */ } }, 400);
-    } catch (e) { /* Leaflet init failed — keep the rest of the screen alive */ }
-    return () => {
-      try { map && map.remove(); } catch (e) { /* ignore */ }
-      mapRef.current = null; candLayer.current = null; fireLayer.current = null; floodLayer.current = null; liveFireLayer.current = null; fireGlowLayer.current = null; branchLayer.current = null; markers.current = {};
-    };
+        const kakao = window.kakao;
+        const map = new kakao.maps.Map(elRef.current, { center: new kakao.maps.LatLng(37.49, 126.90), level: 6 });
+        mapRef.current = map;
+        infoRef.current = new kakao.maps.InfoWindow({ removable: true, zIndex: 5 });
+        setReady(true);
+        setTimeout(() => { try { map.relayout(); } catch (e) { /* ignore */ } }, 200);
+      } catch (e) { /* SDK 인증 실패(미등록 도메인 등) — 화면 나머지는 유지 */ }
+    });
+    return () => { cancelled = true; cleanup && cleanup(); mapRef.current = null; };
   }, []);
 
-  // 도시침수 예상구역 — 테두리 없이 반투명 하늘색으로만 채움 (A·B 공통)
+  const openInfo = (html, pos) => {
+    const map = mapRef.current; if (!map || !infoRef.current) return;
+    infoRef.current.setContent(`<div style="padding:6px 10px;font:13px/1.4 'SamsungOne Korean',Pretendard,system-ui,sans-serif;white-space:nowrap;max-width:240px;">${html}</div>`);
+    infoRef.current.setPosition(pos);
+    infoRef.current.open(map);
+  };
+
+  // 후보 마커
   useEffect(() => {
-    const fg = floodLayer.current; if (!fg) return;
-    fg.clearLayers();
+    if (!ready) return;
+    const map = mapRef.current, kakao = window.kakao; if (!map) return;
+    candOverlays.current.forEach(o => o.setMap(null));
+    candOverlays.current = []; markerMap.current = {};
+    // 선택/방문된 핀이 위로 오도록 정렬
+    const rank = (c) => (c.id === selectedId ? 2 : (visits && visits[c.id] ? 1 : 0));
+    [...candidates].sort((a, b) => rank(a) - rank(b)).forEach(c => {
+      if (c.lat == null || c.lng == null) return;
+      const sel = c.id === selectedId;
+      const { col, big, label } = markerInfo(c, variant, visits);
+      const size = sel ? 18 : (big ? 14 : 12);
+      const el = document.createElement('div');
+      el.style.cssText = `width:${size}px;height:${size}px;border-radius:50%;background:${col};border:${sel ? 3 : 2}px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.45);cursor:pointer;`;
+      el.title = label;
+      const pos = new kakao.maps.LatLng(c.lat, c.lng);
+      const ov = new kakao.maps.CustomOverlay({ position: pos, content: el, xAnchor: 0.5, yAnchor: 0.5, zIndex: sel ? 4 : 2, clickable: true });
+      el.addEventListener('click', () => { onSelect && onSelect(c.id); openInfo(label, pos); });
+      ov.setMap(map);
+      candOverlays.current.push(ov);
+      markerMap.current[c.id] = { pos, label };
+    });
+  }, [ready, candidates, selectedId, variant, visits]);
+
+  // 화재 구역 — 후보 분포 범위와 겹치는 구역만 (전국 난립 방지)
+  useEffect(() => {
+    if (!ready) return;
+    const map = mapRef.current, kakao = window.kakao; if (!map) return;
+    fireOverlays.current.forEach(o => o.setMap(null)); fireOverlays.current = [];
+    if (!showFire) return;
+    const pts = candidates.filter(c => c.lat != null && c.lng != null);
+    let bb = null;
+    if (pts.length) { let a = 999, b = 999, c = -999, d = -999; pts.forEach(p => { if (p.lng < a) a = p.lng; if (p.lng > c) c = p.lng; if (p.lat < b) b = p.lat; if (p.lat > d) d = p.lat; }); bb = [a - 0.18, b - 0.18, c + 0.18, d + 0.18]; }
+    const regions = (fireRegions || []).filter(r => { if (!bb || !r.bbox) return true; const [a, b, c, d] = r.bbox; return !(c < bb[0] || a > bb[2] || d < bb[1] || b > bb[3]); });
+    regions.forEach(r => {
+      if (!r.geo) return;
+      const recent = r.minDays < 30;
+      geoToKakaoPaths(r.geo).forEach(path => {
+        const poly = new kakao.maps.Polygon({ path, strokeWeight: recent ? 2 : 1, strokeColor: '#dc2626', strokeOpacity: 0.9, strokeStyle: 'shortdash', fillColor: '#dc2626', fillOpacity: recent ? 0.08 : 0.04 });
+        poly.setMap(map); fireOverlays.current.push(poly);
+        kakao.maps.event.addListener(poly, 'click', (me) => openInfo(`<b style="color:#dc2626">🔥 ${r.name} · 최근 화재 ${r.count}건</b><br><span style="color:#555">${(r.fires || []).map(x => `· ${x.days}일 전 ${x.scale} — ${x.title || ''}`).join('<br>')}</span>`, me.latLng));
+      });
+      if (Array.isArray(r.bbox)) {
+        const [a, b, c, d] = r.bbox;
+        const el = document.createElement('div');
+        el.style.cssText = 'background:#dc2626;color:#fff;font:11px/1 sans-serif;padding:3px 7px;border-radius:11px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.3);';
+        el.textContent = `🔥 ${r.name} ${r.count}건`;
+        const pin = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng((b + d) / 2, (a + c) / 2), content: el, xAnchor: 0.5, yAnchor: 0.5, zIndex: 3 });
+        pin.setMap(map); fireOverlays.current.push(pin);
+      }
+    });
+  }, [ready, showFire, fireRegions, candidates]);
+
+  // 침수 예상구역 — 테두리 없이 반투명 하늘색 채움
+  useEffect(() => {
+    if (!ready) return;
+    const map = mapRef.current, kakao = window.kakao; if (!map) return;
+    floodOverlays.current.forEach(o => o.setMap(null)); floodOverlays.current = [];
     if (!showFlood || !floodLayers || !floodLayers.length) return;
     let cancelled = false;
+    const draw = (data) => {
+      if (cancelled) return;
+      geoToKakaoPaths(data).forEach(path => {
+        const poly = new kakao.maps.Polygon({ path, strokeWeight: 1, strokeOpacity: 0, fillColor: FLOOD_FILL, fillOpacity: 0.45 });
+        poly.setMap(map); floodOverlays.current.push(poly);
+      });
+    };
     floodLayers.forEach(layer => {
-      const draw = (data) => {
-        if (cancelled || !floodLayer.current) return;
-        L.geoJSON(data, { pane: 'floodPane', style: { stroke: false, fill: true, fillColor: FLOOD_FILL, fillOpacity: 0.6 } })
-          .bindPopup(`<b style="color:#0284c7">💧 침수 위험 구역 (기왕최대)</b><br><span style="color:#555">${layer.label}</span>`)
-          .addTo(floodLayer.current);
-      };
-      if (layer.geo) draw(layer.geo);                                  // 데이터에 인라인된 GeoJSON (단일 HTML 대응)
+      if (layer.geo) draw(layer.geo);
       else if (floodCache.has(layer.path)) draw(floodCache.get(layer.path));
       else if (layer.path) fetch(layer.path).then(r => r.json()).then(d => { floodCache.set(layer.path, d); draw(d); }).catch(() => { });
     });
     return () => { cancelled = true; };
-  }, [floodLayers, showFlood]);
+  }, [ready, floodLayers, showFlood]);
 
-  // 화재 오버레이 — 최근 화재가 발생한 군/구 행정구역을 빨간 점선으로 표현
+  // 필터 변경 시 후보 범위로 자동 확대
   useEffect(() => {
-    if (!fireLayer.current) return;
-    fireLayer.current.clearLayers();
-    if (!showFire) return;
-    const regions = fireRegions || [];
-    // 현재 후보 분포 범위와 겹치는 화재 구역만 표시 (전국 점선 난립 방지)
+    if (!ready) return;
+    const map = mapRef.current, kakao = window.kakao; if (!map) return;
     const pts = candidates.filter(c => c.lat != null && c.lng != null);
-    let bb = null;
-    if (pts.length) { let a = 999, b = 999, c = -999, d = -999; pts.forEach(p => { if (p.lng < a) a = p.lng; if (p.lng > c) c = p.lng; if (p.lat < b) b = p.lat; if (p.lat > d) d = p.lat; }); bb = [a - 0.18, b - 0.18, c + 0.18, d + 0.18]; }
-    const inView = regions.filter(r => { if (!bb || !r.bbox) return true; const [a, b, c, d] = r.bbox; return !(c < bb[0] || a > bb[2] || d < bb[1] || b > bb[3]); });
-    inView.forEach(r => {
-      const recent = r.minDays < 30;
-      L.geoJSON(r.geo, { pane: 'firePane', style: { stroke: false, fill: true, fillColor: FIRE_FILL, fillOpacity: recent ? 0.6 : 0.42 } })
-        .bindPopup(`<b style="color:#dc2626">🔥 ${r.name} · 최근 화재 ${r.count}건</b><br><span style="color:#555">${r.fires.map(x => `· ${x.days}일 전 ${x.scale} — ${x.title || ''}`).join('<br>')}</span>`)
-        .addTo(fireLayer.current);
-      if (Array.isArray(r.bbox)) { const [a, b, c, d] = r.bbox;
-        L.marker([(b + d) / 2, (a + c) / 2], { icon: L.divIcon({ className: 'fire-pin', html: `<span>🔥 ${r.name} ${r.count}건</span>`, iconSize: null }), interactive: false, keyboard: false }).addTo(fireLayer.current); }
-    });
-  }, [showFire, fireRegions, candidates]);
-
-  // 실데이터 화재 포인트 글로우 — firePane blur로 feather(아이폰 강수량 느낌), 최근일수록 진하게
-  useEffect(() => {
-    const g = fireGlowLayer.current; if (!g) return;
-    g.clearLayers();
-    if (!showFire || !firePointsLive || !firePointsLive.length) return;
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    firePointsLive.forEach(f => {
-      if (f.lat == null || f.lng == null) return;
-      let daysAgo = 0;
-      if (f.date) { const d = new Date(f.date + 'T00:00:00'); daysAgo = Math.max(0, Math.round((today - d) / 86400000)); }
-      const fade = Math.max(0.28, 0.7 - daysAgo * 0.02);   // 최근=진하게, 오래될수록 옅게
-      L.circleMarker([f.lat, f.lng], { pane: 'firePane', radius: 17, stroke: false, fillColor: FIRE_FILL, fillOpacity: fade * 0.55 }).addTo(g);
-      L.circleMarker([f.lat, f.lng], { pane: 'firePane', radius: 7, stroke: false, fillColor: FIRE_FILL, fillOpacity: fade })
-        .bindTooltip(`🔥 ${f.time || ''} · ${f.loc || ''}${f.type ? ' · ' + f.type : ''}`, { direction: 'top', offset: [0, -6] })
-        .addTo(g);
-    });
-  }, [showFire, firePointsLive]);
-
-  // 소방청(국민안전24) 실시간 화재 출동 지점 — 개별 마커 (같은 "화재 오버레이" 토글로 함께 켜짐)
-  useEffect(() => {
-    if (!liveFireLayer.current) return;
-    liveFireLayer.current.clearLayers();
-    if (!showFire || !liveFirePoints || !liveFirePoints.length) return;
-    liveFirePoints.forEach(f => {
-      if (f.lat == null || f.lng == null) return;
-      L.marker([f.lat, f.lng], { icon: L.divIcon({ className: 'livefire-pin', html: '🚒', iconSize: [22, 22], iconAnchor: [11, 11] }) })
-        .bindTooltip(`${f.time} · ${f.loc} · ${f.scale}`, { direction: 'top', offset: [0, -8] })
-        .addTo(liveFireLayer.current);
-    });
-  }, [showFire, liveFirePoints]);
-
-  // 지사 관할 경계 — 보라 점선(feather) + 옅은 채움
-  useEffect(() => {
-    const bl = branchLayer.current; if (!bl) return;
-    bl.clearLayers();
-    if (!branchBoundary) return;
-    L.geoJSON(branchBoundary, { pane: 'branchPane', style: { color: BRANCH_LINE, weight: 3, opacity: .9, dashArray: '3 7', lineCap: 'round', lineJoin: 'round', fill: true, fillColor: BRANCH_LINE, fillOpacity: 0.05 } })
-      .bindPopup(`<b style="color:${BRANCH_LINE}">${branchBoundary.properties?.branch || ''} 관할 경계</b><br><span style="color:#555">담당 사업장 분포 기준 근사 영역</span>`)
-      .addTo(bl);
-  }, [branchBoundary]);
-
-  useEffect(() => {
-    if (!candLayer.current) return;
-    candLayer.current.clearLayers(); markers.current = {};
-    // 겹치는 핀끼리는 '방문 결과 있는 핀'과 '선택된 핀'이 항상 위에 오도록 정렬
-    // (미방문 회색 핀이 색상 핀 위를 덮어 '고리처럼' 보이는 현상 방지)
-    const rank = (c) => (c.id === selectedId ? 2 : (visits && visits[c.id] ? 1 : 0));
-    const ordered = [...candidates].sort((a, b) => rank(a) - rank(b));
-    ordered.forEach(c => {
-      if (c.lat == null) return;
-      const sel = c.id === selectedId;
-      const { col, big, label } = markerInfo(c, variant, visits);
-      const m = L.circleMarker([c.lat, c.lng], { radius: sel ? 11 : (big ? 8 : 7), color: '#fff', weight: sel ? 3 : 2, fillColor: col, fillOpacity: 1 });
-      m.bindTooltip(label, { direction: 'top', offset: [0, -6] });
-      m.on('click', () => onSelect && onSelect(c.id));
-      m.addTo(candLayer.current); markers.current[c.id] = m;
-      if (rank(c) > 0 && m.bringToFront) m.bringToFront();
-    });
-  }, [candidates, selectedId, variant, visits]);
-
-  // 군·구 / 읍·면·동 등 필터가 바뀌면 해당 범위로 지도 확대
-  useEffect(() => {
-    const map = mapRef.current; if (!map) return;
-    const pts = candidates.filter(c => c.lat != null && c.lng != null).map(c => [c.lat, c.lng]);
-    const run = () => {
+    const id = setTimeout(() => {
       try {
-        try { map.invalidateSize(); } catch (e) { /* ignore */ }
-        // 관할 경계가 있으면 그 경계에 고정 (필터·페이지가 바뀌어도 지도 뷰 유지)
-        if (branchBoundary && branchBoundary.geometry) {
-          const ring = branchBoundary.geometry.coordinates[0].map(([lng, lat]) => [lat, lng]);
-          map.fitBounds(L.latLngBounds(ring), { padding: [26, 26], maxZoom: 15 });
-          return;
-        }
-        // 후보가 없으면 화재 포인트 범위로 맞춘다 (인사이트 전국 화재 지도)
-        const base = pts.length ? pts : (firePointsLive || []).filter(f => f.lat != null && f.lng != null).map(f => [f.lat, f.lng]);
-        if (base.length === 0) { map.setView([36.5, 127.8], 7); return; }
-        if (base.length === 1) { map.setView(base[0], 12); return; }
-        map.fitBounds(L.latLngBounds(base), { padding: [40, 40], maxZoom: pts.length ? 16 : 12 });
+        map.relayout();
+        if (pts.length === 0) { map.setCenter(new kakao.maps.LatLng(37.49, 126.90)); map.setLevel(8); return; }
+        if (pts.length === 1) { map.setCenter(new kakao.maps.LatLng(pts[0].lat, pts[0].lng)); map.setLevel(4); return; }
+        const bounds = new kakao.maps.LatLngBounds();
+        pts.forEach(p => bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)));
+        map.setBounds(bounds);
       } catch (e) { /* ignore */ }
-    };
-    const id = setTimeout(run, 80);
+    }, 120);
     return () => clearTimeout(id);
-  }, [fitKey]);
+  }, [ready, fitKey]);
 
+  // 선택 포커스 — 해당 위치로 이동 + 정보창
   useEffect(() => {
-    if (!mapRef.current || !focusId) return;
+    if (!ready || !focusId) return;
+    const map = mapRef.current, kakao = window.kakao; if (!map) return;
     const c = candidates.find(x => x.id === focusId);
     if (c && c.lat != null) {
-      try { mapRef.current.invalidateSize(); } catch (e) { /* ignore */ }
-      try { mapRef.current.flyTo([c.lat, c.lng], 16, { duration: .6 }); } catch (e) { /* ignore */ }  // 선택한 핀을 정중앙으로 줌인
-      const m = markers.current[focusId];
-      if (m) { setTimeout(() => { try { m.openTooltip(); } catch (e) { /* ignore */ } }, 650); if (m.bringToFront) m.bringToFront(); }
+      try { map.setLevel(3); map.panTo(new kakao.maps.LatLng(c.lat, c.lng)); } catch (e) { /* ignore */ }
+      const m = markerMap.current[focusId];
+      if (m) openInfo(m.label, m.pos);
     }
-  }, [focusId]);
+  }, [ready, focusId]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={elRef} style={{ position: 'absolute', inset: 0 }} />
       <div className="map-legend">
-        {variant === 'fire' ? (
-          <>
-            <div className="row"><span className="dot dot--flood" style={{ background: FIRE_FILL }} />최근 화재 위치</div>
-            <div className="row faint" style={{ fontSize: 12 }}>최근일수록 진하게</div>
-          </>
-        ) : variant === 'C' ? (
-          <>
-            <div className="row"><span className="dot" style={{ background: STATUS_HEX.reject }} />주의 필요</div>
-            <div className="row"><span className="dot" style={{ background: STATUS_HEX.won }} />안정</div>
-          </>
-        ) : variant === 'B' ? (
+        {variant === 'B' ? (
           <>
             <div className="row"><span className="dot" style={{ background: STATUS_HEX.done }} />방문완료</div>
             <div className="row"><span className="dot" style={{ background: STATUS_HEX.revisit }} />재방문필요</div>
             <div className="row"><span className="dot" style={{ background: STATUS_HEX.reject }} />거절</div>
             <div className="row"><span className="dot" style={{ background: STATUS_HEX.won }} />수주완료</div>
             <div className="row"><span className="dot" style={{ background: TIER_HEX.nodata }} />미방문</div>
-            <div className="row"><span className="dot dot--flood" style={{ background: FIRE_FILL }} />최근 화재 지역</div>
-            <div className="row">🚒 소방청 실시간 화재출동</div>
-            <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />침수 위험 구역</div>
-            {branchBoundary && <div className="row"><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: `3px dashed ${BRANCH_LINE}`, flex: 'none' }} />관할 경계</div>}
+            <div className="row"><span className="lg-dash" />최근 화재 발생 구역</div>
+            <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />도시침수 예상구역</div>
+          </>
+        ) : variant === 'C' ? (
+          <>
+            <div className="row"><span className="dot" style={{ background: '#e5484d' }} />주의 필요</div>
+            <div className="row"><span className="dot" style={{ background: '#1d6ceb' }} />안정</div>
           </>
         ) : (
           <>
@@ -232,10 +227,8 @@ export function TargetMap({ candidates, firePoints, fireRegions, liveFirePoints,
             <div className="row"><span className="dot" style={{ background: TIER_HEX.B }} />B 71–80 · 관계형성</div>
             <div className="row"><span className="dot" style={{ background: TIER_HEX.C }} />C 51–70 · 모니터링</div>
             <div className="row"><span className="dot" style={{ background: TIER_HEX.D }} />D 50↓ / NO_DATA</div>
-            <div className="row"><span className="dot dot--flood" style={{ background: FIRE_FILL }} />최근 화재 지역</div>
-            <div className="row">🚒 소방청 실시간 화재출동</div>
-            <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />침수 위험 구역</div>
-            {branchBoundary && <div className="row"><span style={{ display: 'inline-block', width: 16, height: 0, borderTop: `3px dashed ${BRANCH_LINE}`, flex: 'none' }} />관할 경계</div>}
+            <div className="row"><span className="lg-dash" />최근 화재 발생 구역</div>
+            <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />도시침수 예상구역</div>
           </>
         )}
       </div>
