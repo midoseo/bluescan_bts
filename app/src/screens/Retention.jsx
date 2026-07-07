@@ -11,7 +11,6 @@ import { createPortal } from 'react-dom'
 import { MI, won } from '../components.jsx'
 import { Donut } from '../charts.jsx'
 import { TargetMap } from '../map.jsx'
-import { useSectionOrder, SectionList } from './Dash.jsx'
 import { USE_TYPES, PRODUCT_TIERS } from '../retentionSchema.js'
 import { buildMonthlyReportData } from '../monthlyReport.js'
 import { buildEmpathyMessageDraft } from '../empathyMessage.js'
@@ -36,8 +35,8 @@ function RDashCard({ title, sub, action, children }) {
   );
 }
 
-const RETENTION_SECTIONS = ['alerts', 'kpis', 'list'];
-const RETENTION_SEC_TITLE = { alerts: '요약 알림', kpis: '핵심 지표', list: '유지고객 목록·지도' };
+const RETENTION_SECTIONS = ['kpis', 'list'];
+const RETENTION_SEC_TITLE = { kpis: '핵심 지표', list: '유지고객 목록·지도' };
 
 // "주의 필요" 판정 — 스코어링이 아니라 raw 신호 중 하나라도 해당하면 표시하는 단순 규칙
 function needsAttention(c) {
@@ -297,22 +296,32 @@ function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate
               <LifetimeValueBox c={c} />
             </div>
             <div>
-              <div className="ld-h">관제 신호 이력 <span className="faint" style={{ fontWeight: 400 }}>· 최근 {c.signalHistory.length}건</span></div>
+              <div className="ld-h">관제 신호 이력 <span className="faint" style={{ fontWeight: 400 }}>· {c.signal3mWindow || '최근 3개월'} 총 {c.signal3mTotal ?? c.signalHistory.length}건</span></div>
               {c.signalHistory.length === 0
-                ? <div className="nodata-box"><MI n="info" s={18} /><div>최근 신호 이력이 없어요.</div></div>
-                : <div className="kwtable">
-                  {c.signalHistory.map((s, i) => (
-                    <div className="kwt-row" key={i}>
-                      <span className="kwt-kw">{s.date} · {s.type}</span>
-                      <span className="kwt-cat"><RBadge tone={s.severity === '심각' ? 'danger' : s.severity === '주의' ? 'warning' : 'neutral'} shape="pill">{s.severity}</RBadge></span>
-                      <span className="kwt-freq faint" style={{ flex: 1, textAlign: 'right', fontVariantNumeric: 'normal' }}>
-                        {s.notifiedAuthority ? '유관기관 통보' : ''}
-                      </span>
-                      <button className="kwt-touch" title="감성터칭 메시지 생성" onClick={e => { e.stopPropagation(); onOpenEmpathy(c, s); }}>
-                        <MI n="favorite" s={16} />
-                      </button>
-                    </div>))}
-                </div>}
+                ? <div className="nodata-box"><MI n="info" s={18} /><div>최근 3개월 신호가 없어요.</div></div>
+                : <>
+                  <div className="kwtable">
+                    {c.signalHistory.map((s, i) => (
+                      <div className="kwt-row" key={i}>
+                        <span className="kwt-kw">{s.date} · {s.type}</span>
+                        <span className="kwt-cat"><RBadge tone={s.severity === '심각' ? 'danger' : s.severity === '주의' ? 'warning' : 'neutral'} shape="pill">{s.severity}</RBadge></span>
+                        <span className="kwt-freq faint" style={{ flex: 1, textAlign: 'right', fontVariantNumeric: 'normal' }}>
+                          {s.notifiedAuthority ? '유관기관 통보' : ''}
+                        </span>
+                        <button className="kwt-touch" title="감성터칭 메시지 생성" onClick={e => { e.stopPropagation(); onOpenEmpathy(c, s); }}>
+                          <MI n="favorite" s={16} />
+                        </button>
+                      </div>))}
+                  </div>
+                  {(c.signalRestSummary && c.signalRestSummary.length > 0) && (
+                    <div className="sig-rest">
+                      <span className="sig-rest__lab">그 외 3개월 신호</span>
+                      {c.signalRestSummary.map(r => (
+                        <span className="sig-rest__chip" key={r.type}>{r.type} <b>{r.count}</b></span>
+                      ))}
+                    </div>
+                  )}
+                </>}
               <div className="ld-h" style={{ marginTop: 14 }}>활성도·소통</div>
               <dl className="ld-attrs">
                 <div><dt>원격제어 사용(30일)</dt><dd>{c.remoteControlUsage30d}회</dd></div>
@@ -345,7 +354,6 @@ function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate
 }
 
 export function RetentionScreen({ data, listMode, onListMode, reportSentOverrides: sentOverrides, onMarkReportSent: markSent, touchOverrides, onMarkTouched: markTouched }) {
-  const ctrl = useSectionOrder(RETENTION_SECTIONS, 'bluescan.retentionDashOrder');
   const [branch, setBranch] = useState('전체');
   const [use, setUse] = useState('전체');
   const [tier, setTier] = useState('all');
@@ -392,59 +400,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
 
   const mapCands = filtered.map(c => ({ ...c, attention: needsAttention(c).flag }));
 
-  // 요약 알림 — 신호 발생 내역(전체 계약처, 최신순)과 계약 만료 임박 목록
-  const signalFeed = aug
-    .flatMap(c => c.signalHistory.map(s => ({ ...s, customerName: c.name, customerId: c.id })))
-    .sort((a, b) => b.date.localeCompare(a.date));
-  const expiringList = withAttention
-    .filter(x => x.att.daysToEnd <= 60 && x.att.daysToEnd >= 0)
-    .sort((a, b) => a.att.daysToEnd - b.att.daysToEnd);
-
   const blocks = {
-    alerts: (
-      <RDashCard title="요약 알림" sub="신호 발생 내역 · 계약 만료 임박">
-        <div className="dash-2col">
-          <div>
-            <div className="faint" style={{ font: 'var(--type-13m)', margin: '2px 0 6px' }}>신호 발생 내역</div>
-            {signalFeed.length === 0
-              ? <div className="nodata-box"><MI n="info" s={18} /><div>최근 신호 내역이 없어요.</div></div>
-              : <div className="news-feed" style={{ maxHeight: 180, overflowY: 'auto' }}>
-                {signalFeed.map((s, i) => (
-                  <div className="news-item" key={i} style={{ cursor: 'default' }}>
-                    <div className="news-day">{s.date.slice(5)}</div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div className="news-title">{s.customerName} · {s.type}</div>
-                      <div className="news-meta">
-                        <RBadge tone={s.severity === '심각' ? 'danger' : s.severity === '주의' ? 'warning' : 'neutral'} shape="pill">{s.severity}</RBadge>
-                        {s.notifiedAuthority && <span className="news-src">유관기관 통보</span>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>}
-          </div>
-          <div>
-            <div className="faint" style={{ font: 'var(--type-13m)', margin: '2px 0 6px' }}>계약 만료 임박(60일 이내)</div>
-            {expiringList.length === 0
-              ? <div className="nodata-box"><MI n="info" s={18} /><div>임박한 계약 만료 건이 없어요.</div></div>
-              : <div className="news-feed" style={{ maxHeight: 180, overflowY: 'auto' }}>
-                {expiringList.map(({ c, att }) => (
-                  <div className="news-item" key={c.id} style={{ cursor: 'default' }}>
-                    <div className="news-day hot">D-{att.daysToEnd}</div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div className="news-title">{c.name}</div>
-                      <div className="news-meta">
-                        <span className="news-region"><MI n="location_on" s={14} />{c.address}</span>
-                        <span className="news-src">{c.endDate} 종료 예정</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>}
-          </div>
-        </div>
-      </RDashCard>
-    ),
     kpis: (
       <div className="retkpis">
         {RET_KPIS.map(k => (
@@ -461,16 +417,11 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
       <>
         <div className="filterbar">
           <div className="fb-row">
-            <span className="fb-label"><MI n="search" s={18} />계약처명</span>
-            <div style={{ width: 240 }}><RTextField value={q} onChange={e => setQ(e.target.value)} placeholder="계약처명·계약번호로 검색" iconLeft={<MI n="search" s={18} />} /></div>
-          </div>
-          <div className="fb-row">
-            <span className="fb-label"><MI n="apartment" s={18} />지사</span>
-            <div className="fb-chips">{branches.map(b => <RChip key={b} selected={branch === b} onClick={() => setBranch(b)}>{b}</RChip>)}</div>
-          </div>
-          <div className="fb-row">
-            <span className="fb-label"><MI n="category" s={18} />업종</span>
-            <div className="fb-chips">
+            <span className="fb-label"><MI n="search" s={18} />검색</span>
+            <div style={{ width: 220 }}><RTextField value={q} onChange={e => setQ(e.target.value)} placeholder="계약처명·계약번호로 검색" iconLeft={<MI n="search" s={18} />} /></div>
+            {q && <RButton size="sm" variant="line" onClick={() => setQ('')} iconLeft={<MI n="close" s={16} />}>해제</RButton>}
+            <span className="fb-label" style={{ marginLeft: 12 }}><MI n="category" s={18} />업종</span>
+            <div className="fb-chips" style={{ flex: '0 0 auto' }}>
               <RChip selected={use === '전체'} onClick={() => setUse('전체')}>전체</RChip>
               {USE_TYPES.map(u => <RChip key={u} selected={use === u} onClick={() => setUse(u)}>{u}</RChip>)}
             </div>
@@ -530,7 +481,8 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
 
   return (
     <div className="pc-content pc-content--wide fadein" data-screen-label="유지관리현황">
-      <SectionList ctrl={ctrl} titles={RETENTION_SEC_TITLE} blocks={blocks} />
+      {blocks.kpis}
+      {blocks.list}
       {reportFor && (
         <MonthlyReportDialog c={reportFor} allCustomers={data}
           sentDate={sentOverrides[reportFor.id] ?? reportFor.monthlyReportSent}

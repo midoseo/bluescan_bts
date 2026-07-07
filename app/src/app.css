@@ -1445,6 +1445,12 @@ body{ background: var(--surface-home); }
 .retkpi--red.on{ border-color:#e5502b; box-shadow:0 0 0 2px rgba(229,80,43,.15); }
 .retkpi--amber.on{ border-color:#d98a1a; box-shadow:0 0 0 2px rgba(217,138,26,.15); }
 
+/* 신호 이력 — 나머지 3개월 유형별 총합 요약 */
+.sig-rest{ display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-top:9px; padding-top:9px; border-top:1px dashed var(--border-default); }
+.sig-rest__lab{ font-size:13px; color:var(--text-tertiary); font-weight:600; }
+.sig-rest__chip{ font-size:13px; color:#4b5563; background:#f2f4f6; border-radius:999px; padding:3px 11px; }
+.sig-rest__chip b{ color:var(--accent); margin-left:3px; }
+
 /* AI 추천 다음 액션 (행 상세) */
 .ld-ai{ display:flex; gap:11px; border-radius:12px; padding:13px 15px; margin-top:14px; }
 .ld-ai__ico{ width:34px; height:34px; border-radius:10px; flex:none; display:grid; place-items:center; color:#fff; }

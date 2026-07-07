@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인사이트 탭 프리뷰 — 블루스캔</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+  :root{ --accent:#1d6ceb; --blue-50:#eef4ff; --ink:#191f28; --sub:#6b7684; --line:#eaecf0; --bg:#f4f6f8; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  .material-symbols-rounded{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;vertical-align:middle;line-height:1;}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 22px 60px;}
+  .pagehead h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px;}
+  .pagehead p{font-size:15px;color:var(--sub);margin:0 0 16px;}
+
+  /* 범위 스위치 (전국/서강) */
+  .scope{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .scope__label{font-size:13px;color:var(--sub);font-weight:600;}
+  .scope__seg{display:inline-flex;background:#e7ebf5;border:1px solid #d3daea;border-radius:10px;padding:3px;gap:2px;}
+  .scope__seg button{border:none;background:none;padding:7px 16px;border-radius:8px;font-size:14px;font-weight:700;color:#5a6472;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .scope__seg button .material-symbols-rounded{font-size:17px;}
+  .scope__seg button.on{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(29,108,235,.35);}
+
+  /* 세그먼트 탭 */
+  .seg{display:inline-flex;background:#eef0f2;border:1px solid #e2e5e9;border-radius:12px;padding:3px;gap:2px;flex-wrap:wrap;margin-bottom:16px;}
+  .seg button{border:none;background:none;padding:8px 15px;border-radius:9px;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .seg button .material-symbols-rounded{font-size:18px;}
+  .seg button.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:16px;}
+  .card__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .card__title{display:inline-flex;align-items:center;gap:8px;font-size:19px;font-weight:700;}
+  .card__title .material-symbols-rounded{color:#ff6b1a;}
+  .card__title.sg .material-symbols-rounded{color:var(--accent);}
+  .note{display:flex;align-items:flex-start;gap:8px;margin-top:12px;font-size:14px;color:var(--sub);line-height:1.5;}
+  .note .material-symbols-rounded{color:#8b95a1;flex:none;font-size:16px;}
+  .live{font-size:12px;font-weight:700;color:#0f8f63;background:#e1f5ee;border-radius:999px;padding:3px 10px;}
+  .src{display:flex;align-items:center;gap:7px;font-size:13px;color:#8b95a1;margin-bottom:12px;}
+  .src .material-symbols-rounded{font-size:16px;color:#adb5bd;}
+  .scope-badge{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:14px;}
+  .scope-badge.nat{background:#eef4ff;color:#1d55c4;} .scope-badge.sg{background:#fff0ea;color:#c0451f;}
+
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+  .kpi{display:flex;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+  .kpi__ico{width:40px;height:40px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--blue-50);color:var(--accent);}
+  .kpi__val{font-size:24px;font-weight:800;line-height:1.1;letter-spacing:-.02em;}
+  .kpi__val span{font-size:13px;font-weight:700;color:var(--sub);margin-left:2px;}
+  .kpi__label{font-size:14px;font-weight:600;margin-top:4px;}
+  .kpi__note{font-size:12px;color:#8b95a1;margin-top:2px;}
+
+  .legend{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:12px;color:#555;}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle;}
+  .gbars{display:flex;align-items:flex-end;gap:14px;height:200px;padding:6px 4px 0;border-bottom:1px solid #e9e9e9;}
+  .gcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
+  .gpair{display:flex;align-items:flex-end;gap:5px;height:170px;}
+  .gbar{width:16px;border-radius:3px 3px 0 0;}
+  .gbar.feb{background:#c4c4c4;} .gbar.may{background:var(--accent);}
+  .gcat{font-size:11px;color:#555;text-align:center;line-height:1.2;}
+
+  /* 가로 막대 (서강 카테고리) */
+  .hbar{display:flex;flex-direction:column;gap:9px;}
+  .hbar__row{display:grid;grid-template-columns:110px 1fr 46px;align-items:center;gap:10px;}
+  .hbar__name{font-size:13px;color:#3a4048;text-align:right;}
+  .hbar__track{background:#f1f3f5;border-radius:6px;height:20px;overflow:hidden;}
+  .hbar__fill{height:100%;border-radius:6px;background:#8fb4f0;}
+  .hbar__fill.hot{background:#1d6ceb;}
+  .hbar__val{font-size:12px;color:#5c6570;font-variant-numeric:tabular-nums;}
+
+  .growth{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .gchip{font-size:13px;color:#4b5563;background:#f2f4f6;border-radius:999px;padding:5px 12px;}
+  .gchip b{color:var(--accent);margin-left:2px;}
+  .gchip.hot{background:#fff0ea;color:#b23b12;} .gchip.hot b{color:#e5502b;}
+
+  .segs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .sc{border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+  .sc__head{display:flex;align-items:center;gap:7px;font-size:15px;font-weight:700;margin-bottom:8px;}
+  .sc__desc{font-size:13px;color:var(--sub);line-height:1.5;margin:0 0 12px;}
+  .cust{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:9px;background:#f8f9fa;margin-bottom:7px;}
+  .cust__name{font-size:14px;font-weight:600;} .cust__trend{font-size:12px;color:var(--sub);}
+  .sc--red{border-top:3px solid #e5502b;} .sc--red .sc__head .material-symbols-rounded{color:#e5502b;}
+  .sc--amber{border-top:3px solid #e2971e;} .sc--amber .sc__head .material-symbols-rounded{color:#e2971e;}
+  .sc--blue{border-top:3px solid #1d6ceb;} .sc--blue .sc__head .material-symbols-rounded{color:#1d6ceb;}
+
+  .proposal{background:linear-gradient(180deg,#f7faff,#fff 60%);}
+  .props{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  .prop{display:flex;gap:12px;}
+  .prop__ico{width:40px;height:40px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #dbe6ff;color:var(--accent);}
+  .prop__title{font-size:15px;font-weight:700;margin-bottom:3px;}
+  .prop__body{font-size:13px;color:#5c6570;line-height:1.55;}
+
+  /* 업종 칩 */
+  .uchips{display:flex;flex-wrap:wrap;gap:8px;}
+  .uchip{font-size:13px;background:#f2f4f6;border-radius:999px;padding:6px 13px;color:#3a4048;}
+  .uchip b{color:var(--accent);margin-left:4px;}
+
+  /* 관제 고객 리스트 */
+  .clist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .crow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid #eef0f2;border-radius:10px;}
+  .crow__n{font-size:14px;font-weight:600;} .crow__v{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums;}
+
+  .dummy{font-size:12px;font-weight:700;color:#8b6d00;background:#fff4d6;border-radius:999px;padding:3px 10px;}
+  .news{display:flex;flex-direction:column;}
+  .news-item{display:flex;align-items:center;gap:14px;padding:12px 4px;border-bottom:1px solid #eef0f2;text-decoration:none;color:inherit;}
+  .news-item:last-child{border-bottom:0;} .news-item:hover{background:#fff6f0;}
+  .news-day{width:54px;flex:none;text-align:center;font-size:13px;font-weight:600;color:var(--sub);border:1px solid #eef0f2;border-radius:8px;padding:5px 0;}
+  .news-day.hot{background:#fff0e8;border-color:#ffd5bf;color:#d1571f;}
+  .news-title{font-size:15px;font-weight:600;}
+  .news-meta{font-size:12px;color:#8b95a1;margin-top:3px;display:flex;gap:10px;}
+
+  .mapbox{height:300px;border-radius:12px;border:1px solid var(--line);overflow:hidden;position:relative;
+    background:radial-gradient(120px 120px at 30% 40%,rgba(229,80,43,.5),transparent),
+               radial-gradient(90px 90px at 62% 55%,rgba(255,118,26,.5),transparent),
+               radial-gradient(70px 70px at 48% 30%,rgba(229,80,43,.35),transparent),
+               radial-gradient(110px 110px at 72% 68%,rgba(255,118,26,.4),transparent),#10151f;
+    display:flex;align-items:center;justify-content:center;color:#9aa4b2;font-size:13px;}
+  .firecases{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .fc{border:1px solid var(--line);border-left:3px solid #c4c4c4;border-radius:11px;padding:12px 14px;}
+  .fc--red{border-left-color:#e5502b;} .fc--orange{border-left-color:#ff761a;}
+  .fc__top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+  .fc__type{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;background:#f2f4f6;color:#5c6570;}
+  .fc__type--red{background:#ffe9e2;color:#c0341a;} .fc__type--orange{background:#fff0e2;color:#c25a12;}
+  .fc__time{font-size:12px;color:#8b95a1;}
+  .fc__loc{display:flex;align-items:center;gap:5px;font-size:14px;}
+  .fc__loc .material-symbols-rounded{color:#adb5bd;font-size:16px;flex:none;}
+
+  .hide{display:none;}
+  @media (max-width:900px){ .kpis,.props,.firecases,.clist{grid-template-columns:1fr 1fr;} .segs{grid-template-columns:1fr;} }
+  @media (max-width:640px){ .kpis,.props,.firecases,.clist{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="pagehead">
+    <h1>인사이트</h1>
+    <p>관제 신호 분석과 화재 동향을 바탕으로 고객 제안에 쓸 인사이트를 제공해요.</p>
+  </div>
+
+  <div class="scope">
+    <span class="scope__label">범위</span>
+    <div class="scope__seg" role="tablist">
+      <button class="on" data-scope="nat" onclick="setScope('nat')"><span class="material-symbols-rounded">public</span>전국</button>
+      <button data-scope="sg" onclick="setScope('sg')"><span class="material-symbols-rounded">location_city</span>서강지사</button>
+    </div>
+  </div>
+
+  <div class="seg" role="tablist">
+    <button class="on" data-tab="report" onclick="setTab('report')"><span class="material-symbols-rounded">insights</span>신호 인사이트 리포트</button>
+    <button data-tab="news" onclick="setTab('news')"><span class="material-symbols-rounded">newspaper</span>화재 뉴스</button>
+    <button data-tab="cases" onclick="setTab('cases')"><span class="material-symbols-rounded">local_fire_department</span>실 화재 사례</button>
+  </div>
+
+  <!-- ===== 전국 리포트 ===== -->
+  <section id="report-nat">
+    <div class="scope-badge nat"><span class="material-symbols-rounded" style="font-size:16px">public</span>전국 기준</div>
+    <div class="src"><span class="material-symbols-rounded">database</span>2026년 2월 ~ 5월 · 실 관제 알람 로그 4개월 · pandas 정제·집계</div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi__ico"><span class="material-symbols-rounded">sensors</span></div><div><div class="kpi__val">30,272<span>건</span></div><div class="kpi__label">분석 신호</div><div class="kpi__note">내부·테스트 4.5% 제외</div></div></div>
+      <div class="kpi"><div class="kpi__ico"><span class="material-symbols-rounded">apartment</span></div><div><div class="kpi__val">947<span>곳</span></div><div class="kpi__label">대상 고객사</div><div class="kpi__note">건물 2,113개</div></div></div>
+      <div class="kpi"><div class="kpi__ico"><span class="material-symbols-rounded">trending_up</span></div><div><div class="kpi__val">+23<span>%</span></div><div class="kpi__label">5월 신호 증가율</div><div class="kpi__note">전월 대비, 증가폭 확대</div></div></div>
+      <div class="kpi"><div class="kpi__ico"><span class="material-symbols-rounded">error</span></div><div><div class="kpi__val">약 50<span>%</span></div><div class="kpi__label">오탐·단순복구성</div><div class="kpi__note">화재신호 49%가 오작동</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card__head"><span class="card__title"><span class="material-symbols-rounded">show_chart</span>월별 관제 신호량</span></div>
+      <svg viewBox="0 0 620 240" width="100%" style="display:block">
+        <g stroke="#e9e9e9"><line x1="46" y1="12" x2="610" y2="12"/><line x1="46" y1="61.5" x2="610" y2="61.5"/><line x1="46" y1="111" x2="610" y2="111"/><line x1="46" y1="160.5" x2="610" y2="160.5"/><line x1="46" y1="210" x2="610" y2="210"/></g>
+        <g font-size="10" fill="#9d9d9d" text-anchor="end"><text x="40" y="15">10,700</text><text x="40" y="64">9,400</text><text x="40" y="114">8,000</text><text x="40" y="163">6,600</text><text x="40" y="213">5,300</text></g>
+        <polygon points="46,210 46,176 234,158 422,119 610,54 610,210" fill="#1d6ceb" opacity="0.12"/>
+        <polyline points="46,176 234,158 422,119 610,54" fill="none" stroke="#1d6ceb" stroke-width="2.5" stroke-linejoin="round"/>
+        <g fill="#fff" stroke="#1d6ceb" stroke-width="2"><circle cx="46" cy="176" r="3"/><circle cx="234" cy="158" r="3"/><circle cx="422" cy="119" r="3"/><circle cx="610" cy="54" r="3"/></g>
+        <g font-size="11" fill="#555" text-anchor="middle"><text x="46" y="230">2월</text><text x="234" y="230">3월</text><text x="422" y="230">4월</text><text x="610" y="230">5월</text></g>
+      </svg>
+      <div class="note"><span class="material-symbols-rounded">trending_up</span>전월 대비 +8% → +16% → +23% · 4개월간 +54%. 여름 진입에 따른 계절 신호가 더해진 결과예요.</div>
+    </div>
+    <div class="card">
+      <div class="card__head"><span class="card__title"><span class="material-symbols-rounded">wb_sunny</span>계절형 신호 급증 (2월 → 5월)</span></div>
+      <div class="gbars" id="gbars"></div>
+      <div class="legend"><span><i style="background:#c4c4c4"></i>2월</span><span><i style="background:#1d6ceb"></i>5월</span></div>
+      <div class="growth" id="growth"></div>
+      <div class="note"><span class="material-symbols-rounded">ac_unit</span>온도·냉방·침수 계열이 여름 대비 관리 수요를 보여주는 선행 지표예요. 화재·전력은 거의 평탄.</div>
+    </div>
+    <div class="card">
+      <div class="card__head"><span class="card__title"><span class="material-symbols-rounded">groups</span>고객 리텐션 신호 3분류</span></div>
+      <div class="segs">
+        <div class="sc sc--red"><div class="sc__head"><span class="material-symbols-rounded">north_east</span>급증 고객</div><p class="sc__desc">신호가 갑자기 늘어난 곳 — 신규 개시 또는 설비 이슈. 선제 접촉 적기.</p>
+          <div class="cust"><span class="cust__name">태영산업</span><span class="cust__trend">4월 18 → 5월 471건</span></div>
+          <div class="cust"><span class="cust__name">중앙대학교</span><span class="cust__trend">4월 121건 급발생</span></div>
+          <div class="cust"><span class="cust__name">도마이편한세상</span><span class="cust__trend">0 → 136건</span></div></div>
+        <div class="sc sc--amber"><div class="sc__head"><span class="material-symbols-rounded">south_east</span>급감 고객</div><p class="sc__desc">신호가 0 근처로 떨어진 곳 — 문제 해소 또는 이탈 임박. 확인 필요.</p>
+          <div class="cust"><span class="cust__name">인천광역시체육회</span><span class="cust__trend">52 → 0건</span></div>
+          <div class="cust"><span class="cust__name">논현코아루오피스텔</span><span class="cust__trend">197 → 32건</span></div>
+          <div class="cust"><span class="cust__name">흑석한강푸르지오</span><span class="cust__trend">60 → 8건</span></div></div>
+        <div class="sc sc--blue"><div class="sc__head"><span class="material-symbols-rounded">priority_high</span>만성 과다 고객</div><p class="sc__desc">4개월 내내 최다 신호 — 설비 이슈 상시. 관리 부담·이탈 위험.</p>
+          <div class="cust"><span class="cust__name">용산구청 어르신복지과</span><span class="cust__trend">누적 2,045건 (월 256~615)</span></div></div>
+      </div>
+    </div>
+    <div class="card proposal">
+      <div class="card__head"><span class="card__title"><span class="material-symbols-rounded">lightbulb</span>고객 제안에 이렇게 활용하세요</span></div>
+      <div class="props">
+        <div class="prop"><div class="prop__ico"><span class="material-symbols-rounded">ac_unit</span></div><div><div class="prop__title">여름 선제 제안</div><div class="prop__body">온도·냉방·침수 신호가 최대 +122% 급증. 냉동창고·전산실·집수정 보유 고객에게 혹서기·장마 대비 원격 감시 강화를 먼저 제안한다.</div></div></div>
+        <div class="prop"><div class="prop__ico"><span class="material-symbols-rounded">tune</span></div><div><div class="prop__title">오경보 저감 부가가치</div><div class="prop__body">전체의 약 절반이 오탐·단순복구성. 감지기 튜닝·포인트 정비를 "관제 품질 개선"으로 제안한다.</div></div></div>
+        <div class="prop"><div class="prop__ico"><span class="material-symbols-rounded">water_drop</span></div><div><div class="prop__title">장마 전 침수 점검</div><div class="prop__body">침수·배수 신호가 집수정에 집중되고 +47% 증가. 지하 중요시설 보유 고객에 사전 점검을 캠페인화한다.</div></div></div>
+        <div class="prop"><div class="prop__ico"><span class="material-symbols-rounded">diversity_3</span></div><div><div class="prop__title">3분류 기반 접점 관리</div><div class="prop__body">급증=즉시 접촉, 급감=이탈 점검, 만성과다=안정화 컨설팅으로 방문 우선순위를 배정한다.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 서강지사 리포트 ===== -->
+  <section id="report-sg" class="hide">
+    <div class="scope-badge sg"><span class="material-symbols-rounded" style="font-size:16px">location_city</span>서강지사 · 마포·서대문</div>
+    <div class="src"><span class="material-symbols-rounded">database</span>서강지사 계약원장(8,008건, 26.06.30) × 관제 알람 4개월 교차 · 이름·지역 이중검증</div>
+    <div class="kpis">
+      <div class="kpi"><div class="kpi__ico"><span class="material-symbols-rounded">store</span></div><div><div class="kpi__val">8,008<span>사업장</span></div><div class="kpi__label">서강 계약(개시)</div><div class="kpi__note">고객 4,609 · 마포 84%·서대문 14%</div></div></div>
+      <div class="kpi"><div class="kpi__ico"><span class="material-symbols-rounded">sensors</span></div><div><div class="kpi__val">30<span>곳</span></div><div class="kpi__label">관제 도입 고객</div><div class="kpi__note">4개월 신호 1,027건 · 도입률 낮음</div></div></div>
+      <div class="kpi"><div class="kpi__ico"><span class="material-symbols-rounded">water_drop</span></div><div><div class="kpi__val">35<span>%</span></div><div class="kpi__label">침수·배수 신호 비중</div><div class="kpi__note">전국과 달리 1순위 리스크</div></div></div>
+      <div class="kpi"><div class="kpi__ico"><span class="material-symbols-rounded">rocket_launch</span></div><div><div class="kpi__val">~0<span>%</span></div><div class="kpi__label">블루스캔 원격 침투</div><div class="kpi__note">방범 위주 → 업셀 여지 큼</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card__head"><span class="card__title sg"><span class="material-symbols-rounded">apartment</span>계약 기반 특성 — 도심 오피스·상가 밀집</span></div>
+      <div class="uchips">
+        <span class="uchip">기타사무실<b>2,932</b></span><span class="uchip">아파트<b>652</b></span><span class="uchip">일반음식점<b>450</b></span>
+        <span class="uchip">기타일반점포<b>425</b></span><span class="uchip">커피점<b>213</b></span><span class="uchip">개인병·의원<b>156</b></span>
+        <span class="uchip">대학교<b>107</b></span>
+      </div>
+      <div class="note"><span class="material-symbols-rounded">info</span>알람상품 95%·방범포함 74%. 마포·서대문 도심의 사무실+상가+F&amp;B+아파트 구성이에요. 유지기간은 30년이상 99곳(초장기 충성)부터 1년미만 980곳(신규)까지 양극.</div>
+    </div>
+
+    <div class="card">
+      <div class="card__head"><span class="card__title sg"><span class="material-symbols-rounded">water_drop</span>서강 관제 신호 — 침수·배수가 1순위</span></div>
+      <div class="hbar" id="sgcat"></div>
+      <div class="note"><span class="material-symbols-rounded">tips_and_updates</span>중수조·집수정·부스터펌프·물탱크 저수위 등 <b>지하 기계실 설비</b> 신호가 상위. 전국은 화재가 최대였지만 서강은 침수·배수(35%)가 압도적 — 도심 노후 오피스 특성.</div>
+    </div>
+
+    <div class="card">
+      <div class="card__head"><span class="card__title sg"><span class="material-symbols-rounded">domain</span>주요 관제 고객 (금융·오피스 중심)</span></div>
+      <div class="clist" id="sgcust"></div>
+      <div class="note"><span class="material-symbols-rounded">south_east</span>원이앤에스는 4월 103 → 5월 6건으로 급감 — 이탈·문제해소 여부 확인 우선 대상.</div>
+    </div>
+
+    <div class="card proposal">
+      <div class="card__head"><span class="card__title sg"><span class="material-symbols-rounded">lightbulb</span>서강지사 제안 전략</span></div>
+      <div class="props">
+        <div class="prop"><div class="prop__ico"><span class="material-symbols-rounded">plumbing</span></div><div><div class="prop__title">지하설비 침수 관제 앵커</div><div class="prop__body">장마 전 집수정·중수조·배수펌프 점검을 지역 캠페인으로. 침수 신호 35% 특성을 근거로 지하 기계실 보유 오피스에 집중.</div></div></div>
+        <div class="prop"><div class="prop__ico"><span class="material-symbols-rounded">rocket_launch</span></div><div><div class="prop__title">방범 고객 업셀</div><div class="prop__body">방범 위주 8천 사업장에 블루스캔 원격관제 침투 거의 0. 아파트(652)·대학교(107)·병의원(156)부터 설비·침수 관제 업셀.</div></div></div>
+        <div class="prop"><div class="prop__ico"><span class="material-symbols-rounded">favorite</span></div><div><div class="prop__title">초장기 고객 리텐션</div><div class="prop__body">30년이상 99곳 등 장기 충성고객 대상 감성터칭·정기 리포트로 이탈 방어.</div></div></div>
+        <div class="prop"><div class="prop__ico"><span class="material-symbols-rounded">person_add</span></div><div><div class="prop__title">신규 온보딩 관리</div><div class="prop__body">1년미만 980곳 신규 계약의 초기 신호를 밀착 관리해 조기 이탈을 막고 관제 전환으로 연결.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 뉴스 -->
+  <section id="news" class="hide">
+    <div class="card">
+      <div class="card__head"><span class="card__title"><span class="material-symbols-rounded">newspaper</span>블루스캔 관련 화재 뉴스</span><span class="dummy">샘플 데이터</span></div>
+      <div class="news" id="newsfeed"></div>
+      <div class="note"><span class="material-symbols-rounded">info</span>현재는 샘플 뉴스예요. 일별 자동 크롤링 연동은 별도로 진행할 예정입니다.</div>
+    </div>
+  </section>
+
+  <!-- ③ 실 화재 사례 -->
+  <section id="cases" class="hide">
+    <div class="card">
+      <div class="card__head"><span class="card__title"><span class="material-symbols-rounded">local_fire_department</span>전국 화재 발생 지도<span class="live">2026-07-06 · 20건</span></span></div>
+      <div class="mapbox">지도 영역 (실제 앱에서는 카카오맵 글로우 히트 렌더 — 프리뷰에서는 생략)</div>
+      <div class="note"><span class="material-symbols-rounded">info</span>국민안전24 실시간 화재정보(WGS84 좌표) 기반. 최근일수록 진하게 표시돼요.</div>
+    </div>
+    <div class="card">
+      <div class="card__head"><span class="card__title"><span class="material-symbols-rounded">format_list_bulleted</span>최근 화재 사례</span></div>
+      <div class="firecases" id="firecases"></div>
+      <div class="note"><span class="material-symbols-rounded">tips_and_updates</span>화재 인근·용도 유사 고객처는 재접촉 타이밍 신호로 활용할 수 있어요.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+  var scope='nat', tab='report';
+  function render(){
+    document.getElementById('report-nat').classList.toggle('hide', !(tab==='report'&&scope==='nat'));
+    document.getElementById('report-sg').classList.toggle('hide', !(tab==='report'&&scope==='sg'));
+    document.getElementById('news').classList.toggle('hide', tab!=='news');
+    document.getElementById('cases').classList.toggle('hide', tab!=='cases');
+    document.querySelectorAll('.seg button').forEach(function(b){b.classList.toggle('on', b.dataset.tab===tab);});
+    document.querySelectorAll('.scope__seg button').forEach(function(b){b.classList.toggle('on', b.dataset.scope===scope);});
+  }
+  function setScope(s){ scope=s; if(tab!=='report') tab='report'; render(); }
+  function setTab(t){ tab=t; render(); }
+
+  // 전국 계절 그룹 막대
+  var cats=['온습도','냉난방·공조','냉동·온도이상','침수·배수','화재·소방','전력·정전'];
+  var feb=[250,82,507,1163,1590,418], may=[554,175,991,1705,1809,437], gr=[122,113,95,47,14,5];
+  var mx=Math.max.apply(null,may)*1.1;
+  document.getElementById('gbars').innerHTML=cats.map(function(c,i){
+    return '<div class="gcol"><div class="gpair"><div class="gbar feb" style="height:'+(feb[i]/mx*170)+'px"></div><div class="gbar may" style="height:'+(may[i]/mx*170)+'px"></div></div><div class="gcat">'+c+'</div></div>';
+  }).join('');
+  document.getElementById('growth').innerHTML=cats.map(function(c,i){return '<span class="gchip'+(gr[i]>=90?' hot':'')+'">'+c+' <b>+'+gr[i]+'%</b></span>';}).join('');
+
+  // 서강 카테고리 가로막대
+  var sc=[['침수·배수',363,true],['기타',216,false],['화재·소방',174,false],['전력·정전',126,false],['설비·장비',92,false],['냉동·온도',29,false],['온습도',25,false]];
+  var smx=363;
+  document.getElementById('sgcat').innerHTML=sc.map(function(r){
+    return '<div class="hbar__row"><div class="hbar__name">'+r[0]+'</div><div class="hbar__track"><div class="hbar__fill'+(r[2]?' hot':'')+'" style="width:'+(r[1]/smx*100)+'%"></div></div><div class="hbar__val">'+r[1]+'건</div></div>';
+  }).join('');
+
+  // 서강 주요 관제 고객
+  var sgc=[['신한은행',241],['에스원',192],['원이앤에스',157],['국민은행',70],['듀델코리아',53],['우정사업본부',36],['삼성생명보험',32],['인앤인주택관리',31]];
+  document.getElementById('sgcust').innerHTML=sgc.map(function(r){return '<div class="crow"><span class="crow__n">'+r[0]+'</span><span class="crow__v">'+r[1]+'건</span></div>';}).join('');
+
+  // 샘플 뉴스
+  var news=[['오늘',1,'인천 부평 공장서 불…인명피해 없어','인천 부평구','연합뉴스'],['오늘',1,'대구 북구 상가 화재로 점포 3곳 소실','대구 북구','뉴스1'],['어제',1,'포항 아파트 화재 주민 30여명 대피','경북 포항시','경북일보'],['2일 전',0,'천안 주택가 새벽 화재…초기 진화','충남 천안시','중도일보'],['3일 전',0,'영천 공장 대형화재 진화에 4시간','경북 영천시','매일신문'],['4일 전',0,'서울 중구 상가 배전반 화재 발생','서울 중구','서울신문']];
+  document.getElementById('newsfeed').innerHTML=news.map(function(n){return '<a class="news-item" href="#" onclick="return false"><div class="news-day'+(n[1]?' hot':'')+'">'+n[0]+'</div><div style="min-width:0;flex:1"><div class="news-title">'+n[2]+'</div><div class="news-meta"><span>📍 '+n[3]+'</span><span>'+n[4]+'</span></div></div><span class="material-symbols-rounded" style="color:#c4c9d0">chevron_right</span></a>';}).join('');
+
+  // 실 화재 사례
+  var cases=[['서울특별시 송파구 문정동','10:13','기타화재'],['대전광역시 중구 선화동','10:04','기타화재'],['서울특별시 중랑구 면목동','08:59','일반화재(차량,주택)'],['담양군 용면 용연리','08:29','기타화재'],['경상북도 영천시 대전동','08:04','대형화재(시장,공장)'],['경기도 구리시 교문동','07:41','일반화재(차량,주택)'],['서울특별시 도봉구 방학동','07:07','일반화재(차량,주택)'],['강원도 원주시 지정면 가곡리','06:41','기타화재'],['충청남도 천안시 수신면 백자리','05:14','일반화재(차량,주택)'],['경상북도 포항시 오천읍 세계리','04:54','고층건물(3층이상,아파트)'],['서울특별시 중랑구 면목동','04:26','일반화재(차량,주택)'],['서울특별시 중구 북창동','03:49','일반화재(차량,주택)'],['경상남도 통영시 용남면 장평리','03:47','기타화재'],['인천광역시 부평구 부평동','02:56','대형화재(시장,공장)'],['대구광역시 북구 칠성동2가','02:50','고층건물(3층이상,아파트)'],['나주시 산포면 송림리','01:08','일반화재(차량,주택)']];
+  function tone(t){ if(/대형|고층/.test(t))return'red'; if(/일반/.test(t))return'orange'; return'gray'; }
+  document.getElementById('firecases').innerHTML=cases.map(function(c){var tn=tone(c[2]);return '<div class="fc fc--'+tn+'"><div class="fc__top"><span class="fc__type fc__type--'+tn+'">'+c[2]+'</span><span class="fc__time">'+c[1]+'</span></div><div class="fc__loc"><span class="material-symbols-rounded">location_on</span>'+c[0]+'</div></div>';}).join('');
+
+  render();
+</script>
+</body>
+</html>

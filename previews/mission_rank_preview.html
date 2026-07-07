@@ -1,0 +1,124 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미션 & 랭킹 프리뷰</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+:root{--accent:#1d6ceb;--ink:#191f28;--sub:#6b7684;--line:#eaecf0;--bg:#f4f6f8;}
+*{box-sizing:border-box;} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+.material-symbols-rounded{font-variation-settings:'FILL' 0,'wght' 500,'opsz' 24;vertical-align:middle;line-height:1;}
+.wrap{max-width:1000px;margin:0 auto;padding:26px 20px 60px;}
+h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 4px;} .desc{font-size:14px;color:var(--sub);margin:0 0 16px;}
+.hero{display:flex;align-items:center;gap:24px;flex-wrap:wrap;background:linear-gradient(120deg,#1d6ceb,#3a86ff);color:#fff;border-radius:18px;padding:20px 24px;margin-bottom:16px;}
+.hero__pts{display:flex;align-items:center;gap:8px;font-size:30px;font-weight:800;} .hero__meta{display:flex;gap:26px;margin-left:auto;flex-wrap:wrap;}
+.hero__meta div{display:flex;flex-direction:column;} .hero__meta b{font-size:24px;font-weight:800;} .hero__meta span{font-size:13px;opacity:.9;}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:16px;}
+.card__head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.card__title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;} .card__title .material-symbols-rounded{color:var(--accent);}
+.seg{display:inline-flex;background:#eef0f2;border:1px solid #e2e5e9;border-radius:10px;padding:3px;gap:2px;}
+.seg button{border:none;background:none;padding:6px 13px;border-radius:8px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+.seg button .material-symbols-rounded{font-size:16px;} .seg button.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.bingo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.cell{position:relative;aspect-ratio:1/1;border:1px solid #e7e9ee;border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:5px;background:#fbfcfe;overflow:hidden;}
+.cell .material-symbols-rounded{color:#b0b8c1;font-size:24px;} .cell .lab{font-size:12px;font-weight:600;color:#3a4048;line-height:1.28;word-break:keep-all;}
+.cell .n{font-size:12px;color:#8b95a1;font-weight:700;} .tag{position:absolute;top:7px;left:7px;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;}
+.cell.activity .tag{background:#eaf2ff;color:#1d55c4;} .cell.perf .tag{background:#fff2e0;color:#c2731a;}
+.cell.free{background:linear-gradient(135deg,#fff6d6,#ffe9a8);border-color:#f4d97a;} .cell.free .material-symbols-rounded{color:#e0a400;} .cell.free .lab{color:#a5760a;font-weight:800;letter-spacing:.05em;}
+.cell.done{background:#e9f7f0;border-color:#9cddc1;} .cell.done .material-symbols-rounded{color:#0f9d63;} .cell.done .lab{color:#127a52;}
+.cell.done.activity{background:#e6f0ff;border-color:#9cc0f5;} .cell.done.activity .material-symbols-rounded{color:#1d6ceb;} .cell.done.activity .lab{color:#1d55c4;}
+.cell.inbingo{box-shadow:0 0 0 2px #f7b500,0 4px 12px rgba(247,181,0,.28);border-color:#f7b500;}
+.legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--sub);}
+.dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:middle;} .dot.a{background:#1d6ceb;} .dot.p{background:#f0902a;}
+.status{margin-left:auto;font-weight:700;color:#c2731a;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;} .chip{border:1px solid #d3daea;background:#fff;color:#3a4048;border-radius:999px;padding:7px 16px;font-size:14px;font-weight:600;cursor:pointer;} .chip.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.rank{display:flex;flex-direction:column;} .rankrow{display:flex;align-items:center;gap:12px;padding:11px 8px;border-bottom:1px solid #f0f1f3;} .rankrow:last-child{border-bottom:0;}
+.rankrow.me{background:#eef4ff;border-radius:10px;} .rankn{width:26px;text-align:center;font-weight:800;color:#b0b8c1;} .rankn.top{color:#f0902a;} .rankname{flex:1;font-size:15px;font-weight:600;} .rankpts{font-weight:800;font-variant-numeric:tabular-nums;}
+.note{display:flex;gap:8px;font-size:13px;color:var(--sub);margin-top:10px;line-height:1.5;} .note .material-symbols-rounded{font-size:16px;color:#8b95a1;flex:none;}
+.badges{display:flex;gap:12px;flex-wrap:wrap;} .badge{width:96px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:1px solid var(--line);border-radius:14px;background:#fbfcfe;color:#b0b8c1;font-size:12px;text-align:center;} .badge.on{background:#fff8e6;border-color:#f4d97a;color:#a5760a;} .badge.on .material-symbols-rounded{color:#e0a400;} .badge .material-symbols-rounded{font-size:28px;}
+</style></head><body><div class="wrap">
+<h1>미션 &amp; 랭킹</h1><p class="desc">기간별 미션 빙고를 채우고, 우리 지사 안에서 실적·활동 랭킹을 확인해요.</p>
+<div class="hero"><div class="hero__pts"><span class="material-symbols-rounded" style="font-variation-settings:'FILL' 1">stars</span><span>180P</span></div>
+<div class="hero__meta"><div><b id="h-rank">2위</b><span id="h-rankt">실적 랭킹</span></div><div><b id="h-bingo">0</b><span>빙고</span></div><div><b id="h-done">0/9</b><span>미션 달성</span></div><div><b>3/6</b><span>획득 배지</span></div></div></div>
+
+<div class="card"><div class="card__head"><div class="card__title"><span class="material-symbols-rounded">grid_view</span>미션 빙고</div>
+<div class="seg" id="bseg"></div></div>
+<div class="bingo-grid" id="grid"></div>
+<div class="legend"><span><i class="dot a"></i>활동 미션</span><span><i class="dot p"></i>성과 미션</span><span class="status" id="bstat"></span></div></div>
+
+<div class="card"><div class="card__head"><div class="card__title"><span class="material-symbols-rounded">leaderboard</span>서강지사 랭킹</div>
+<div class="seg" id="rseg"></div></div>
+<div class="chips" id="rchips"></div>
+<div class="rank" id="rank"></div>
+<div class="note"><span class="material-symbols-rounded">info</span><span id="rnote"></span></div></div>
+
+<div class="card"><div class="card__title"><span class="material-symbols-rounded">workspace_premium</span>배지</div>
+<div class="badges">
+<div class="badge on"><span class="material-symbols-rounded">flag</span>첫 방문 기록</div>
+<div class="badge on"><span class="material-symbols-rounded">emoji_events</span>첫 계약 성공</div>
+<div class="badge"><span class="material-symbols-rounded">shield</span>안전 지킴이</div>
+<div class="badge on"><span class="material-symbols-rounded">volunteer_activism</span>리텐션 수호자</div>
+<div class="badge"><span class="material-symbols-rounded">edit_note</span>완벽한 기록가</div>
+<div class="badge"><span class="material-symbols-rounded">military_tech</span>퀘스트 마스터</div>
+</div></div>
+</div>
+<script>
+var FREE={free:1,lab:'FREE'};
+function C(lab,tag,icon,cur,tgt){return{lab:lab,tag:tag,icon:icon,cur:cur,tgt:tgt,done:cur>=tgt};}
+var BOARDS={
+ week:[C('방문 결과 3건 기록','activity','fact_check',3,3),C('수주 1건 달성','perf','emoji_events',1,1),C('화재·침수 신호 1곳 대응','activity','bolt',1,1),
+   C('업셀 후보 2곳 방문','perf','trending_up',1,2),FREE,C('S등급 후보 방문','perf','workspace_premium',0,1),
+   C('감성터칭 1건 발송','activity','favorite',1,1),C('이탈위험 고객 방어 1건','perf','shield',0,1),C('월간 리포트 1건 발송','perf','description',1,1)],
+ month:[C('방문 결과 20건','activity','fact_check',20,20),C('수주 3건','perf','emoji_events',3,3),C('신호 대응 5곳','activity','bolt',5,5),
+   C('업셀 전환 5건','perf','trending_up',3,5),FREE,C('S등급 신규 3곳','perf','workspace_premium',3,3),
+   C('감성터칭 8건','activity','favorite',8,8),C('이탈위험 방어 6건','perf','shield',4,6),C('월 실적 목표 달성','perf','flag',1,1)],
+ quarter:[C('방문 결과 60건','activity','fact_check',60,60),C('수주 10건','perf','emoji_events',10,10),C('신호 대응 15곳','activity','bolt',15,15),
+   C('업셀 전환 15건','perf','trending_up',15,15),FREE,C('S등급 신규 10곳','perf','workspace_premium',10,10),
+   C('감성터칭 25건','activity','favorite',25,25),C('이탈위험 방어 18건','perf','shield',12,18),C('분기 실적 목표 달성','perf','flag',1,1)],
+ half:[C('방문 결과 120건','activity','fact_check',120,120),C('수주 20건','perf','emoji_events',20,20),C('신호 대응 30곳','activity','bolt',30,30),
+   C('업셀 전환 30건','perf','trending_up',30,30),FREE,C('S등급 신규 20곳','perf','workspace_premium',20,20),
+   C('감성터칭 50건','activity','favorite',50,50),C('이탈위험 방어 35건','perf','shield',35,35),C('반기 실적 목표 달성','perf','flag',1,1)]};
+var LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+var BT=[['week','이번 주'],['month','월간'],['quarter','분기'],['half','반기']];
+var bp='week';
+document.getElementById('bseg').innerHTML=BT.map(function(t){return '<button data-b="'+t[0]+'" onclick="setB(\''+t[0]+'\')">'+t[1]+'</button>';}).join('');
+function setB(p){bp=p;renderB();}
+function renderB(){
+ document.querySelectorAll('#bseg button').forEach(function(b){b.classList.toggle('on',b.dataset.b===bp);});
+ var cells=BOARDS[bp]; var done=cells.map(function(c){return c.free?true:c.done;});
+ var inb={}; var nb=0; LINES.forEach(function(l){if(l.every(function(i){return done[i];})){nb++;l.forEach(function(i){inb[i]=1;});}});
+ document.getElementById('grid').innerHTML=cells.map(function(c,i){
+  if(c.free)return '<div class="cell free'+(inb[i]?' inbingo':'')+'"><span class="material-symbols-rounded" style="font-variation-settings:\'FILL\' 1">star</span><span class="lab">FREE</span></div>';
+  var cls='cell '+c.tag+(c.done?' done':'')+(inb[i]?' inbingo':'');
+  return '<div class="'+cls+'"><span class="tag">'+(c.tag==='activity'?'활동':'성과')+'</span>'
+   +'<span class="material-symbols-rounded"'+(c.done?' style="font-variation-settings:\'FILL\' 1"':'')+'>'+(c.done?'check_circle':c.icon)+'</span>'
+   +'<span class="lab">'+c.lab+'</span><span class="n">'+c.cur+'/'+c.tgt+'</span></div>';
+ }).join('');
+ document.getElementById('bstat').textContent=nb>0?('🎉 '+nb+'빙고 달성!'):'한 줄을 완성하면 빙고!';
+ document.getElementById('h-bingo').textContent=nb;
+ document.getElementById('h-done').textContent=done.filter(Boolean).length+'/9';
+}
+// 랭킹
+var NAMES=[['김제니','me'],['김서연'],['이도윤'],['박지호'],['최예준'],['정하은'],['한지우'],['오서윤']];
+function seed(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return 60+(Math.abs(h)%300);}
+var MUL={week:0.4,month:1.7,quarter:5.2,half:10.5};
+var rt='perf',rp='week';
+var RT=[['perf','실적 랭킹','emoji_events'],['activity','활동 랭킹','directions_run']];
+var RP=[['week','주간'],['month','월간'],['quarter','분기'],['half','반기']];
+document.getElementById('rseg').innerHTML=RT.map(function(t){return '<button data-r="'+t[0]+'" onclick="setRT(\''+t[0]+'\')"><span class="material-symbols-rounded">'+t[2]+'</span>'+t[1]+'</button>';}).join('');
+document.getElementById('rchips').innerHTML=RP.map(function(p){return '<button class="chip" data-p="'+p[0]+'" onclick="setRP(\''+p[0]+'\')">'+p[1]+'</button>';}).join('');
+function setRT(t){rt=t;renderR();} function setRP(p){rp=p;renderR();}
+function renderR(){
+ document.querySelectorAll('#rseg button').forEach(function(b){b.classList.toggle('on',b.dataset.r===rt);});
+ document.querySelectorAll('#rchips .chip').forEach(function(b){b.classList.toggle('on',b.dataset.p===rp);});
+ var rows=NAMES.map(function(n){
+   var pts=(n[1]==='me'&&rt==='activity'&&rp==='week')?180:Math.round(seed(n[0]+'|'+rt+':'+rp)*MUL[rp]);
+   return {name:n[0],me:n[1]==='me',pts:pts};
+ }).sort(function(a,b){return b.pts-a.pts;}).slice(0,8);
+ var myr=rows.findIndex(function(r){return r.me;})+1;
+ document.getElementById('rank').innerHTML=rows.map(function(r,i){
+  return '<div class="rankrow'+(r.me?' me':'')+'"><span class="rankn'+(i<3?' top':'')+'">'+(i+1)+'</span><span class="rankname">'+(r.me?r.name+' (나)':r.name)+'</span><span class="rankpts">'+r.pts.toLocaleString()+'P</span></div>';
+ }).join('');
+ document.getElementById('h-rank').textContent=myr+'위';
+ document.getElementById('h-rankt').textContent=(rt==='perf'?'실적 랭킹':'활동 랭킹');
+ document.getElementById('rnote').textContent=(rt==='perf'?'실적 랭킹은 수주·업셀 전환 등 성과 포인트 기준':'활동 랭킹은 방문·리포트·감성터칭 등 활동 포인트 기준')+'이에요. 동료 점수는 데모용 예시값입니다.';
+}
+renderB();renderR();
+</script></body></html>
