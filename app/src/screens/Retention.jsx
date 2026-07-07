@@ -50,6 +50,60 @@ function TierBadge({ tier }) {
   return <RBadge tone={tier === 'dual' ? 'info' : 'neutral'} shape="pill">{PRODUCT_TIERS[tier]}</RBadge>;
 }
 
+// --- 데모 보강: 실 계약·관제 데이터에 아직 없는 VOC·해지·이번달 개시를 id 순서 기반으로 결정론적 배정(시연용).
+//     실서비스 전환 시 이 함수 대신 실제 계약/CS 집계로 채운다. (신호 급증·만료 도래는 실데이터로 판정) ---
+const OPEN_IDX = new Set([2, 17, 20]);        // 이번달 개시
+const TERM_IDX = new Set([9, 25]);            // 해지
+const VOC_IDX = new Set([1, 4, 7, 11, 14, 22, 27]); // VOC 발생 고객처
+const VOCOPEN_IDX = new Set([4, 11]);         // 미해결 VOC
+function augmentRetention(data) {
+  const now = new Date();
+  return data.map((c, i) => {
+    const daysToEnd = Math.round((new Date(c.endDate) - now) / 86400000);
+    return {
+      ...c,
+      openThisMonth: OPEN_IDX.has(i),
+      terminated: TERM_IDX.has(i),
+      vocTotal: VOC_IDX.has(i) ? 1 : 0,
+      unresolvedVOC: VOCOPEN_IDX.has(i) ? 1 : (c.unresolvedVOC || 0),
+      manageNeeded: c.signalTrend === '증가' || (c.signalCount90d || 0) >= 120,
+      expirySoon: daysToEnd >= 0 && daysToEnd <= 120,
+      _daysToEnd: daysToEnd,
+    };
+  });
+}
+// KPI 구분(클릭 필터) — 관리물건/개시/해지/만료도래/VOC/미해결VOC/신호관리필요
+const RET_KPIS = [
+  { key: 'all', label: '관리 유지물건', icon: 'apartment', tone: '' },
+  { key: 'open', label: '이번달 개시', icon: 'fiber_new', tone: 'blue' },
+  { key: 'term', label: '해지', icon: 'link_off', tone: 'red' },
+  { key: 'expiry', label: '계약만료 도래', icon: 'event_busy', tone: 'amber' },
+  { key: 'voc', label: 'VOC 발생', icon: 'support_agent', tone: 'amber' },
+  { key: 'vocopen', label: '미해결 VOC', icon: 'error', tone: 'red' },
+  { key: 'manage', label: '신호 관리필요', icon: 'monitor_heart', tone: 'amber' },
+];
+function matchCat(c, cat) {
+  switch (cat) {
+    case 'open': return c.openThisMonth;
+    case 'term': return c.terminated;
+    case 'expiry': return c.expirySoon;
+    case 'voc': return c.vocTotal > 0;
+    case 'vocopen': return c.unresolvedVOC > 0;
+    case 'manage': return c.manageNeeded;
+    default: return true;
+  }
+}
+// AI 추천 다음 액션 — 상태 우선순위로 판단(스코어 아님, 규칙 기반)
+function aiAction(c) {
+  const d = c._daysToEnd != null ? c._daysToEnd : Math.round((new Date(c.endDate) - new Date()) / 86400000);
+  if (c.terminated) return { tone: 'priority', t: '해지 방어', b: '즉시 방문해 원격 전환 혜택·재계약 인센티브를 제안하세요. 최근 신호 이력과 ROI로 유지 가치를 설명합니다.' };
+  if (c.unresolvedVOC > 0) return { tone: 'priority', t: '미해결 VOC 처리', b: '접수된 불만을 24시간 내 회신하고 담당자를 배정하세요. 처리 후 감성터칭으로 관계를 회복합니다.' };
+  if (c.expirySoon) return { tone: 'warn', t: `계약 만료 D-${d} · 갱신 제안`, b: '3년 재계약 갱신 제안서를 준비하고 방문 일정을 잡으세요. BEP 도달 고객은 유지 가치가 큽니다.' };
+  if (c.manageNeeded) return { tone: 'warn', t: '신호 급증 관리', b: '현장 점검 후 월간 리포트를 발송해 안심 소통하세요. 반복 신호는 설비 노후 점검을 권장합니다.' };
+  if (c.openThisMonth) return { tone: 'ok', t: '신규 개시 온보딩', b: '개시 축하 콜과 앱 사용법을 안내하세요. 초기 만족도가 장기 유지율을 좌우합니다.' };
+  return { tone: 'ok', t: '정상 유지', b: '특이 신호가 없어요. 정기 감성터칭과 분기 리포트로 관계를 관리하세요.' };
+}
+
 // 생애가치(BEP/ROI) — "지금 해약하면 손해인가, 할인해줘도 남는 고객인가"를 숫자로 보여준다(스코어 아님)
 function LifetimeValueBox({ c }) {
   const lossIfChurn = c.netValueToDate < 0;
@@ -199,7 +253,11 @@ function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate
       <div className="lrow-main" onClick={onToggle}>
         <div className="lrow-id">
           <div className="lrow-name">{c.name} <span className="kw">{c.use}</span>
-            {att.flag && <RBadge tone="danger" shape="pill" dot>주의 필요</RBadge>}
+            {c.terminated && <RBadge tone="danger" shape="pill">해지</RBadge>}
+            {c.unresolvedVOC > 0 ? <RBadge tone="danger" shape="pill">미해결 VOC</RBadge> : (c.vocTotal > 0 && <RBadge tone="warning" shape="pill">VOC</RBadge>)}
+            {c.expirySoon && <RBadge tone="warning" shape="pill">만료 D-{c._daysToEnd}</RBadge>}
+            {c.openThisMonth && <RBadge tone="info" shape="pill">이번달 개시</RBadge>}
+            {att.flag && !c.terminated && <RBadge tone="danger" shape="pill" dot>주의 필요</RBadge>}
             <TierBadge tier={c.productTier} />
           </div>
           <div className="lrow-addr">{c.address} · 계약번호 {c.contractNo} · 담당 {c.assignedConsultant}</div>
@@ -270,6 +328,16 @@ function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate
               </div>
             </div>
           </div>
+          {(() => { const a = aiAction(c); return (
+            <div className={'ld-ai ld-ai--' + a.tone}>
+              <div className="ld-ai__ico"><MI n="smart_toy" s={20} /></div>
+              <div className="ld-ai__body">
+                <div className="ld-ai__badge">AI 추천 다음 액션</div>
+                <div className="ld-ai__t">{a.t}</div>
+                <div className="ld-ai__b">{a.b}</div>
+              </div>
+            </div>
+          ); })()}
         </div>
       )}
     </div>
@@ -288,13 +356,16 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
   const [reportFor, setReportFor] = useState(null); // 월간 리포트 팝업 대상 고객
   const [empathyFor, setEmpathyFor] = useState(null); // { c, signal } — 감성터칭 메시지 팝업 대상
   const [page, setPage] = useState(1);
+  const [cat, setCat] = useState('all'); // KPI 구분 필터
   // 리포트·감성터칭 발송 상태는 App.jsx로 끌어올려졌다(게이미피케이션 포인트 계산에 필요해서) —
   // sentOverrides/markSent/touchOverrides/markTouched는 위에서 props를 받아온 이름 그대로 재사용한다.
 
-  const branches = ['전체', ...Array.from(new Set(data.map(c => c.branch)))];
+  const aug = augmentRetention(data);
+  const branches = ['전체', ...Array.from(new Set(aug.map(c => c.branch)))];
   const qx = q.trim().toLowerCase();
-  const withAttention = data.map(c => ({ c, att: needsAttention(c) }));
+  const withAttention = aug.map(c => ({ c, att: needsAttention(c) }));
   const filtered = withAttention.filter(({ c, att }) =>
+    matchCat(c, cat) &&
     (branch === '전체' || c.branch === branch) &&
     (use === '전체' || c.use === use) &&
     (tier === 'all' || c.productTier === tier) &&
@@ -303,7 +374,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
   ).map(x => x.c);
 
   // 페이지네이션 (신규진행현황과 동일) — 필터/검색이 바뀌면 1페이지로
-  useEffect(() => { setPage(1); }, [branch, use, tier, q, showAttentionOnly]);
+  useEffect(() => { setPage(1); }, [branch, use, tier, q, showAttentionOnly, cat]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / RETENTION_PER_PAGE));
   const curPage = Math.min(page, totalPages);
   const pageBase = (curPage - 1) * RETENTION_PER_PAGE;
@@ -317,16 +388,12 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `유지관리현황_${todayCompact()}.csv`; a.click();
   };
 
-  const kpi = {
-    total: data.length,
-    attention: withAttention.filter(x => x.att.flag).length,
-    expiringSoon: withAttention.filter(x => x.att.daysToEnd <= 60 && x.att.daysToEnd >= 0).length,
-  };
+  const kpiCount = (key) => key === 'all' ? aug.length : aug.filter(c => matchCat(c, key)).length;
 
   const mapCands = filtered.map(c => ({ ...c, attention: needsAttention(c).flag }));
 
   // 요약 알림 — 신호 발생 내역(전체 계약처, 최신순)과 계약 만료 임박 목록
-  const signalFeed = data
+  const signalFeed = aug
     .flatMap(c => c.signalHistory.map(s => ({ ...s, customerName: c.name, customerId: c.id })))
     .sort((a, b) => b.date.localeCompare(a.date));
   const expiringList = withAttention
@@ -379,10 +446,15 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
       </RDashCard>
     ),
     kpis: (
-      <div className="bkpis">
-        <div className="bkpi"><div className="bkpi__label" style={{ marginBottom: 8 }}>전체 유지고객</div><div className="bkpi__val tnum" style={{ marginBottom: 8 }}>{kpi.total}곳</div></div>
-        <div className="bkpi"><div className="bkpi__label" style={{ marginBottom: 8 }}>주의 필요</div><div className="bkpi__val tnum" style={{ marginBottom: 8, color: 'var(--s1-red-500,#e5484d)' }}>{kpi.attention}곳</div></div>
-        <div className="bkpi"><div className="bkpi__label" style={{ marginBottom: 8 }}>계약 만료 임박(60일 이내)</div><div className="bkpi__val tnum" style={{ marginBottom: 8 }}>{kpi.expiringSoon}곳</div></div>
+      <div className="retkpis">
+        {RET_KPIS.map(k => (
+          <button key={k.key} className={'retkpi' + (k.tone ? ' retkpi--' + k.tone : '') + (cat === k.key ? ' on' : '')}
+            onClick={() => setCat(cat === k.key && k.key !== 'all' ? 'all' : k.key)}>
+            <span className="retkpi__ico"><MI n={k.icon} s={18} /></span>
+            <span className="retkpi__n tnum">{kpiCount(k.key)}<i>건</i></span>
+            <span className="retkpi__lab">{k.label}</span>
+          </button>
+        ))}
       </div>
     ),
     list: (

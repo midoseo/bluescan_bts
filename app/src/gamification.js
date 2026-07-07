@@ -117,3 +117,91 @@ export function buildLeaderboard(consultants, myEmpno, myPoints) {
   if (myEmpno && !rows.some(r => r.isMe)) rows.push({ empno: myEmpno, name: '나', branch: '', points: myPoints, isMe: true });
   return rows.sort((a, b) => b.points - a.points);
 }
+
+/* ===== 사업팀 — 지사를 상위 사업팀으로 묶는다(데모: 지사명 해시로 결정론적 배정) ===== */
+const TEAM_NAMES = ['수도권사업팀', '중부사업팀', '영남사업팀', '호남·강원사업팀'];
+export function teamOf(branch) {
+  let h = 0; const s = String(branch || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return TEAM_NAMES[Math.abs(h) % TEAM_NAMES.length];
+}
+
+/* ===== 오늘의 미션 — 대시보드에서 오늘 해야 할 핵심 과업과 연결(활동 위주) ===== */
+export function todayMissions(ctx) {
+  const visits = ctx.visits || {};
+  return [
+    { id: 'login', label: '오늘 로그인하기', icon: 'login', pts: 5, done: true },
+    { id: 'visit', label: '방문 결과 1건 입력하기', icon: 'fact_check', pts: 10, done: Object.keys(visits).length >= 1 },
+    { id: 'report', label: '유지고객 월간 리포트 1건 발송', icon: 'description', pts: 15, done: Object.keys(ctx.reportSentOverrides || {}).length >= 1 },
+    { id: 'touch', label: '감성터칭 메시지 1건 발송', icon: 'favorite', pts: 10, done: Object.keys(ctx.touchOverrides || {}).length >= 1 },
+  ];
+}
+
+/* ===== 이달 미션 목표 — 활동 위주. base=이달 이미 누적(데모), live=이번 세션 증가분 ===== */
+export const MONTH_MISSION_DEFS = [
+  { id: 'm_visit', label: '방문 결과 입력', icon: 'fact_check', target: 20, base: 11, live: c => Object.keys(c.visits || {}).length },
+  { id: 'm_login', label: '로그인 출석', icon: 'login', target: 20, base: 14, live: () => 1 },
+  { id: 'm_report', label: '고객 월간 리포트 발송', icon: 'description', target: 8, base: 3, live: c => Object.keys(c.reportSentOverrides || {}).length },
+  { id: 'm_touch', label: '감성메시지 발송', icon: 'favorite', target: 12, base: 5, live: c => Object.keys(c.touchOverrides || {}).length },
+  { id: 'm_upsell', label: '업셀·신규 방문', icon: 'trending_up', target: 15, base: 8, live: c => Object.keys(c.visits || {}).length },
+];
+export function monthMissions(ctx) {
+  return MONTH_MISSION_DEFS.map(m => {
+    const current = Math.min(m.base + m.live(ctx), m.target);
+    return { ...m, current, done: current >= m.target };
+  });
+}
+
+/* ===== 실적 랭킹 — 월/분기/반기 누적 실적(금액) · 지사/사업팀/전체 ===== */
+const PERF_MUL = { month: 1, quarter: 3.1, half: 6.2 };
+function seededAmount(empno, period) {
+  let h = 0; const s = String(empno) + '|' + period;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  const baseManwon = 1800 + (Math.abs(h) % 6200); // 1,800~8,000만원(월 기준)
+  return Math.round(baseManwon * (PERF_MUL[period] || 1)) * 10000; // 원
+}
+/* ===== 실시간 소식(GM 방송) — 경쟁심리 자극용 브로드캐스트 피드 =====
+ * 온라인 게임의 서버 공지처럼 동료의 수주·배지·미션·랭킹 소식을 흘려보낸다.
+ * 데모: 계정 명단에서 결정론적으로 이벤트를 생성한다(실서비스 시 실제 이벤트 스트림으로 교체).
+ * 각 소식은 scope(branch=우리지사 / team=사업팀 / all=전국) 태그를 갖는다. */
+const _NEWS_REGIONS = ['용산구', '마포구', '서대문구', '강남구', '성동구', '송파구', '노원구', '중구', '영등포구', '동작구'];
+const _NEWS_USES = ['노인복지시설', '오피스빌딩', '아파트 단지', '대학교', '물류센터', '병원', '상가', '관공서', '전산센터', '호텔'];
+const _NEWS_BADGES = ['리텐션 수호자', '안전 지킴이', '완벽한 기록가', '퀘스트 마스터', '첫 계약 성공', '업셀 전문가'];
+function _hstr(s) { let h = 0; s = String(s); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+export function buildBroadcast({ accounts, myBranch }) {
+  const cons = (accounts || []).filter(a => a.role === 'consultant');
+  const myTeam = teamOf(myBranch);
+  const pick = (salt, pool) => pool[_hstr(salt) % pool.length];
+  const items = [];
+  cons.forEach((a, i) => {
+    const h = _hstr(a.empno + ':' + i);
+    if (h % 5 !== 0 && h % 5 !== 2) return; // 약 40%만 이벤트 발생(과밀 방지)
+    const scope = a.branch === myBranch ? 'branch' : (teamOf(a.branch) === myTeam ? 'team' : 'all');
+    const kind = h % 5;
+    if (kind === 0) {
+      const won = 200 + (h % 500);
+      items.push({ scope, tone: 'win', icon: 'celebration', text: `${a.name} 담당자 ${pick(a.empno + 'r', _NEWS_REGIONS)} ${pick(a.empno + 'u', _NEWS_USES)} 통합 수주! 월 ${won.toLocaleString()}만원 개시!` });
+    } else { // kind === 2
+      const k = (h >> 3) % 4;
+      if (k === 0) items.push({ scope, tone: 'badge', icon: 'military_tech', text: `${a.name} 담당자가 '${pick(a.empno + 'b', _NEWS_BADGES)}' 배지를 획득했습니다!` });
+      else if (k === 1) items.push({ scope, tone: 'mission', icon: 'task_alt', text: `${a.name} 담당자 이달 미션 전체 달성!` });
+      else if (k === 2) items.push({ scope, tone: 'rank', icon: 'emoji_events', text: `${a.name} 담당자 ${teamOf(a.branch)} 실적 1위 등극!` });
+      else items.push({ scope, tone: 'big', icon: 'payments', text: `${a.name} 담당자 월 실적 ${1 + (h % 3)}억 돌파!` });
+    }
+  });
+  return items.slice(0, 24);
+}
+
+export function buildPerfRanking({ accounts, myEmpno, myBranch, period, scope }) {
+  const myTeam = teamOf(myBranch);
+  let pool = (accounts || []).filter(a => a.role === 'consultant');
+  if (scope === 'branch') pool = pool.filter(a => a.branch === myBranch);
+  else if (scope === 'team') pool = pool.filter(a => teamOf(a.branch) === myTeam);
+  if (myEmpno && !pool.some(a => a.empno === myEmpno)) pool = [...pool, { empno: myEmpno, name: '나', branch: myBranch }];
+  const rows = pool.map(a => ({
+    empno: a.empno, name: a.name, branch: a.branch, team: teamOf(a.branch),
+    amount: seededAmount(a.empno, period), isMe: a.empno === myEmpno,
+  })).sort((x, y) => y.amount - x.amount);
+  rows.forEach((r, i) => { r.rank = i + 1; });
+  return { top: rows.slice(0, 10), me: rows.find(r => r.isMe) || null, total: rows.length };
+}
