@@ -93,7 +93,8 @@ export default function App() {
   const markTouched = useCallback((id) => setTouchOverrides(prev => ({ ...prev, [id]: new Date().toISOString().slice(0, 10) })), []);
   const [visits, setVisits] = useState(() => buildDemoVisits());   // 시연용 방문결과 3건 시드
   const [resultItem, setResultItem] = useState(null);
-  const [retInitCat, setRetInitCat] = useState('all');   // 홈 유지관리 핵심 → 유지관리현황 진입 시 초기 KPI 필터
+  const [retInitCat, setRetInitCat] = useState('all');   // 홈 → 유지관리현황 진입 시 초기 KPI 필터
+  const [pipeInitTier, setPipeInitTier] = useState('all'); // 홈 → 신규진행현황 진입 시 초기 등급 필터
   const [alertOpen, setAlertOpen] = useState(() => {
     try { return localStorage.getItem('bluescan.alertOpen') !== '0'; } catch { return true; }
   });
@@ -237,18 +238,24 @@ export default function App() {
 
   const pageTitle = view === 'home' ? (isAdmin ? '관리자 대시보드' : '컨설턴트 대시보드') : (TITLES[view] && TITLES[view].crumb);
 
-  // --- 홈 좌측 "유지관리 핵심" — 유지관리현황 KPI와 동일 집계. 클릭 시 해당 필터로 유지관리현황 진입 ---
+  // --- 홈 좌측 "오늘 할 일" — 유지관리·신규진행·미션 화면의 핵심만 뽑아 클릭 시 해당 화면(필터 적용)으로 이동 ---
   const _retAug = augmentRetention(retention);
   const _retAttn = _retAug.filter(c => needsAttention(c).flag).length;
   const _retExpiry = _retAug.filter(c => c.expirySoon).length;
   const _retManage = _retAug.filter(c => c.manageNeeded).length;
+  const _bothN = pipelineData.filter(c => c.track === 'B' && c.btype === 'both').length;
+  const _topN = pipelineData.filter(c => tierOf(c.score).key === 'S').length;
+  const _questsDone = quests.filter(q => q.done).length;
   const goRetention = (cat) => { setRetInitCat(cat); setView('retention'); };
-  const homeRetStats = [
-    { cat: 'all', icon: 'apartment', tone: '', label: '관리 유지물건', n: _retAug.length },
-    { cat: 'attn', icon: 'warning', tone: 'red', label: '주의 필요', n: _retAttn },
-    { cat: 'expiry', icon: 'event_busy', tone: 'amber', label: '만료 도래', n: _retExpiry },
-    { cat: 'manage', icon: 'monitor_heart', tone: 'amber', label: '신호 관리필요', n: _retManage },
-  ];
+  const goPipeline = (tier) => { setPipeInitTier(tier); setView('pipeline'); };
+  const homeTodos = [
+    _retAttn > 0 && { icon: 'warning', tone: 'danger', label: '주의 필요 유지고객', n: _retAttn, unit: '곳', act: () => goRetention('attn') },
+    _retExpiry > 0 && { icon: 'event_busy', tone: 'warn', label: '계약 만료 임박', n: _retExpiry, unit: '곳', act: () => goRetention('expiry') },
+    _bothN > 0 && { icon: 'priority_high', tone: 'warn', label: '우선접촉 대상', n: _bothN, unit: '곳', act: () => goPipeline('both') },
+    { icon: 'star', tone: '', label: '최우선 신규 후보', n: _topN, unit: '곳', act: () => goPipeline('S') },
+    _retManage > 0 && { icon: 'monitor_heart', tone: '', label: '신호 관리필요', n: _retManage, unit: '곳', act: () => goRetention('manage') },
+    { icon: 'military_tech', tone: '', label: '이번주 퀘스트', n: `${_questsDone}/${quests.length}`, unit: '', act: () => setView('activity') },
+  ].filter(Boolean).slice(0, 6);
 
   // 헤더 날짜 — 오늘(실행 시점) + 이달 영업일수 경과
   const _now = new Date();
@@ -324,26 +331,23 @@ export default function App() {
                   <div className="hsummary__pts"><MI n="stars" s={22} fill /><span className="tnum">{gamify.total}P</span></div>
                   <div className="hsummary__ptssub">오늘의 활동 점수</div>
                 </div>
-                <div className="hsummary__label">유지관리 핵심</div>
-                <div className="hsummary__grid">
-                  {homeRetStats.map((it) => (
-                    <button key={it.cat} className={'home-retstat' + (it.tone ? ' home-retstat--' + it.tone : '')} onClick={() => goRetention(it.cat)}>
-                      <span className="home-retstat__ico"><MI n={it.icon} s={17} /></span>
-                      <span className="home-retstat__n tnum">{it.n}<i>곳</i></span>
-                      <span className="home-retstat__lab">{it.label}</span>
-                    </button>
-                  ))}
-                </div>
+                <div className="hsummary__label">오늘 할 일</div>
+                {homeTodos.map((it, i) => (
+                  <button key={i} className={'hsummary__card' + (it.tone ? ' hsummary__card--' + it.tone : '')} onClick={it.act}>
+                    <span className="hsummary__k"><MI n={it.icon} s={18} />{it.label}</span>
+                    <b>{it.n}{it.unit && <i>{it.unit}</i>}</b>
+                  </button>
+                ))}
               </aside>
               <div className="hcol">
                 {isAdmin
                   ? <AdminDash onNav={setView} user={user} seeAll={seeAll} listA={visibleA} listB={visibleB} recorded={visRecorded} />
-                  : <SalesDash persona={persona} onNav={setView} listA={visibleA} listB={visibleB} retention={retention} recorded={visRecorded} visits={visits} onResult={openResult} seasonPreview={seasonPreview} onSeasonPreview={setSeasonPreview} floodSeasonOn={floodSeasonOn} gamify={gamify} reportSentOverrides={reportSentOverrides} touchOverrides={touchOverrides} myEmpno={user.empno} myBranch={user.branch} />}
+                  : <SalesDash persona={persona} onNav={setView} onGoRetention={goRetention} listA={visibleA} listB={visibleB} retention={retention} recorded={visRecorded} visits={visits} onResult={openResult} />}
               </div>
             </div>
           ) : (
             <>
-              {view === 'pipeline' && <PipelineScreen data={pipelineData} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} floodSeasonOn={floodSeasonOn} />}
+              {view === 'pipeline' && <PipelineScreen data={pipelineData} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} floodSeasonOn={floodSeasonOn} initTier={pipeInitTier} />}
               {view === 'listA' && <ListAScreen data={visibleA} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
               {view === 'listB' && <ListBScreen data={visibleB} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} visits={visits} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
               {view === 'retention' && <RetentionScreen data={retention} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)}

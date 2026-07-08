@@ -177,10 +177,11 @@ function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount
   );
 }
 
-export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, floodSeasonOn = true }) {
+export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, floodSeasonOn = true, initTier = 'all' }) {
   const D = window.APPDATA;
   const [track, setTrack] = useState('전체');   // 전체 / 신규 / 기존
-  const [tierF, setTierF] = useState('all');    // 등급 KPI 필터: all/S/A/B/C/D/both
+  const [tierF, setTierF] = useState(initTier);    // 등급 KPI 필터: all/S/A/B/C/D/both (홈에서 진입 시 initTier)
+  useEffect(() => { setTierF(initTier); }, [initTier]);
   const [q, setQ] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [focusId, setFocusId] = useState(null);
