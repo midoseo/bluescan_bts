@@ -1449,7 +1449,7 @@ body{ background: var(--surface-home); }
 }
 
 /* ===== 유지관리현황 — KPI 구분 카드 ===== */
-.retkpis{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+.retkpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
 .retkpi{ background:#fff; border:1px solid var(--border-default); border-radius:12px; padding:11px 10px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
 .retkpi:hover{ border-color:#b9cdf3; }
 .retkpi.on{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(29,108,235,.15); }
