@@ -256,9 +256,7 @@ function RetentionDetail({ c, sentDate, onOpenReport, touchDate, onOpenEmpathy }
                 {c.sensorTypes.map(s => <RBadge key={s} tone="neutral" shape="pill">{s} 센서</RBadge>)}
                 {c.remoteControlDevices.map(d => <RBadge key={d} tone="info" shape="pill">원격제어 · {d}</RBadge>)}
               </div>
-            </div>
-            <div>
-              <div className="ld-h">관제 신호 이력 <span className="faint" style={{ fontWeight: 400 }}>· {c.signal3mWindow || '최근 3개월'} 총 {c.signal3mTotal ?? c.signalHistory.length}건</span></div>
+              <div className="ld-h" style={{ marginTop: 14 }}>관제 신호 이력 <span className="faint" style={{ fontWeight: 400 }}>· {c.signal3mWindow || '최근 3개월'} 총 {c.signal3mTotal ?? c.signalHistory.length}건</span></div>
               {c.signalHistory.length === 0
                 ? <div className="nodata-box"><MI n="info" s={18} /><div>최근 3개월 신호가 없어요.</div></div>
                 : <>
@@ -284,7 +282,9 @@ function RetentionDetail({ c, sentDate, onOpenReport, touchDate, onOpenEmpathy }
                     </div>
                   )}
                 </>}
-              <div className="ld-h" style={{ marginTop: 14 }}>활성도·소통</div>
+            </div>
+            <div>
+              <div className="ld-h">활성도·소통</div>
               <dl className="ld-attrs">
                 <div><dt>원격제어 사용(30일)</dt><dd>{c.remoteControlUsage30d}회</dd></div>
                 <div><dt>앱·웹 마지막 접속</dt><dd>{c.lastAppAccessDate || <i className="nd">기록 없음</i>}</dd></div>
