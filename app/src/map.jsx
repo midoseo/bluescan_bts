@@ -232,9 +232,9 @@ export function TargetMap({ candidates, fireRegions, showFire, showFlood = true,
           <>
             <div className="row"><span className="dot" style={{ background: TIER_HEX.S }} />S 91+ · 최우선</div>
             <div className="row"><span className="dot" style={{ background: TIER_HEX.A }} />A 81–90 · 유망</div>
-            <div className="row"><span className="dot" style={{ background: TIER_HEX.B }} />B 71–80 · 관계형성</div>
-            <div className="row"><span className="dot" style={{ background: TIER_HEX.C }} />C 51–70 · 모니터링</div>
-            <div className="row"><span className="dot" style={{ background: TIER_HEX.D }} />D 50↓ / NO_DATA</div>
+            <div className="row"><span className="dot" style={{ background: TIER_HEX.B }} />B 71–80 · 보통</div>
+            <div className="row"><span className="dot" style={{ background: TIER_HEX.C }} />C 51–70 · 하위</div>
+            <div className="row"><span className="dot" style={{ background: TIER_HEX.D }} />D 50↓ · 최하위 / NO_DATA</div>
             <div className="row"><span className="lg-dash" />최근 화재 발생 구역</div>
             <div className="row"><span className="dot dot--flood" style={{ background: FLOOD_FILL }} />도시침수 예상구역</div>
           </>

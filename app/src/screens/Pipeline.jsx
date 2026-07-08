@@ -218,6 +218,16 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, fl
 
   return (
     <div className="pc-content pc-content--wide fadein" data-screen-label="신규진행현황">
+      <div className="retkpis rankkpis">
+        {RANK_KPIS.map(k => (
+          <button key={k.key} className={'retkpi' + (k.tone ? ' retkpi--' + k.tone : '') + (tierF === k.key ? ' on' : '')}
+            onClick={() => setTierF(tierF === k.key && k.key !== 'all' ? 'all' : k.key)}>
+            <span className="retkpi__ico"><MI n={k.icon} s={18} /></span>
+            <span className="retkpi__n tnum">{tierCount(k.key)}<i>건</i></span>
+            <span className="retkpi__lab">{k.label}</span>
+          </button>
+        ))}
+      </div>
       <div className="filterbar">
         <div className="fb-row">
           <span className="fb-label"><MI n="filter_list" s={18} />구분</span>

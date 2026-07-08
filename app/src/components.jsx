@@ -58,9 +58,9 @@ export function tierOf(score) {
   if (score == null) return { key: 'nodata', label: 'NO_DATA', tone: 'neutral', color: 'var(--s1-gray-400)' };
   if (score >= 91) return { key: 'S', label: 'S · 최우선', tone: 'positive', color: 'var(--s1-seagreen-700)' };
   if (score >= 81) return { key: 'A', label: 'A · 유망', tone: 'positive', color: 'var(--s1-seagreen-600)' };
-  if (score >= 71) return { key: 'B', label: 'B · 관계형성', tone: 'info', color: 'var(--s1-blue-500, #1d6ceb)' };
-  if (score >= 51) return { key: 'C', label: 'C · 모니터링', tone: 'warning', color: 'var(--s1-yellow-800)' };
-  return { key: 'D', label: 'D · 낮음', tone: 'neutral', color: 'var(--s1-gray-500)' };
+  if (score >= 71) return { key: 'B', label: 'B · 보통', tone: 'info', color: 'var(--s1-blue-500, #1d6ceb)' };
+  if (score >= 51) return { key: 'C', label: 'C · 하위', tone: 'warning', color: 'var(--s1-yellow-800)' };
+  return { key: 'D', label: 'D · 최하위', tone: 'neutral', color: 'var(--s1-gray-500)' };
 }
 export const VISIT = {
   done: { label: '방문완료', tone: 'positive', dot: 'var(--s1-seagreen-600)' },

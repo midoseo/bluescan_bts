@@ -137,7 +137,7 @@ function MonthlyReportDialog({ c, allCustomers, sentDate, onMarkSent, onClose })
   // document.body에 직접 포털로 띄운다 — 목록 영역 안에서 렌더링되면 부모의 스크롤 컨테이너에
   // 갇혀 팝업이 리스트와 같이 스크롤되는 문제가 있어, 화면 중앙에 독립적으로 고정되도록 분리했다.
   return createPortal(
-    <RDialog title="월간 유지관리 리포트" subtitle={`${c.name} · ${report.monthLabel}`} closeButton width={760} onClose={onClose}
+    <div className="dlg-boost"><RDialog title="월간 유지관리 리포트" subtitle={`${c.name} · ${report.monthLabel}`} closeButton width={760} onClose={onClose}
       actions={[
         { label: '닫기', variant: 'secondary', onClick: onClose },
         { label: 'PDF로 다운로드', variant: 'line', onClick: downloadPdf },
@@ -210,7 +210,7 @@ function MonthlyReportDialog({ c, allCustomers, sentDate, onMarkSent, onClose })
 
         <div className="mreport__foot">본 리포트는 AI가 자동 생성한 초안입니다. 발송 전 담당자 검토가 필요합니다. · 발송 상태: {sentDate ? `${sentDate} 발송 처리됨` : '미발송'}</div>
       </div>
-    </RDialog>,
+    </RDialog></div>,
     document.body
   );
 }
@@ -221,7 +221,7 @@ function EmpathyMessageDialog({ c, signal, onClose, onSent }) {
   const [text, setText] = useState(() => buildEmpathyMessageDraft(c, signal));
   const send = () => { onSent(c.id); onClose(); };
   return createPortal(
-    <RDialog title="감성터칭 메시지" subtitle={`${c.name} · ${signal.date} ${signal.type} 신호`} closeButton width={520} onClose={onClose}
+    <div className="dlg-boost"><RDialog title="감성터칭 메시지" subtitle={`${c.name} · ${signal.date} ${signal.type} 신호`} closeButton width={520} onClose={onClose}
       actions={[
         { label: '닫기', variant: 'secondary', onClick: onClose },
         { label: '승인 발송(모의)', onClick: send },
@@ -232,7 +232,7 @@ function EmpathyMessageDialog({ c, signal, onClose, onSent }) {
         </div>
         <RTextarea value={text} onChange={e => setText(e.target.value)} rows={8} />
       </div>
-    </RDialog>,
+    </RDialog></div>,
     document.body
   );
 }
