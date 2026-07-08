@@ -198,9 +198,11 @@ export default function App() {
   // 같은 건물 중복 제거 (건축물대장 동·호 단위 중복 방지) — 건물명+주소 기준
   const _dedupe = (arr) => { const seen = new Set(); return arr.filter(c => { const k = `${c.name}|${c.address}`; if (seen.has(k)) return false; seen.add(k); return true; }); };
   const _rawA = _dedupe((seeAll ? listA : listA.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won'));
-  const _rawB = _dedupe((seeAll ? listB : listB.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won'));
+  // 기존 고객: 먼저 규칙 기반 점수를 부여한 뒤 정렬 → 상위 N건 노출(더미/개별세대가 아니라 실명·우량 건물이 뜨도록)
+  const _rawB = _dedupe((seeAll ? listB : listB.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won'))
+    .map(c => (c.score != null ? c : { ...c, ...scoreExisting(c) }));
   const visibleA = seeAll ? _rawA : _rawA.slice().sort((a, b) => (b.score ?? -1) - (a.score ?? -1));  // 신규 후보 전건(페이지네이션으로 표시)
-  const visibleB = seeAll ? _rawB : _rawB.slice(0, DEMO_CAP_B);
+  const visibleB = seeAll ? _rawB : _rawB.slice().sort((a, b) => (b.score ?? -1) - (a.score ?? -1)).slice(0, DEMO_CAP_B);
   const visRecorded = seeAll ? recorded : recorded.filter(c => c.branch === user.branch);
 
   const cntA = visibleA.filter(c => !c.excluded && !c.duplicate).length;
