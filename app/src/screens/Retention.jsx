@@ -328,18 +328,6 @@ function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate
           </div>
           <div className="lrow-addr">{c.address} · 계약번호 {c.contractNo} · 담당 {c.assignedConsultant}</div>
         </div>
-        <div style={{ flex: 'none', display: 'flex', gap: 16, alignItems: 'center' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div className="faint" style={{ font: 'var(--type-12r)' }}>최근 30일 신호</div>
-            <div className="tnum" style={{ font: 'var(--type-15m)' }}>{c.signalCount30d}건 <span className="faint" style={{ font: 'var(--type-12r)' }}>({c.signalTrend})</span></div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div className="faint" style={{ font: 'var(--type-12r)' }}>계약 종료(예상)</div>
-            <div className="tnum" style={{ font: 'var(--type-15m)', color: att.daysToEnd <= 60 ? 'var(--s1-red-500,#e5484d)' : undefined }}>
-              {att.daysToEnd >= 0 ? `D-${att.daysToEnd}` : `만료 ${-att.daysToEnd}일 경과`}
-            </div>
-          </div>
-        </div>
         <span className="lrow-more" aria-hidden="true">자세히<MI n="chevron_right" s={18} /></span>
       </div>
     </div>
