@@ -1353,7 +1353,7 @@ body{ background: var(--surface-home); }
 .ins-src .material-symbols-rounded{ font-size:16px; color:#adb5bd; }
 
 /* KPI */
-.ins-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.ins-kpis{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:12px; }
 .ins-kpi{ display:flex; align-items:flex-start; gap:12px; background:#fff; border:1px solid #eaecf0; border-radius:14px; padding:16px 18px; }
 .ins-kpi__ico{ width:40px; height:40px; flex:none; border-radius:11px; display:flex; align-items:center; justify-content:center; background:var(--s1-blue-50); color:var(--accent); }
 .ins-kpi__val{ font-size:26px; font-weight:800; color:#191f28; line-height:1.1; letter-spacing:-.02em; }
@@ -1407,6 +1407,10 @@ body{ background: var(--surface-home); }
 .firecase__loc{ display:flex; align-items:center; gap:5px; font-size:14px; color:#191f28; word-break:keep-all; }
 .firecase__loc .material-symbols-rounded{ color:#adb5bd; flex:none; }
 
+/* 월별 신호량 + 계절형 급증 — 좌우 2열 */
+.ins-two-col{ display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+.ins-two-col .insight-card{ margin-top:0; }
+
 /* 범위 스위치 (전국/서강지사) */
 .ins-scope{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 .ins-scope__label{ font-size:13px; color:#6b7684; font-weight:600; }
@@ -1441,6 +1445,7 @@ body{ background: var(--surface-home); }
 
 @media (max-width:900px){
   .ins-kpis{ grid-template-columns:repeat(2,1fr); }
+  .ins-two-col{ grid-template-columns:1fr; }
   .ins-segs{ grid-template-columns:1fr; }
   .ins-props{ grid-template-columns:1fr; }
   .firecases{ grid-template-columns:1fr; }

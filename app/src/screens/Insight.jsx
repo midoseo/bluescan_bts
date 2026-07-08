@@ -46,51 +46,31 @@ function NationalReport() {
         ))}
       </div>
 
-      <div className="insight-card" style={{ marginTop: 16 }}>
-        <div className="insight-card__head">
-          <span className="insight-card__title"><MI n="show_chart" s={22} />월별 관제 신호량</span>
+      <div className="ins-two-col" style={{ marginTop: 16 }}>
+        <div className="insight-card">
+          <div className="insight-card__head">
+            <span className="insight-card__title"><MI n="show_chart" s={20} />월별 관제 신호량</span>
+          </div>
+          <AreaChartC categories={SI.monthly.categories} series={[{ name: '월 신호량', data: SI.monthly.data }]} unit="건" height={190} />
+          <div className="insight-note"><MI n="trending_up" s={16} />{SI.monthly.momText}. 여름 진입에 따른 계절 신호가 더해진 결과예요.</div>
         </div>
-        <AreaChartC categories={SI.monthly.categories} series={[{ name: '월 신호량', data: SI.monthly.data }]} unit="건" />
-        <div className="insight-note"><MI n="trending_up" s={16} />{SI.monthly.momText}. 단순 고객 증가가 아니라 여름 진입에 따른 계절 신호가 더해진 결과예요.</div>
-      </div>
 
-      <div className="insight-card" style={{ marginTop: 16 }}>
-        <div className="insight-card__head">
-          <span className="insight-card__title"><MI n="wb_sunny" s={22} />계절형 신호 급증 (2월 → 5월)</span>
-        </div>
-        <GroupedBar
-          categories={SI.seasonal.categories}
-          series={[{ name: '2월', data: SI.seasonal.feb }, { name: '5월', data: SI.seasonal.may }]}
-          unit="건" />
-        <div className="ins-growth">
-          {SI.seasonal.categories.map((c, i) => (
-            <span className={'ins-growth__chip' + (SI.seasonal.growthPct[i] >= 90 ? ' hot' : '')} key={c}>
-              {c} <b>+{SI.seasonal.growthPct[i]}%</b>
-            </span>
-          ))}
-        </div>
-        <div className="insight-note"><MI n="ac_unit" s={16} />온도·냉방·침수 계열이 여름 대비 관리 수요를 그대로 보여주는 선행 지표예요. 화재·전력은 거의 평탄.</div>
-      </div>
-
-      <div className="insight-card" style={{ marginTop: 16 }}>
-        <div className="insight-card__head">
-          <span className="insight-card__title"><MI n="groups" s={22} />고객 리텐션 신호 3분류</span>
-        </div>
-        <div className="ins-segs">
-          {SI.segments.map(sg => (
-            <div className={'ins-seg-card ins-seg-card--' + sg.tone} key={sg.key}>
-              <div className="ins-seg-card__head"><MI n={sg.icon} s={18} />{sg.title}</div>
-              <p className="ins-seg-card__desc">{sg.desc}</p>
-              <div className="ins-seg-card__list">
-                {sg.items.map((it, i) => (
-                  <div className="ins-cust" key={i}>
-                    <span className="ins-cust__name">{it.name}</span>
-                    <span className="ins-cust__trend">{it.trend}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="insight-card">
+          <div className="insight-card__head">
+            <span className="insight-card__title"><MI n="wb_sunny" s={20} />계절형 신호 급증 (2월 → 5월)</span>
+          </div>
+          <GroupedBar
+            categories={SI.seasonal.categories}
+            series={[{ name: '2월', data: SI.seasonal.feb }, { name: '5월', data: SI.seasonal.may }]}
+            unit="건" height={190} />
+          <div className="ins-growth">
+            {SI.seasonal.categories.map((c, i) => (
+              <span className={'ins-growth__chip' + (SI.seasonal.growthPct[i] >= 90 ? ' hot' : '')} key={c}>
+                {c} <b>+{SI.seasonal.growthPct[i]}%</b>
+              </span>
+            ))}
+          </div>
+          <div className="insight-note"><MI n="ac_unit" s={16} />온도·냉방·침수 계열이 여름 대비 관리 수요를 보여주는 선행 지표예요.</div>
         </div>
       </div>
 
@@ -207,19 +187,9 @@ export function InsightScreen() {
     <div className="pc-content pc-content--wide fadein">
       <div className="pc-pagehead"><div>
         <h1 className="pc-pagehead__title">인사이트</h1>
-        <p className="pc-pagehead__desc">관제 신호 분석과 화재 동향을 바탕으로 고객 제안에 쓸 인사이트를 제공해요.</p>
       </div></div>
 
-      {/* 범위 스위치 (전국/서강지사) */}
-      <div className="ins-scope">
-        <span className="ins-scope__label">범위</span>
-        <div className="seg ins-scope__seg" role="tablist">
-          <button className={scope === 'nat' ? 'on' : ''} onClick={() => setScope('nat')}><MI n="public" s={17} />전국</button>
-          <button className={scope === 'sg' ? 'on' : ''} onClick={() => setScope('sg')}><MI n="location_city" s={17} />서강지사</button>
-        </div>
-      </div>
-
-      {/* 탭 스위처 */}
+      {/* 탭 스위처 — 최상단 */}
       <div className="seg ins-seg" role="tablist" style={{ marginBottom: 16 }}>
         {TABS.map(t => (
           <button key={t.key} className={tab === t.key ? 'on' : ''} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}>
@@ -229,7 +199,18 @@ export function InsightScreen() {
       </div>
 
       {/* ① 신호 인사이트 리포트 (전국/서강 분리) */}
-      {tab === 'report' && (scope === 'nat' ? <NationalReport /> : <SeogangReport />)}
+      {tab === 'report' && (
+        <>
+          <div className="ins-scope">
+            <span className="ins-scope__label">범위</span>
+            <div className="seg ins-scope__seg" role="tablist">
+              <button className={scope === 'nat' ? 'on' : ''} onClick={() => setScope('nat')}><MI n="public" s={17} />전국</button>
+              <button className={scope === 'sg' ? 'on' : ''} onClick={() => setScope('sg')}><MI n="location_city" s={17} />서강지사</button>
+            </div>
+          </div>
+          {scope === 'nat' ? <NationalReport /> : <SeogangReport />}
+        </>
+      )}
 
       {/* ② 화재 뉴스 */}
       {tab === 'news' && (

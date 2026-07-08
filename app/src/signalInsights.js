@@ -14,7 +14,6 @@ export const SIGNAL_INSIGHTS = {
     { key: 'total', label: '분석 신호', value: '30,272', unit: '건', icon: 'sensors', note: '내부·테스트 4.5% 제외' },
     { key: 'cust', label: '대상 고객사', value: '947', unit: '곳', icon: 'apartment', note: '건물 2,113개' },
     { key: 'growth', label: '5월 신호 증가율', value: '+23', unit: '%', icon: 'trending_up', note: '전월 대비, 증가폭 확대' },
-    { key: 'false', label: '오탐·단순복구성', value: '약 50', unit: '%', icon: 'error', note: '화재신호의 49%가 오작동/정상복구' },
   ],
 
   // 월별 총 신호량
