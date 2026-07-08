@@ -193,16 +193,21 @@ export default function App() {
   const logout = () => { try { sessionStorage.removeItem('bluescan.user'); } catch { /* ignore */ } setVisits({}); setUser(null); setView('home'); setUserOpen(false); setNavOpen(false); };
 
   // --- 지사 필터: 본사 전체 관리자만 전체 조회, 그 외(지사장·컨설턴트)는 본인 지사만 / 수주완료(방문상태=won) 건은 후보 리스트에서 제외 ---
-  // 시연 경량화 — 컨설턴트(본인 지사) 화면만 상위 N건으로 캡. 관리자 전체(seeAll) 집계는 그대로.
-  const DEMO_CAP_B = 12;
+  // 전부 실데이터 — 기존 고객도 개수 제한 없이 전건 노출(점수순 정렬).
   // 같은 건물 중복 제거 (건축물대장 동·호 단위 중복 방지) — 건물명+주소 기준
   const _dedupe = (arr) => { const seen = new Set(); return arr.filter(c => { const k = `${c.name}|${c.address}`; if (seen.has(k)) return false; seen.add(k); return true; }); };
+  // 건물 단위 주소 키 (괄호·동/관 등 보조표기 제거)
+  const _bldgKey = (a) => String(a || '').replace(/\(.*?\)/g, '').replace(/[,·].*$/, '').replace(/\s+/g, '').toLowerCase();
+  // 이미 블루스캔(유지관리) 사용 중인 건물 — 업셀 후보에서 제외 (같은 건물 재제안 방지)
+  const _blueScanBldg = new Set(retention.map(r => _bldgKey(r.address)));
   const _rawA = _dedupe((seeAll ? listA : listA.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won'));
-  // 기존 고객: 먼저 규칙 기반 점수를 부여한 뒤 정렬 → 상위 N건 노출(더미/개별세대가 아니라 실명·우량 건물이 뜨도록)
-  const _rawB = _dedupe((seeAll ? listB : listB.filter(c => c.branch === user.branch)).filter(c => visits[c.id]?.status !== 'won'))
+  // 기존 고객: 블루스캔 사용 건물 제외 → 규칙 기반 점수 부여 후 정렬 → 전건 노출(실명·우량 건물이 상위로)
+  const _rawB = _dedupe((seeAll ? listB : listB.filter(c => c.branch === user.branch))
+    .filter(c => visits[c.id]?.status !== 'won')
+    .filter(c => !_blueScanBldg.has(_bldgKey(c.address))))
     .map(c => (c.score != null ? c : { ...c, ...scoreExisting(c) }));
   const visibleA = seeAll ? _rawA : _rawA.slice().sort((a, b) => (b.score ?? -1) - (a.score ?? -1));  // 신규 후보 전건(페이지네이션으로 표시)
-  const visibleB = seeAll ? _rawB : _rawB.slice().sort((a, b) => (b.score ?? -1) - (a.score ?? -1)).slice(0, DEMO_CAP_B);
+  const visibleB = seeAll ? _rawB : _rawB.slice().sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
   const visRecorded = seeAll ? recorded : recorded.filter(c => c.branch === user.branch);
 
   const cntA = visibleA.filter(c => !c.excluded && !c.duplicate).length;
