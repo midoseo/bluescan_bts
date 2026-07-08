@@ -1454,19 +1454,28 @@ body{ background: var(--surface-home); }
 }
 
 /* ===== 유지관리현황 — KPI 구분 카드 ===== */
-.retkpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-.retkpi{ background:#fff; border:1px solid var(--border-default); border-radius:12px; padding:11px 10px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
+.retkpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.retkpi{ background:#fff; border:1px solid var(--border-default); border-radius:12px; padding:14px 13px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
 .retkpi:hover{ border-color:#b9cdf3; }
 .retkpi.on{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(29,108,235,.15); }
-.retkpi__ico{ width:28px; height:28px; border-radius:8px; display:grid; place-items:center; background:#eef4ff; color:var(--accent); margin-bottom:7px; }
-.retkpi__ico .material-symbols-rounded{ font-size:18px; }
-.retkpi__n{ display:block; font-size:20px; font-weight:800; line-height:1; }
-.retkpi__n i{ font-size:13px; color:var(--text-tertiary); font-weight:700; font-style:normal; margin-left:2px; }
-.retkpi__lab{ display:block; font-size:13px; font-weight:600; color:var(--text-body); margin-top:3px; }
+.retkpi__ico{ width:32px; height:32px; border-radius:8px; display:grid; place-items:center; background:#eef4ff; color:var(--accent); margin-bottom:8px; }
+.retkpi__ico .material-symbols-rounded{ font-size:20px; }
+.retkpi__n{ display:block; font-size:26px; font-weight:800; line-height:1; }
+.retkpi__n i{ font-size:15px; color:var(--text-tertiary); font-weight:700; font-style:normal; margin-left:2px; }
+.retkpi__lab{ display:block; font-size:15px; font-weight:600; color:var(--text-body); margin-top:5px; }
 .retkpi--red .retkpi__ico{ background:#ffe9e2; color:#e5502b; }
 .retkpi--amber .retkpi__ico{ background:#fff2e0; color:#d98a1a; }
 .retkpi--red.on{ border-color:#e5502b; box-shadow:0 0 0 2px rgba(229,80,43,.15); }
 .retkpi--amber.on{ border-color:#d98a1a; box-shadow:0 0 0 2px rgba(217,138,26,.15); }
+
+/* 신규진행현황 — 등급 7개 KPI (한 줄 배치, 폭 좁아 텍스트 소폭 축소) */
+.rankkpis{ grid-template-columns:repeat(7,1fr); gap:9px; }
+.rankkpis .retkpi{ padding:11px 9px; }
+.rankkpis .retkpi__ico{ width:28px; height:28px; margin-bottom:6px; }
+.rankkpis .retkpi__ico .material-symbols-rounded{ font-size:18px; }
+.rankkpis .retkpi__n{ font-size:21px; }
+.rankkpis .retkpi__n i{ font-size:13px; }
+.rankkpis .retkpi__lab{ font-size:12.5px; margin-top:3px; white-space:nowrap; }
 
 /* 신호 이력 — 나머지 3개월 유형별 총합 요약 */
 .sig-rest{ display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-top:9px; padding-top:9px; border-top:1px dashed var(--border-default); }
@@ -1484,8 +1493,8 @@ body{ background: var(--surface-home); }
 .ld-ai--warn{ background:#fff8ea; border:1px solid #ffe0a3; } .ld-ai--warn .ld-ai__ico{ background:#d98a1a; }
 .ld-ai--ok{ background:#eef8f2; border:1px solid #bfe5cf; } .ld-ai--ok .ld-ai__ico{ background:#0f9d63; }
 
-@media (max-width:960px){ .retkpis{ grid-template-columns:repeat(4,1fr); } }
-@media (max-width:560px){ .retkpis{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:900px){ .retkpis{ grid-template-columns:repeat(2,1fr); } .rankkpis{ grid-template-columns:repeat(4,1fr); } }
+@media (max-width:560px){ .retkpis{ grid-template-columns:repeat(2,1fr); } .rankkpis{ grid-template-columns:repeat(2,1fr); } }
 
 /* ===== 미션 & 랭킹 (오늘/이달/랭킹) ===== */
 .act-card__head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
