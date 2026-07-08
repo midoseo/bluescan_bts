@@ -83,7 +83,6 @@ export const SEOGANG_INSIGHTS = {
     { key: 'contract', label: '서강 계약(개시)', value: '8,008', unit: '사업장', icon: 'store', note: '고객 4,609 · 마포 84%·서대문 14%' },
     { key: 'monitored', label: '관제 도입 고객', value: '30', unit: '곳', icon: 'sensors', note: '4개월 신호 1,027건 · 도입률 낮음' },
     { key: 'flood', label: '침수·배수 신호 비중', value: '35', unit: '%', icon: 'water_drop', note: '전국과 달리 1순위 리스크' },
-    { key: 'upsell', label: '블루스캔 원격 침투', value: '~0', unit: '%', icon: 'rocket_launch', note: '방범 위주 → 업셀 여지 큼' },
   ],
 
   // 계약 기반 업종 구성(도심 오피스·상가)
