@@ -109,6 +109,18 @@ function ExistingDetail({ c }) {
           <div><dt>계약 유지</dt><dd>{c.contractMonths != null ? c.contractMonths + '개월' : <i className="nd">—</i>}</dd></div>
           <div><dt>월 경비금액</dt><dd>{won(c.monthlyFee)}</dd></div>
         </dl>
+        {c.buildingLedger && c.buildingLedger.matched && (
+          <>
+            <div className="ld-h" style={{ marginTop: 14 }}>건축물대장 <span className="faint" style={{ fontWeight: 400 }}>· 실연동(건축HUB)</span></div>
+            <dl className="ld-attrs">
+              <div><dt>연면적</dt><dd>{c.buildingLedger.gfa ? num(c.buildingLedger.gfa) + '㎡' : <i className="nd">NO_DATA</i>}</dd></div>
+              <div><dt>층수</dt><dd>지상 {c.buildingLedger.grndFlr ?? '—'}층 / 지하 {c.buildingLedger.ugrndFlr ?? 0}층</dd></div>
+              <div><dt>사용승인</dt><dd>{c.buildingLedger.approvalDate ? `${c.buildingLedger.approvalDate} (${c.buildingLedger.approvalYrAgo}년)` : <i className="nd">NO_DATA</i>}</dd></div>
+              <div><dt>구조</dt><dd>{c.buildingLedger.struct || <i className="nd">—</i>}</dd></div>
+              <div><dt>주용도</dt><dd>{c.buildingLedger.mainUse || <i className="nd">—</i>}</dd></div>
+            </dl>
+          </>
+        )}
       </div>
     </div>
   );
