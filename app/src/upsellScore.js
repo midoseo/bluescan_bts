@@ -44,7 +44,21 @@ export function scoreExisting(c) {
   const v4 = Math.min(20, Math.round(mw * 4));
   comps.push({ k: '관제 매칭도', v: v4, max: 20, note: `매칭 키워드 ${c.matchCount || 0}종` });
 
-  // 합계 — NO_DATA(v=null) 항목은 신규 방식과 동일하게 합산에서 제외
-  const score = comps.reduce((s, cc) => s + (cc.v || 0), 0);
+  // 5) 건축물대장 우량도 (max 15) — 실연동(build-buildingledger 배치)으로 붙은 buildingLedger 기반
+  const bl = c.buildingLedger;
+  if (bl && bl.matched) {
+    let v5 = 0; const n5 = [];
+    if (bl.gfa >= 10000) { v5 += 6; n5.push('연면적 1만㎡↑'); }
+    else if (bl.gfa >= 3000) { v5 += 4; n5.push('연면적 3천㎡↑'); }
+    if (bl.approvalYrAgo >= 20) { v5 += 5; n5.push('20년 이상 노후'); }
+    if (bl.ugrndFlr >= 1) { v5 += 4; n5.push('지하층 보유(침수·설비 리스크)'); }
+    v5 = Math.min(15, v5);
+    comps.push({ k: '건축물대장 우량도', v: v5, max: 15, note: n5.join(' · ') || '해당 없음' });
+  } else if (bl && bl.matched === false) {
+    comps.push({ k: '건축물대장 우량도', v: null, max: 15, note: '대장 미매칭 (NO_DATA)' });
+  }
+
+  // 합계 — NO_DATA(v=null) 항목은 신규 방식과 동일하게 합산에서 제외. 총점 100 상한.
+  const score = Math.min(100, comps.reduce((s, cc) => s + (cc.v || 0), 0));
   return { score, comps };
 }

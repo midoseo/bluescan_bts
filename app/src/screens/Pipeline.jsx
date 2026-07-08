@@ -132,6 +132,7 @@ function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount
             {isB && c.btype === 'both' && <Badge tone="danger" shape="pill" dot>우선 접촉</Badge>}
             {isB && c.b1 && <Badge tone="info" shape="pill">B-1 경비원</Badge>}
             {isB && c.b2 && <Badge tone="warning" shape="pill">B-2 중요실</Badge>}
+            {isB && c.buildingLedger && c.buildingLedger.matched && <Badge tone="positive" shape="pill">건축물대장 매칭</Badge>}
             {!isB && c.noData && c.noData.length > 0 && <Badge tone="neutral">NO_DATA {c.noData.length}</Badge>}
           </div>
           <div className="lrow-addr">{addr}</div>

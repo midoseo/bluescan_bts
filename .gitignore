@@ -14,3 +14,4 @@ app/vite.config.js.timestamp-*.mjs
 # OS / editor
 .DS_Store
 *.log
+app/src/buildingLedger.cache.json
