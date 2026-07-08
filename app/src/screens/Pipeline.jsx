@@ -13,6 +13,17 @@ import { todayCompact } from '../dateUtil.js'
 const { useState, useEffect } = React
 const PER_PAGE = 6
 
+// 상단 등급 KPI 그리드 (신규진행현황)
+const RANK_KPIS = [
+  { key: 'all', label: '전체 후보', icon: 'groups', tone: '' },
+  { key: 'S', label: '최우선', icon: 'star', tone: 'green' },
+  { key: 'A', label: '유망', icon: 'trending_up', tone: 'green' },
+  { key: 'B', label: '보통', icon: 'radio_button_checked', tone: '' },
+  { key: 'C', label: '하위', icon: 'south', tone: 'amber' },
+  { key: 'D', label: '최하위', icon: 'south', tone: 'amber' },
+  { key: 'both', label: '우선접촉', icon: 'priority_high', tone: 'red' },
+]
+
 const { Chip, Badge, Button, TextField, Select, Dialog } = window.UXDesignSystem_59a60b;
 
 // 구분(신규/기존) 배지 — 목록에서 두 성격을 한눈에 구분
@@ -169,6 +180,7 @@ function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount
 export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, floodSeasonOn = true }) {
   const D = window.APPDATA;
   const [track, setTrack] = useState('전체');   // 전체 / 신규 / 기존
+  const [tierF, setTierF] = useState('all');    // 등급 KPI 필터: all/S/A/B/C/D/both
   const [q, setQ] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [focusId, setFocusId] = useState(null);
@@ -179,8 +191,14 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, fl
   // 신규 후보의 제외/중복 항목은 목록에서 제외 (기존 고객엔 해당 없음)
   const active = data.filter(c => !(c.track === 'A' && (c.excluded || c.duplicate)));
   const qx = q.trim().toLowerCase();
+  // 등급/우선접촉 매칭 — both=우선접촉(경비원+중요실), 그 외 S/A/B/C/D는 점수 등급
+  const matchTier = (c, k) => k === 'all' ? true
+    : k === 'both' ? (c.track === 'B' && c.btype === 'both')
+    : tierOf(c.score).key === k;
+  const tierCount = (k) => active.filter(c => matchTier(c, k)).length;
   const filtered = active.filter(c =>
     (track === '전체' || (track === '신규' && c.track === 'A') || (track === '기존' && c.track === 'B')) &&
+    matchTier(c, tierF) &&
     (qx === '' || (`${c.name || ''} ${c.address || ''} ${c.ind || ''}`).toLowerCase().includes(qx)));
   filtered.sort((a, b) => (b.score == null ? -1 : b.score) - (a.score == null ? -1 : a.score));
 
@@ -190,7 +208,7 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, fl
     exist: active.filter(c => c.track === 'B').length,
   };
 
-  useEffect(() => { setPage(1); }, [track, q]);
+  useEffect(() => { setPage(1); }, [track, q, tierF]);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const curPage = Math.min(page, totalPages);
   const pageBase = (curPage - 1) * PER_PAGE;
