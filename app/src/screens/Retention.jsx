@@ -75,12 +75,14 @@ export function augmentRetention(data) {
 // KPI 구분(클릭 필터) — 관리 유지물건 / 이번달 개시 / 계약만료 도래(3개월) / 신호관리필요
 const RET_KPIS = [
   { key: 'all', label: '관리 유지물건', icon: 'apartment', tone: '' },
+  { key: 'attn', label: '주의 필요', icon: 'warning', tone: 'red' },
   { key: 'open', label: '이번달 개시', icon: 'fiber_new', tone: 'blue' },
   { key: 'expiry', label: '계약만료 도래', icon: 'event_busy', tone: 'amber' },
   { key: 'manage', label: '신호 관리필요', icon: 'monitor_heart', tone: 'amber' },
 ];
 function matchCat(c, cat) {
   switch (cat) {
+    case 'attn': return needsAttention(c).flag;
     case 'open': return c.openThisMonth;
     case 'expiry': return c.expirySoon;
     case 'manage': return c.manageNeeded;
@@ -269,7 +271,7 @@ function RetentionDetail({ c, sentDate, onOpenReport, touchDate, onOpenEmpathy }
                           {s.notifiedAuthority ? '유관기관 통보' : ''}
                         </span>
                         <button className="kwt-touch" title="감성터칭 메시지 생성" onClick={e => { e.stopPropagation(); onOpenEmpathy(c, s); }}>
-                          <MI n="favorite" s={16} />
+                          <MI n="sms" s={15} />감성터칭
                         </button>
                       </div>))}
                   </div>
@@ -334,7 +336,7 @@ function RetentionRow({ c, expanded, onToggle, sentDate, onOpenReport, touchDate
   );
 }
 
-export function RetentionScreen({ data, listMode, onListMode, reportSentOverrides: sentOverrides, onMarkReportSent: markSent, touchOverrides, onMarkTouched: markTouched }) {
+export function RetentionScreen({ data, listMode, onListMode, initCat = 'all', reportSentOverrides: sentOverrides, onMarkReportSent: markSent, touchOverrides, onMarkTouched: markTouched }) {
   const [branch, setBranch] = useState('전체');
   const [use, setUse] = useState('전체');
   const [tier, setTier] = useState('all');
@@ -345,7 +347,8 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
   const [reportFor, setReportFor] = useState(null); // 월간 리포트 팝업 대상 고객
   const [empathyFor, setEmpathyFor] = useState(null); // { c, signal } — 감성터칭 메시지 팝업 대상
   const [page, setPage] = useState(1);
-  const [cat, setCat] = useState('all'); // KPI 구분 필터
+  const [cat, setCat] = useState(initCat); // KPI 구분 필터 (홈에서 진입 시 initCat)
+  useEffect(() => { setCat(initCat); }, [initCat]);
   // 리포트·감성터칭 발송 상태는 App.jsx로 끌어올려졌다(게이미피케이션 포인트 계산에 필요해서) —
   // sentOverrides/markSent/touchOverrides/markTouched는 위에서 props를 받아온 이름 그대로 재사용한다.
 

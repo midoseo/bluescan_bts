@@ -277,8 +277,9 @@ body{background:var(--s1-gray-50);color:var(--text-body);font:var(--type-14r);le
 .kwt-kw{font:var(--type-14m);letter-spacing:-.02em;color:var(--text-body);}
 .kwt-cat{font:var(--type-12r);}
 .kwt-freq{text-align:right;font:var(--type-13m);color:var(--text-body);font-variant-numeric:tabular-nums;}
-.kwt-touch{flex:none;border:1px solid var(--border-subtle);background:#fff;border-radius:999px;width:28px;height:28px;
-  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--s1-red-500,#e5484d);}
+.kwt-touch{flex:none;border:1px solid var(--border-subtle);background:#fff;border-radius:999px;height:28px;padding:0 11px;gap:4px;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--s1-red-500,#e5484d);
+  font-size:13px;font-weight:600;white-space:nowrap;}
 .kwt-touch:hover{background:#fef2f2;border-color:var(--s1-red-300,#f5a3a8);}
 .nodata-box{background:var(--s1-gray-50);border:1px solid var(--border-subtle);border-radius:var(--radius-m);padding:14px 16px;
   font:var(--type-14r);letter-spacing:-.02em;color:var(--text-secondary);display:flex;gap:10px;align-items:flex-start;}
@@ -1235,6 +1236,21 @@ body{ background: var(--surface-home); }
 
 @media (max-width:560px){ .home-retstats{ grid-template-columns:repeat(2,1fr); } }
 
+/* ===== 홈 — 파이프라인 세로형 ===== */
+.pipe-steps{ display:flex; flex-direction:column; gap:6px; }
+.pipe-step{ display:flex; align-items:center; gap:10px; width:100%; background:#f7f9fb; border:1px solid #eef1f4; border-radius:10px; padding:10px 13px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
+.pipe-step:hover{ border-color:#1d6ceb; box-shadow:0 2px 8px rgba(29,108,235,.1); background:#fff; }
+.pipe-step__n{ width:22px; height:22px; border-radius:999px; background:#1d6ceb; color:#fff; font-size:12px; font-weight:800; display:grid; place-items:center; flex:none; }
+.pipe-step__t{ font-size:15px; font-weight:600; color:#191f28; }
+.pipe-step__cnt{ margin-left:auto; font-size:16px; font-weight:800; color:#191f28; }
+.pipe-step__cnt i{ font-size:12px; font-style:normal; font-weight:600; color:#8b95a1; margin-left:2px; }
+.pipe-step__go{ color:#adb5bd; flex:none; }
+.pipe-reclist{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+.pipe-recrow{ display:flex; align-items:center; gap:8px; width:100%; background:#fff; border:1px solid #eef1f4; border-radius:10px; padding:9px 13px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
+.pipe-recrow:hover{ border-color:#1d6ceb; box-shadow:0 2px 8px rgba(29,108,235,.1); }
+.pipe-recrow__name{ font-size:14px; font-weight:700; color:#191f28; margin-right:2px; }
+.pipe-recrow__go{ margin-left:auto; color:#adb5bd; flex:none; }
+
 /* 좁은 화면 — 요약패널을 상단으로, 탭 가로 스크롤 */
 @media (max-width:1080px){
   .homewrap{ grid-template-columns:1fr; }
@@ -1488,7 +1504,7 @@ body{ background: var(--surface-home); }
 }
 
 /* ===== 유지관리현황 — KPI 구분 카드 ===== */
-.retkpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.retkpis{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px; }
 .retkpi{ background:#fff; border:1px solid var(--border-default); border-radius:12px; padding:14px 13px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
 .retkpi:hover{ border-color:#b9cdf3; }
 .retkpi.on{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(29,108,235,.15); }

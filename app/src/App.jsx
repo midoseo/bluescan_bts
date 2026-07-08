@@ -93,6 +93,7 @@ export default function App() {
   const markTouched = useCallback((id) => setTouchOverrides(prev => ({ ...prev, [id]: new Date().toISOString().slice(0, 10) })), []);
   const [visits, setVisits] = useState(() => buildDemoVisits());   // 시연용 방문결과 3건 시드
   const [resultItem, setResultItem] = useState(null);
+  const [retInitCat, setRetInitCat] = useState('all');   // 홈 유지관리 핵심 → 유지관리현황 진입 시 초기 KPI 필터
   const [alertOpen, setAlertOpen] = useState(() => {
     try { return localStorage.getItem('bluescan.alertOpen') !== '0'; } catch { return true; }
   });
@@ -236,22 +237,18 @@ export default function App() {
 
   const pageTitle = view === 'home' ? (isAdmin ? '관리자 대시보드' : '컨설턴트 대시보드') : (TITLES[view] && TITLES[view].crumb);
 
-  // --- 홈 좌측 "오늘 할 일" 요약 — 유지관리·신규진행·미션 화면의 핵심만 뽑아 클릭 시 해당 화면으로 이동 ---
+  // --- 홈 좌측 "유지관리 핵심" — 유지관리현황 KPI와 동일 집계. 클릭 시 해당 필터로 유지관리현황 진입 ---
   const _retAug = augmentRetention(retention);
   const _retAttn = _retAug.filter(c => needsAttention(c).flag).length;
   const _retExpiry = _retAug.filter(c => c.expirySoon).length;
   const _retManage = _retAug.filter(c => c.manageNeeded).length;
-  const _bothN = pipelineData.filter(c => c.track === 'B' && c.btype === 'both').length;
-  const _topN = pipelineData.filter(c => tierOf(c.score).key === 'S').length;
-  const _questsDone = quests.filter(q => q.done).length;
-  const homeTodos = [
-    _retAttn > 0 && { icon: 'warning', tone: 'danger', label: '주의 필요 유지고객', n: _retAttn, unit: '곳', go: 'retention' },
-    _retExpiry > 0 && { icon: 'event_busy', tone: 'warn', label: '계약 만료 임박', n: _retExpiry, unit: '곳', go: 'retention' },
-    _bothN > 0 && { icon: 'priority_high', tone: 'warn', label: '우선접촉 대상', n: _bothN, unit: '곳', go: 'pipeline' },
-    { icon: 'star', tone: '', label: '최우선 신규 후보', n: _topN, unit: '곳', go: 'pipeline' },
-    _retManage > 0 && { icon: 'monitor_heart', tone: '', label: '신호 관리필요', n: _retManage, unit: '곳', go: 'retention' },
-    { icon: 'military_tech', tone: '', label: '이번주 퀘스트', n: `${_questsDone}/${quests.length}`, unit: '', go: 'activity' },
-  ].filter(Boolean).slice(0, 6);
+  const goRetention = (cat) => { setRetInitCat(cat); setView('retention'); };
+  const homeRetStats = [
+    { cat: 'all', icon: 'apartment', tone: '', label: '관리 유지물건', n: _retAug.length },
+    { cat: 'attn', icon: 'warning', tone: 'danger', label: '주의 필요', n: _retAttn },
+    { cat: 'expiry', icon: 'event_busy', tone: 'warn', label: '만료 도래', n: _retExpiry },
+    { cat: 'manage', icon: 'monitor_heart', tone: 'warn', label: '신호 관리필요', n: _retManage },
+  ];
 
   // 헤더 날짜 — 오늘(실행 시점) + 이달 영업일수 경과
   const _now = new Date();
@@ -320,18 +317,18 @@ export default function App() {
         <ErrorBoundary key={view}>
           {view === 'home' ? (
             <div className="homewrap">
-              {/* 좌측 요약 패널 — 활동 점수 + 오늘 할 일(클릭 시 해당 화면으로) */}
+              {/* 좌측 패널 — 유지관리 핵심(활동 점수 + KPI). 카드 클릭 시 유지관리현황을 해당 필터로 진입 */}
               <aside className="hsummary">
                 <div className="hsummary__score">
                   <div className="hsummary__who">{persona.name} 님 · {seeAll ? '전체 지사' : user.branch}</div>
                   <div className="hsummary__pts"><MI n="stars" s={22} fill /><span className="tnum">{gamify.total}P</span></div>
                   <div className="hsummary__ptssub">오늘의 활동 점수</div>
                 </div>
-                <div className="hsummary__label">오늘 할 일</div>
-                {homeTodos.map((it, i) => (
-                  <button key={i} className={'hsummary__card' + (it.tone ? ' hsummary__card--' + it.tone : '')} onClick={() => setView(it.go)}>
+                <div className="hsummary__label">유지관리 핵심</div>
+                {homeRetStats.map((it) => (
+                  <button key={it.cat} className={'hsummary__card' + (it.tone ? ' hsummary__card--' + it.tone : '')} onClick={() => goRetention(it.cat)}>
                     <span className="hsummary__k"><MI n={it.icon} s={18} />{it.label}</span>
-                    <b>{it.n}{it.unit && <i>{it.unit}</i>}</b>
+                    <b>{it.n}<i>곳</i></b>
                   </button>
                 ))}
               </aside>
@@ -347,6 +344,7 @@ export default function App() {
               {view === 'listA' && <ListAScreen data={visibleA} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
               {view === 'listB' && <ListBScreen data={visibleB} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} visits={visits} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
               {view === 'retention' && <RetentionScreen data={retention} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)}
+                initCat={retInitCat}
                 reportSentOverrides={reportSentOverrides} onMarkReportSent={markReportSent}
                 touchOverrides={touchOverrides} onMarkTouched={markTouched} />}
               {view === 'confirmed' && <ConfirmedScreen confirmed={visRecorded} visits={visits} onVisit={saveVisit} onRemove={removeVisit} onDownload={download} onResult={openResult}

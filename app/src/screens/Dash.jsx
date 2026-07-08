@@ -1,9 +1,8 @@
 /* ===== Dash.jsx — 관리자/컨설턴트 대시보드 ===== */
 import React from 'react'
-import { MI, VISIT, tierOf } from '../components.jsx'
+import { MI, VISIT } from '../components.jsx'
 import { GroupedBar } from '../charts.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
-import { augmentRetention, needsAttention } from './Retention.jsx'
 const { useState, useRef } = React
 
 const DS = window.UXDesignSystem_59a60b;
@@ -334,15 +333,6 @@ export function AdminDash({ onNav, user, seeAll = true, listA = [], listB = [], 
 const STAGE_OF = { done: '협상', revisit: '제안', reject: '종료', won: '계약' };
 const STAGE_TONE = { 발굴: 'neutral', 접촉: 'neutral', 제안: 'info', 협상: 'warning', 계약: 'success', 종료: 'danger' };
 
-// 유지고객 "주의" 사유 한 줄 라벨
-function attnReason(c) {
-  const d = c._daysToEnd;
-  if (d != null && d >= 0 && d <= 60) return { text: `만료 D-${d}`, tone: 'danger' };
-  if ((c.signalHistory || []).some(s => s.severity === '심각')) return { text: '심각 신호', tone: 'danger' };
-  if (c.vocAttention) return { text: 'VOC 주의', tone: 'warning' };
-  return { text: '점검 필요', tone: 'warning' };
-}
-
 export function SalesDash({ persona, onNav, listA, listB, retention, recorded, visits, onResult }) {
   recorded = recorded || []; visits = visits || {};
   const D = window.APPDATA || {};
@@ -356,20 +346,6 @@ export function SalesDash({ persona, onNav, listA, listB, retention, recorded, v
   const byStatus = (s) => recorded.filter(c => visits[c.id]?.status === s).length;
   const wonCnt = byStatus('won');
   const proposalN = byStatus('revisit'), negoN = byStatus('done');
-
-  // 유지관리 핵심 — 파생 필드로 주의/만료/신호관리/개시 집계
-  const retAug = augmentRetention(retention || []);
-  const retAttention = retAug.filter(c => needsAttention(c).flag)
-    .sort((a, b) => (a._daysToEnd ?? 9999) - (b._daysToEnd ?? 9999));
-  const retExpiry = retAug.filter(c => c.expirySoon).length;
-  const retManage = retAug.filter(c => c.manageNeeded).length;
-  const retOpen = retAug.filter(c => c.openThisMonth).length;
-  const RET_STATS = [
-    { key: 'all', label: '관리 유지물건', n: retAug.length, tone: '' },
-    { key: 'attn', label: '주의 필요', n: retAttention.length, tone: 'red' },
-    { key: 'expiry', label: '만료 도래', n: retExpiry, tone: 'amber' },
-    { key: 'manage', label: '신호 관리필요', n: retManage, tone: 'amber' },
-  ];
 
   const STEPS = [
     ['발굴', discovered, '공공·관제 데이터로 발굴된 전체 후보.'],
@@ -428,63 +404,33 @@ export function SalesDash({ persona, onNav, listA, listB, retention, recorded, v
         )}
       </div>
 
-      {/* 2) 유지관리 핵심 */}
+      {/* 2) 신규 진행 파이프라인 — 세로형(공간 절약) */}
       <div style={{ marginTop: 16 }}>
-        <DashCard title="유지관리 핵심" sub="주의가 필요한 유지고객을 먼저 확인하세요"
-          action={<DBtn size="sm" variant="line" onClick={() => onNav('retention')} iconLeft={<MI n="shield_with_heart" s={18} />}>유지관리현황</DBtn>}>
-          <div className="home-retstats">
-            {RET_STATS.map(s => (
-              <button key={s.key} className={'home-retstat' + (s.tone ? ' home-retstat--' + s.tone : '')} onClick={() => onNav('retention')}>
-                <span className="home-retstat__n tnum">{s.n}<i>곳</i></span>
-                <span className="home-retstat__lab">{s.label}</span>
-              </button>
-            ))}
-          </div>
-          {retAttention.length === 0
-            ? <div className="nodata-box" style={{ marginTop: 12 }}><MI n="check_circle" s={20} /><div>지금 주의가 필요한 유지고객이 없어요.</div></div>
-            : <div className="home-attnlist">
-              {retAttention.slice(0, 4).map(c => { const r = attnReason(c); return (
-                <button key={c.id} className="home-attnrow" onClick={() => onNav('retention')}>
-                  <span className="home-attnrow__name">{c.name}</span>
-                  <span className="home-attnrow__use faint">{c.use}</span>
-                  <DBadge tone={toneOf(r.tone)} shape="pill">{r.text}</DBadge>
-                  <MI n="chevron_right" s={18} cls="home-attnrow__go" />
-                </button>
-              ); })}
-              {retAttention.length > 4 && (
-                <button className="news-more" onClick={() => onNav('retention')}>주의 고객 전체 보기 <span className="news-more__n">+{retAttention.length - 4}</span> <MI n="chevron_right" s={18} /></button>
-              )}
-            </div>}
-        </DashCard>
-      </div>
-
-      {/* 3) 신규 진행 파이프라인 */}
-      <div style={{ marginTop: 16 }}>
-        <DashCard title="내 파이프라인 현황" sub="방문 결과 입력에 따라 단계가 자동 반영돼요"
+        <DashCard title="내 파이프라인 현황" sub="단계를 누르면 영업활동관리로 이동해요"
           action={<DBtn size="sm" variant="line" onClick={() => onNav('confirmed')} iconLeft={<MI n="fact_check" s={18} />}>방문 결과 보기</DBtn>}>
-          <div className="steps">
+          <div className="pipe-steps">
             {STEPS.map(([t, cnt, desc], i) => (
-              <div className="step" key={i}>
-                <div className="step__top"><span className="step__n">{i + 1}</span>{i < STEPS.length - 1 && <span className="step__line" />}</div>
-                <div className="step__t">{t} <b>{cnt}건</b></div>
-                <div className="step__d">{desc}</div>
-              </div>))}
+              <button className="pipe-step" key={i} onClick={() => onNav('confirmed')} title={desc}>
+                <span className="pipe-step__n">{i + 1}</span>
+                <span className="pipe-step__t">{t}</span>
+                <span className="pipe-step__cnt tnum">{cnt}<i>건</i></span>
+                <MI n="chevron_right" s={16} cls="pipe-step__go" />
+              </button>))}
           </div>
-          <div style={{ marginTop: 18 }}>
-            {recorded.length === 0
-              ? <div className="nodata-box"><MI n="info" s={20} /><div>아직 입력된 방문 결과가 없어요. 신규진행현황 목록에서 <b>방문 결과 입력</b>을 누르면 해당 건이 파이프라인 단계에 자동으로 반영돼요.</div></div>
-              : <SimpleTable
-                cols={[{ label: '고객사' }, { label: '유형' }, { label: '파이프라인 단계' }, { label: '방문 상태' }, { label: '메모' }, { label: '', c: 1 }]}
-                rows={recorded.map(c => { const v = visits[c.id]; const stage = STAGE_OF[v?.status] || '접촉'; const vm = v ? VISIT[v.status] : null;
-                  return [
-                    <b>{c.name}</b>,
-                    B(c.track === 'A' ? '신규' : '기존(업셀링)', c.track === 'A' ? 'info' : 'warning'),
-                    B(stage, STAGE_TONE[stage]),
-                    vm ? <DBadge tone={vm.tone} dot>{vm.label}</DBadge> : <DBadge tone="neutral">미입력</DBadge>,
-                    <span className="memo-cell" style={{ display: 'inline-block', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{v?.memo || '—'}</span>,
-                    <DBtn size="sm" variant="line" onClick={() => onResult(c)}>결과 수정</DBtn>,
-                  ]; })} />}
-          </div>
+          {recorded.length === 0
+            ? <div className="nodata-box" style={{ marginTop: 14 }}><MI n="info" s={20} /><div>아직 입력된 방문 결과가 없어요. 신규진행현황 목록에서 <b>방문 결과 입력</b>을 누르면 파이프라인 단계에 자동 반영돼요.</div></div>
+            : <div className="pipe-reclist">
+              {recorded.map(c => { const v = visits[c.id]; const stage = STAGE_OF[v?.status] || '접촉'; const vm = v ? VISIT[v.status] : null;
+                return (
+                  <button className="pipe-recrow" key={c.id} onClick={() => onResult(c)}>
+                    <span className="pipe-recrow__name">{c.name}</span>
+                    {B(c.track === 'A' ? '신규' : '기존', c.track === 'A' ? 'info' : 'warning')}
+                    {B(stage, STAGE_TONE[stage])}
+                    {vm ? <DBadge tone={vm.tone} dot>{vm.label}</DBadge> : <DBadge tone="neutral">미입력</DBadge>}
+                    <MI n="chevron_right" s={16} cls="pipe-recrow__go" />
+                  </button>
+                ); })}
+            </div>}
         </DashCard>
       </div>
     </div>
