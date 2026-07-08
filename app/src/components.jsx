@@ -50,7 +50,7 @@ export function BltaMark({ height = 26, className = '', style }) {
 }
 
 /* ---------- helpers ---------- */
-export const won = (n) => n == null ? '—' : (n >= 10000 ? (n / 10000).toLocaleString() + '만원' : n.toLocaleString() + '원');
+export const won = (n) => n == null ? '—' : (n >= 10000 ? Math.round(n / 10000).toLocaleString() + '만원' : Math.round(n).toLocaleString() + '원');
 export const num = (n) => n == null ? '—' : n.toLocaleString();
 
 /* score tiers — PRD 등급 (S 91~100 / A 81~90 / B 71~80 / C 51~70 / D ≤50) */
