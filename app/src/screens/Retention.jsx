@@ -39,7 +39,7 @@ const RETENTION_SECTIONS = ['kpis', 'list'];
 const RETENTION_SEC_TITLE = { kpis: '핵심 지표', list: '유지고객 목록·지도' };
 
 // "주의 필요" 판정 — 스코어링이 아니라 raw 신호 중 하나라도 해당하면 표시하는 단순 규칙
-function needsAttention(c) {
+export function needsAttention(c) {
   const daysToEnd = Math.round((new Date(c.endDate) - new Date()) / 86400000);
   const hasSevereSignal = c.signalHistory.some(s => s.severity === '심각');
   return { flag: daysToEnd <= 60 || hasSevereSignal || c.vocAttention, daysToEnd };
@@ -58,7 +58,7 @@ function isManageNeeded(c) {
   return c.signalTrend === '증가' || total >= 30 || hasSevere;
 }
 // 실데이터 기반 파생 필드(데모 주입 없음). 개시=실 개시월 / 만료도래=endDate(개시+3년 갱신 모델) 3개월 내 / 신호관리필요=위 규칙
-function augmentRetention(data) {
+export function augmentRetention(data) {
   const now = new Date();
   const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   return data.map((c) => {

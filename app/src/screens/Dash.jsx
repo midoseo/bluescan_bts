@@ -1,11 +1,9 @@
 /* ===== Dash.jsx — 관리자/컨설턴트 대시보드 ===== */
 import React from 'react'
-import { MI, VISIT } from '../components.jsx'
-import { GroupedBar, Radar } from '../charts.jsx'
+import { MI, VISIT, tierOf } from '../components.jsx'
+import { GroupedBar } from '../charts.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
-import { SEASON_DEF, SEASON_ORDER } from '../season.js'
-import { augmentListBFlood } from '../floodRisk.js'
-import { questProgress, badgeStatus, buildLeaderboard } from '../gamification.js'
+import { augmentRetention, needsAttention } from './Retention.jsx'
 const { useState, useRef } = React
 
 const DS = window.UXDesignSystem_59a60b;
@@ -331,40 +329,47 @@ export function AdminDash({ onNav, user, seeAll = true, listA = [], listB = [], 
   );
 }
 
-/* ============ 컨설턴트 대시보드 ============ */
+/* ============ 컨설턴트 대시보드 (간소화 — 오늘의 알림 · 유지관리 핵심 · 신규 파이프라인) ============ */
 /* 방문 상태 → 파이프라인 단계 매핑 */
 const STAGE_OF = { done: '협상', revisit: '제안', reject: '종료', won: '계약' };
 const STAGE_TONE = { 발굴: 'neutral', 접촉: 'neutral', 제안: 'info', 협상: 'warning', 계약: 'success', 종료: 'danger' };
 
-export function SalesDash({ persona, onNav, listA, listB, retention, recorded, visits, onResult, seasonPreview, onSeasonPreview, floodSeasonOn,
-  gamify, reportSentOverrides, touchOverrides, myEmpno, myBranch }) {
-  const regions = ['강남구', '서초구', '송파구', '마포구', '영등포구', '용산구', '성동구'];
+// 유지고객 "주의" 사유 한 줄 라벨
+function attnReason(c) {
+  const d = c._daysToEnd;
+  if (d != null && d >= 0 && d <= 60) return { text: `만료 D-${d}`, tone: 'danger' };
+  if ((c.signalHistory || []).some(s => s.severity === '심각')) return { text: '심각 신호', tone: 'danger' };
+  if (c.vocAttention) return { text: 'VOC 주의', tone: 'warning' };
+  return { text: '점검 필요', tone: 'warning' };
+}
+
+export function SalesDash({ persona, onNav, listA, listB, retention, recorded, visits, onResult }) {
   recorded = recorded || []; visits = visits || {};
-  const gamifyCtx = { visits, listA, listB, retention, reportSentOverrides, touchOverrides };
-  const myPoints = gamify ? gamify.total : 0;
-  const quests = questProgress(gamifyCtx);
-  const badges = badgeStatus(gamifyCtx);
-  const roster = (window.APP_ACCOUNTS || []).filter(a => a.role === 'consultant' && a.branch === myBranch);
-  const leaderboard = buildLeaderboard(roster, myEmpno, myPoints).slice(0, 8);
   const D = window.APPDATA || {};
   const [newsOpen, setNewsOpen] = useState(false);
   const newsAll = (D.firePoints || []).filter(f => f.title).slice().sort((a, b) => a.days - b.days);
-  const news = newsOpen ? newsAll.slice(0, 15) : newsAll.slice(0, 2);
+  const news = newsAll.slice(0, 12);
   const dayLabel = (d) => d <= 0 ? '오늘' : d === 1 ? '어제' : d + '일 전';
   const fireStats = buildFireDispatchDemo();
-  // 시즌별 특화 타깃 — 혹서기·풍수해기(6~9월) 침수 위험 후보 (신규 A + 유지고객 B)
-  const floodCands = (listA || []).filter(c => !c.excluded && !c.duplicate && c.flood && c.flood.level === '주의').slice().sort((a, b) => (b.score || 0) - (a.score || 0));
-  const floodBAll = augmentListBFlood(listB || []);
-  const floodBCands = floodBAll.filter(b => b.flood && b.flood.level === '주의').slice().sort((a, b) => (b.undergroundRoom ? 1 : 0) - (a.undergroundRoom ? 1 : 0));
-  const floodBHighRisk = floodBCands.filter(b => b.undergroundRoom).length;
-  const seasonKey = seasonPreview || 'normal';
   const discovered = (listA || []).filter(c => !c.excluded && !c.duplicate).length + (listB || []).filter(c => c.matchCount > 0).length;
   const visited = recorded.length;
   const byStatus = (s) => recorded.filter(c => visits[c.id]?.status === s).length;
   const wonCnt = byStatus('won');
-  const proposalN = byStatus('revisit'), negoN = byStatus('done'), rejectN = byStatus('reject');
-  const newCnt = recorded.filter(c => c.track === 'A').length, upCnt = recorded.filter(c => c.track === 'B').length;
-  const doneRate = visited ? Math.round(negoN / visited * 100) : 0;
+  const proposalN = byStatus('revisit'), negoN = byStatus('done');
+
+  // 유지관리 핵심 — 파생 필드로 주의/만료/신호관리/개시 집계
+  const retAug = augmentRetention(retention || []);
+  const retAttention = retAug.filter(c => needsAttention(c).flag)
+    .sort((a, b) => (a._daysToEnd ?? 9999) - (b._daysToEnd ?? 9999));
+  const retExpiry = retAug.filter(c => c.expirySoon).length;
+  const retManage = retAug.filter(c => c.manageNeeded).length;
+  const retOpen = retAug.filter(c => c.openThisMonth).length;
+  const RET_STATS = [
+    { key: 'all', label: '관리 유지물건', n: retAug.length, tone: '' },
+    { key: 'attn', label: '주의 필요', n: retAttention.length, tone: 'red' },
+    { key: 'expiry', label: '만료 도래', n: retExpiry, tone: 'amber' },
+    { key: 'manage', label: '신호 관리필요', n: retManage, tone: 'amber' },
+  ];
 
   const STEPS = [
     ['발굴', discovered, '공공·관제 데이터로 발굴된 전체 후보.'],
@@ -374,290 +379,113 @@ export function SalesDash({ persona, onNav, listA, listB, retention, recorded, v
     ['계약', wonCnt, '수주완료로 계약 체결된 건.'],
   ];
 
-  // ---- 드래그앤드롭 섹션 커스터마이징 (포인터 기반 — 끌어오면 기존 섹션이 밀려남) ----
-  const DASH_SECTIONS = ['news', 'season', 'kpis', 'gamify', 'charts', 'pipeline'];
-  const SEC_TITLE = { news: '블루스캔 관련 뉴스', season: '시즌 타깃 신호', kpis: '핵심 지표', gamify: '이번 주 퀘스트·랭킹', charts: '지역·유형 분포', pipeline: '내 파이프라인' };
-  const [order, setOrder] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem('bluescan.dashOrder') || 'null'); if (Array.isArray(s)) { const f = s.filter(k => DASH_SECTIONS.includes(k)); return [...f, ...DASH_SECTIONS.filter(k => !f.includes(k))]; } } catch { /* ignore */ }
-    return DASH_SECTIONS;
-  });
-  const orderRef = useRef(order); orderRef.current = order;
-  const wrapRef = useRef(null);
-  const [draggingKey, setDraggingKey] = useState(null);
-  const persist = (next) => { try { localStorage.setItem('bluescan.dashOrder', JSON.stringify(next)); } catch { /* ignore */ } };
-  const resetOrder = () => { setOrder(DASH_SECTIONS); persist(DASH_SECTIONS); };
-
-  const beginDrag = (e, key) => {
-    e.preventDefault();
-    setDraggingKey(key);
-    document.body.classList.add('dash-dragging');
-    const move = (ev) => {
-      const wrap = wrapRef.current; if (!wrap) return;
-      const els = [...wrap.querySelectorAll('.dash-sec')];
-      let overKey = null;
-      for (const el of els) { const r = el.getBoundingClientRect(); if (ev.clientY >= r.top && ev.clientY <= r.bottom) { overKey = el.dataset.key; break; } }
-      if (!overKey && els.length) {  // 첫 섹션 위 / 마지막 섹션 아래로 끌었을 때
-        const first = els[0].getBoundingClientRect(), last = els[els.length - 1].getBoundingClientRect();
-        if (ev.clientY < first.top) overKey = els[0].dataset.key;
-        else if (ev.clientY > last.bottom) overKey = els[els.length - 1].dataset.key;
-      }
-      if (overKey && overKey !== key) {
-        setOrder(prev => { const from = prev.indexOf(key), to = prev.indexOf(overKey); if (from < 0 || to < 0 || from === to) return prev; const next = [...prev]; next.splice(to, 0, next.splice(from, 1)[0]); return next; });
-      }
-    };
-    const up = () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-      document.body.classList.remove('dash-dragging');
-      setDraggingKey(null);
-      setOrder(cur => { persist(cur); return cur; });   // 최신 순서를 확실히 저장
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-  };
-
-  const SECTION = {
-    news: (
-      <DashCard title="블루스캔 관련 뉴스" sub="최근 화재·보안 이슈 · 공개 뉴스 데이터 + 소방청 출동 통계"
-        action={<span style={{ font: 'var(--type-13r)', color: 'var(--text-tertiary)' }}>최근 발생순 · 영업 타이밍 신호</span>}>
-        <div className="firedsp">
-          <div className="firedsp__top">
-            <MI n="local_fire_department" s={16} />
-            <span className="firedsp__label">오늘의 화재 출동 현황</span>
-            <DBadge tone="danger" shape="pill">접수 {fireStats.national.rcpt}건</DBadge>
-            <DBadge tone="warning" shape="pill">진행중 {fireStats.national.prog}건</DBadge>
-            <DBadge tone="neutral" shape="pill">인명피해 {fireStats.national.life}명</DBadge>
-            <DBadge tone="neutral" shape="pill">재산피해 {(fireStats.national.prop / 1e8).toFixed(1)}억원</DBadge>
-            <span className="firedsp__src">{fireStats.source} · 기준일 {fireStats.baseDate}</span>
-          </div>
-          <div className="faint" style={{ font: 'var(--type-13m)', margin: '2px 0 6px' }}>실시간 화재 출동 현황 <span style={{ fontWeight: 400 }}>· safekorea 실시간 화재정보</span></div>
-          <div className="news-feed" style={{ maxHeight: 220, overflowY: 'auto' }}>
-            {(fireStats.liveItems || []).map(f => (
-              <div className="news-item" key={f.id} style={{ cursor: 'default' }}>
-                <div className="news-day hot">{f.time.split(' ')[1]}</div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="news-title">{f.type} · {f.loc}</div>
-                  <div className="news-meta">
-                    <span className="news-region"><MI n="location_on" s={14} />{f.loc.split(' ')[0]} {f.loc.split(' ')[1]}</span>
-                    <DBadge tone={f.scale === '대형' ? 'danger' : f.scale === '중형' ? 'warning' : 'neutral'} shape="pill">{f.scale}</DBadge>
-                    <span className="news-src">{f.time}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        {news.length === 0
-          ? <div className="nodata-box"><MI n="info" s={20} /><div>표시할 뉴스가 없어요.</div></div>
-          : <div className="news-feed">
-            {news.map((f, i) => (
-              <a className="news-item" key={i} href={f.url || '#'} target="_blank" rel="noopener noreferrer" onClick={e => { if (!f.url) e.preventDefault(); }}>
-                <div className={'news-day' + (f.days <= 1 ? ' hot' : '')}>{dayLabel(f.days)}</div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="news-title">{f.title}</div>
-                  <div className="news-meta">
-                    {f.sigungu && <span className="news-region"><MI n="location_on" s={14} />{f.sigungu}</span>}
-                    {f.biz && <span className="news-src">{f.biz}</span>}
-                    <DBadge tone={f.scale === '대형' ? 'danger' : f.scale === '중형' ? 'warning' : 'neutral'} shape="pill">{f.scale}</DBadge>
-                    <span className="news-src">{f.source}</span>
-                  </div>
-                </div>
-                <MI n="open_in_new" s={16} cls="news-ext" />
-              </a>
-            ))}
-          </div>}
-        {newsAll.length > 2 && (
-          <button className="news-more" onClick={() => setNewsOpen(o => !o)}>
-            {newsOpen
-              ? <>접기 <MI n="expand_less" s={18} /></>
-              : <>더보기 <span className="news-more__n">+{newsAll.length - 2}</span> <MI n="expand_more" s={18} /></>}
-          </button>
-        )}
-      </DashCard>
-    ),
-    season: (
-      <DashCard title="시즌 타깃 신호" sub={`${SEASON_DEF[seasonKey].label} · ${SEASON_DEF[seasonKey].theme}`}
-        action={<div style={{ width: 190 }}>
-          <DSel value={seasonKey} onChange={(v) => onSeasonPreview && onSeasonPreview(v)}
-            options={SEASON_ORDER.map(k => ({ value: k, label: '미리보기 · ' + SEASON_DEF[k].label }))} />
-        </div>}>
-        {floodSeasonOn ? (
-          floodCands.length === 0 && floodBCands.length === 0 ? (
-            <div className="nodata-box"><MI n="info" s={20} /><div>담당 구역에 침수 위험 신호가 있는 후보·고객처가 없어요.</div></div>
-          ) : (
-            <>
-              <div className="firedsp" style={{ marginBottom: 12 }}>
-                <div className="firedsp__top">
-                  <MI n="water_drop" s={16} />
-                  <span className="firedsp__label">도시침수 예상구역(기왕최대) 내 대상</span>
-                  <DBadge tone="info" shape="pill">신규 후보 {floodCands.length}곳</DBadge>
-                  <DBadge tone="info" shape="pill">유지고객 {floodBCands.length}곳</DBadge>
-                  {floodBHighRisk > 0 && <DBadge tone="danger" shape="pill">지하 중요시설 고위험 {floodBHighRisk}곳</DBadge>}
-                  <span className="firedsp__src">건축물대장·관제 스코어링 연계 · 점수에는 미반영(타이밍 신호 전용)</span>
-                </div>
-              </div>
-
-              {floodCands.length > 0 && <>
-                <div className="faint" style={{ font: 'var(--type-13m)', margin: '4px 0 6px' }}>신규 고객 후보 (리스트 A)</div>
-                <div className="news-feed">
-                  {floodCands.slice(0, 5).map(c => (
-                    <div className="news-item" key={c.id} style={{ cursor: 'default' }}>
-                      <div className="news-day hot"><MI n="water_drop" s={16} /></div>
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <div className="news-title">{c.name}</div>
-                        <div className="news-meta">
-                          <span className="news-region"><MI n="location_on" s={14} />{c.address}</span>
-                          <DBadge tone="info" shape="pill">{c.flood.area}</DBadge>
-                          <span className="news-src">점수 {c.score}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {onNav && <DBtn size="sm" variant="line" onClick={() => onNav('listA')} iconLeft={<MI n="travel_explore" s={18} />} style={{ margin: '10px 0 16px' }}>신규 고객 후보에서 전체 보기 (+{Math.max(floodCands.length - 5, 0)})</DBtn>}
-              </>}
-
-              {floodBCands.length > 0 && <>
-                <div className="faint" style={{ font: 'var(--type-13m)', margin: '4px 0 6px' }}>유지고객 (리스트 B · 업셀링)</div>
-                <div className="news-feed">
-                  {floodBCands.slice(0, 5).map(c => (
-                    <div className="news-item" key={c.id} style={{ cursor: 'default' }}>
-                      <div className={'news-day' + (c.undergroundRoom ? ' hot' : '')}><MI n="water_drop" s={16} /></div>
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <div className="news-title">{c.name}</div>
-                        <div className="news-meta">
-                          <span className="news-region"><MI n="location_on" s={14} />{c.address}</span>
-                          <DBadge tone="info" shape="pill">{c.flood.area}</DBadge>
-                          {c.undergroundRoom
-                            ? <DBadge tone="danger" shape="pill">{c.undergroundRoom} · 고위험(예시)</DBadge>
-                            : <span className="news-src">{c.ind}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {onNav && <DBtn size="sm" variant="line" onClick={() => onNav('listB')} iconLeft={<MI n="apartment" s={18} />} style={{ marginTop: 10 }}>유지고객 후보에서 전체 보기 (+{Math.max(floodBCands.length - 5, 0)})</DBtn>}
-              </>}
-            </>
-          )
-        ) : (
-          <div className="nodata-box"><MI n="info" s={20} /><div>침수 위험 신호는 혹서기·풍수해기(6~9월)에만 표시돼요. 위 선택창에서 다른 시즌을 미리볼 수 있어요.</div></div>
-        )}
-      </DashCard>
-    ),
-    kpis: (
-      <div className="bkpis">
-        <SpecKpi label="발굴 후보" value={discovered + '건'} tag={{ text: '신규+기존(업셀링)', tone: 'info' }} />
-        <SpecKpi label="방문 접촉" value={visited + '건'} tag={{ text: '결과 입력 완료', tone: 'success' }} />
-        <SpecKpi label="협상 단계" value={negoN + '건'} tag={{ text: '방문완료 전환', tone: 'warning' }} />
-        <SpecKpi label="방문 성공률" value={doneRate + '%'} tag={{ text: `거절 ${rejectN}건`, tone: doneRate >= 50 ? 'success' : 'neutral' }} />
-      </div>
-    ),
-    gamify: (
-      <DashCard title="이번 주 퀘스트·랭킹" sub="활동할수록 포인트가 쌓여요 · 배점은 예시(관리자가 확정 필요)"
-        action={<span style={{ font: 'var(--type-20b,800 20px/1 sans-serif)', color: 'var(--accent)' }}>{myPoints}P</span>}>
-        <div className="dash-2col">
-          <div>
-            <div className="faint" style={{ font: 'var(--type-13m)', margin: '2px 0 10px' }}>퀘스트 진행률</div>
-            {quests.map(q => (
-              <div key={q.id} style={{ marginBottom: 12 }}>
-                <div className="goalbar__top">
-                  <span className="goalbar__label"><MI n={q.icon} s={16} style={{ verticalAlign: '-3px', marginRight: 4 }} />{q.label}</span>
-                  <span className="goalbar__pct" style={{ fontSize: 14 }}>{q.current}/{q.target}</span>
-                </div>
-                <div className="goalbar__track">
-                  <div className="goalbar__fill" style={{ width: `${q.current / q.target * 100}%`, background: q.done ? 'var(--s1-seagreen-600,#1fb279)' : 'var(--accent)' }} />
-                </div>
-              </div>
-            ))}
-            <div className="faint" style={{ font: 'var(--type-13m)', margin: '16px 0 8px' }}>배지</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {badges.map(b => (
-                <span key={b.id} title={b.label} className="gm-badge" data-on={b.unlocked ? '1' : '0'}>
-                  <MI n={b.icon} s={16} fill={b.unlocked} />{b.label}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="faint" style={{ font: 'var(--type-13m)', margin: '2px 0 10px' }}>지사 랭킹 <span style={{ fontWeight: 400 }}>· 동료는 예시 데이터, 나는 실제 활동 기준</span></div>
-            {leaderboard.length === 0
-              ? <div className="nodata-box"><MI n="info" s={18} /><div>같은 지사에 등록된 컨설턴트 계정이 없어요.</div></div>
-              : <SimpleTable
-                cols={[{ label: '', c: 1 }, { label: '이름' }, { label: '포인트', c: 1 }, { label: '비교' }]}
-                rows={leaderboard.map((r, i) => [
-                  <span className={'perf-rank' + (i < 3 ? ' perf-rank--top' : '')}>{i + 1}</span>,
-                  <b style={{ color: r.isMe ? 'var(--accent)' : undefined }}>{r.name}{r.isMe ? ' (나)' : ''}</b>,
-                  <span className="perf-num">{r.points}</span>,
-                  <div className="perf-bar"><div className="perf-bar__fill" style={{ width: Math.round(r.points / Math.max(...leaderboard.map(x => x.points), 1) * 100) + '%' }} /></div>,
-                ])} />}
-          </div>
-        </div>
-      </DashCard>
-    ),
-    charts: (
-      <div className="dash-2col">
-        <DashCard title="지역별 전체 건수" sub="담당구역 현황 · 신규 vs 기존 고객(업셀링)">
-          <GroupedBar categories={regions}
-            series={[{ name: '후보(신규)', data: [8, 6, 5, 7, 4, 5, 3] }, { name: '후보(기존 고객)', data: [5, 4, 3, 4, 3, 2, 2] }]} />
-        </DashCard>
-        <DashCard title="후보 유형 분포" sub="신규 vs 기존 고객(업셀링)">
-          <Radar categories={regions} series={[{ name: '신규', data: [8, 6, 5, 7, 4, 5, 3] }, { name: '기존 고객(업셀링)', data: [5, 4, 3, 4, 3, 2, 2] }]} />
-        </DashCard>
-      </div>
-    ),
-    pipeline: (
-      <DashCard title="내 파이프라인 현황" sub="방문 결과 입력에 따라 단계가 자동 반영돼요"
-        action={<DBtn size="sm" variant="line" onClick={() => onNav('confirmed')} iconLeft={<MI n="fact_check" s={18} />}>방문 결과 보기</DBtn>}>
-        <div className="steps">
-          {STEPS.map(([t, cnt, desc], i) => (
-            <div className="step" key={i}>
-              <div className="step__top"><span className="step__n">{i + 1}</span>{i < STEPS.length - 1 && <span className="step__line" />}</div>
-              <div className="step__t">{t} <b>{cnt}건</b></div>
-              <div className="step__d">{desc}</div>
-            </div>))}
-        </div>
-        <div style={{ marginTop: 18 }}>
-          {recorded.length === 0
-            ? <div className="nodata-box"><MI n="info" s={20} /><div>아직 입력된 방문 결과가 없어요. 신규 고객 후보·기존 고객 후보(업셀링) 목록에서 <b>결과 입력</b>을 누르면 해당 건이 파이프라인 단계에 자동으로 반영돼요.</div></div>
-            : <SimpleTable
-              cols={[{ label: '고객사' }, { label: '유형' }, { label: '파이프라인 단계' }, { label: '방문 상태' }, { label: '메모' }, { label: '', c: 1 }]}
-              rows={recorded.map(c => { const v = visits[c.id]; const stage = STAGE_OF[v?.status] || '접촉'; const vm = v ? VISIT[v.status] : null;
-                return [
-                  <b>{c.name}</b>,
-                  B(c.track === 'A' ? '신규' : '기존(업셀링)', c.track === 'A' ? 'info' : 'warning'),
-                  B(stage, STAGE_TONE[stage]),
-                  vm ? <DBadge tone={vm.tone} dot>{vm.label}</DBadge> : <DBadge tone="neutral">미입력</DBadge>,
-                  <span className="memo-cell" style={{ display: 'inline-block', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{v?.memo || '—'}</span>,
-                  <DBtn size="sm" variant="line" onClick={() => onResult(c)}>결과 수정</DBtn>,
-                ]; })} />}
-        </div>
-      </DashCard>
-    ),
-  };
-
   return (
     <div className="pc-content pc-content--wide fadein" data-screen-label="컨설턴트 대시보드">
       <div className="pc-pagehead">
         <div>
           <div className="pc-pagehead__title">안녕하세요, {persona?.name || '김영업'}님</div>
-          <div className="pc-pagehead__desc">담당 구역의 파이프라인·후보 분포와 블루스캔 관련 뉴스를 확인하세요. 섹션 좌상단 <MI n="drag_indicator" s={16} style={{ verticalAlign: '-3px' }} />핸들을 드래그하면 원하는 순서로 배치할 수 있어요.</div>
-        </div>
-        <div className="ph-right">
-          <DBtn size="sm" variant="line" onClick={resetOrder} iconLeft={<MI n="restart_alt" s={18} />}>구성 초기화</DBtn>
+          <div className="pc-pagehead__desc">오늘 챙길 유지관리·신규 진행 현황만 간단히 정리했어요. 항목을 누르면 상세 화면으로 넘어가요.</div>
         </div>
       </div>
 
-      <div ref={wrapRef}>
-        {order.map(key => (
-          <div key={key} data-key={key} className={'dash-sec' + (draggingKey === key ? ' dash-sec--dragging' : '')}>
-            <div className="dash-sec__bar" onPointerDown={e => beginDrag(e, key)}>
-              <MI n="drag_indicator" s={18} /><span className="dash-sec__name">{SEC_TITLE[key]}</span>
-              <span className="faint dash-sec__hint">드래그하여 순서 변경</span>
+      {/* 1) 오늘의 알림 — 화재·보안 뉴스 (열기/닫기) */}
+      <div className={'home-alertbox' + (newsOpen ? ' open' : '')}>
+        <button className="home-alertbox__head" onClick={() => setNewsOpen(o => !o)} aria-expanded={newsOpen}>
+          <span className="home-alertbox__ico"><MI n="local_fire_department" s={20} fill /></span>
+          <span className="home-alertbox__title">오늘의 화재·보안 알림</span>
+          <span className="home-alertbox__meta">출동 접수 {fireStats.national.rcpt}건 · 관련 뉴스 {newsAll.length}건</span>
+          <span className="home-alertbox__toggle">{newsOpen ? '닫기' : '열기'}<MI n={newsOpen ? 'expand_less' : 'expand_more'} s={18} /></span>
+        </button>
+        {newsOpen && (
+          <div className="home-alertbox__body">
+            <div className="firedsp__top">
+              <DBadge tone="danger" shape="pill">접수 {fireStats.national.rcpt}건</DBadge>
+              <DBadge tone="warning" shape="pill">진행중 {fireStats.national.prog}건</DBadge>
+              <DBadge tone="neutral" shape="pill">인명피해 {fireStats.national.life}명</DBadge>
+              <DBadge tone="neutral" shape="pill">재산피해 {(fireStats.national.prop / 1e8).toFixed(1)}억원</DBadge>
+              <span className="firedsp__src">{fireStats.source} · 기준일 {fireStats.baseDate}</span>
             </div>
-            <div className="dash-sec__body">{SECTION[key]}</div>
+            {news.length === 0
+              ? <div className="nodata-box"><MI n="info" s={20} /><div>표시할 뉴스가 없어요.</div></div>
+              : <div className="news-feed" style={{ marginTop: 8 }}>
+                {news.map((f, i) => (
+                  <a className="news-item" key={i} href={f.url || '#'} target="_blank" rel="noopener noreferrer" onClick={e => { if (!f.url) e.preventDefault(); }}>
+                    <div className={'news-day' + (f.days <= 1 ? ' hot' : '')}>{dayLabel(f.days)}</div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="news-title">{f.title}</div>
+                      <div className="news-meta">
+                        {f.sigungu && <span className="news-region"><MI n="location_on" s={14} />{f.sigungu}</span>}
+                        {f.biz && <span className="news-src">{f.biz}</span>}
+                        <DBadge tone={f.scale === '대형' ? 'danger' : f.scale === '중형' ? 'warning' : 'neutral'} shape="pill">{f.scale}</DBadge>
+                        <span className="news-src">{f.source}</span>
+                      </div>
+                    </div>
+                    <MI n="open_in_new" s={16} cls="news-ext" />
+                  </a>
+                ))}
+              </div>}
           </div>
-        ))}
+        )}
+      </div>
+
+      {/* 2) 유지관리 핵심 */}
+      <div style={{ marginTop: 16 }}>
+        <DashCard title="유지관리 핵심" sub="주의가 필요한 유지고객을 먼저 확인하세요"
+          action={<DBtn size="sm" variant="line" onClick={() => onNav('retention')} iconLeft={<MI n="shield_with_heart" s={18} />}>유지관리현황</DBtn>}>
+          <div className="home-retstats">
+            {RET_STATS.map(s => (
+              <button key={s.key} className={'home-retstat' + (s.tone ? ' home-retstat--' + s.tone : '')} onClick={() => onNav('retention')}>
+                <span className="home-retstat__n tnum">{s.n}<i>곳</i></span>
+                <span className="home-retstat__lab">{s.label}</span>
+              </button>
+            ))}
+          </div>
+          {retAttention.length === 0
+            ? <div className="nodata-box" style={{ marginTop: 12 }}><MI n="check_circle" s={20} /><div>지금 주의가 필요한 유지고객이 없어요.</div></div>
+            : <div className="home-attnlist">
+              {retAttention.slice(0, 4).map(c => { const r = attnReason(c); return (
+                <button key={c.id} className="home-attnrow" onClick={() => onNav('retention')}>
+                  <span className="home-attnrow__name">{c.name}</span>
+                  <span className="home-attnrow__use faint">{c.use}</span>
+                  <DBadge tone={toneOf(r.tone)} shape="pill">{r.text}</DBadge>
+                  <MI n="chevron_right" s={18} cls="home-attnrow__go" />
+                </button>
+              ); })}
+              {retAttention.length > 4 && (
+                <button className="news-more" onClick={() => onNav('retention')}>주의 고객 전체 보기 <span className="news-more__n">+{retAttention.length - 4}</span> <MI n="chevron_right" s={18} /></button>
+              )}
+            </div>}
+        </DashCard>
+      </div>
+
+      {/* 3) 신규 진행 파이프라인 */}
+      <div style={{ marginTop: 16 }}>
+        <DashCard title="내 파이프라인 현황" sub="방문 결과 입력에 따라 단계가 자동 반영돼요"
+          action={<DBtn size="sm" variant="line" onClick={() => onNav('confirmed')} iconLeft={<MI n="fact_check" s={18} />}>방문 결과 보기</DBtn>}>
+          <div className="steps">
+            {STEPS.map(([t, cnt, desc], i) => (
+              <div className="step" key={i}>
+                <div className="step__top"><span className="step__n">{i + 1}</span>{i < STEPS.length - 1 && <span className="step__line" />}</div>
+                <div className="step__t">{t} <b>{cnt}건</b></div>
+                <div className="step__d">{desc}</div>
+              </div>))}
+          </div>
+          <div style={{ marginTop: 18 }}>
+            {recorded.length === 0
+              ? <div className="nodata-box"><MI n="info" s={20} /><div>아직 입력된 방문 결과가 없어요. 신규진행현황 목록에서 <b>방문 결과 입력</b>을 누르면 해당 건이 파이프라인 단계에 자동으로 반영돼요.</div></div>
+              : <SimpleTable
+                cols={[{ label: '고객사' }, { label: '유형' }, { label: '파이프라인 단계' }, { label: '방문 상태' }, { label: '메모' }, { label: '', c: 1 }]}
+                rows={recorded.map(c => { const v = visits[c.id]; const stage = STAGE_OF[v?.status] || '접촉'; const vm = v ? VISIT[v.status] : null;
+                  return [
+                    <b>{c.name}</b>,
+                    B(c.track === 'A' ? '신규' : '기존(업셀링)', c.track === 'A' ? 'info' : 'warning'),
+                    B(stage, STAGE_TONE[stage]),
+                    vm ? <DBadge tone={vm.tone} dot>{vm.label}</DBadge> : <DBadge tone="neutral">미입력</DBadge>,
+                    <span className="memo-cell" style={{ display: 'inline-block', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'middle' }}>{v?.memo || '—'}</span>,
+                    <DBtn size="sm" variant="line" onClick={() => onResult(c)}>결과 수정</DBtn>,
+                  ]; })} />}
+          </div>
+        </DashCard>
       </div>
     </div>
   );

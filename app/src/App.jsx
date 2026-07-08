@@ -1,8 +1,9 @@
 /* ===== App.jsx — root: S-1 GNB shell, routing, state ===== */
 import React from 'react'
 import { useTweaks } from './useTweaks.js'
-import { MI, VISIT, BrandMark, BltaMark } from './components.jsx'
+import { MI, VISIT, BrandMark, BltaMark, tierOf } from './components.jsx'
 import { AdminDash, SalesDash } from './screens/Dash.jsx'
+import { augmentRetention, needsAttention } from './screens/Retention.jsx'
 import { ListAScreen } from './screens/ListA.jsx'
 import { ListBScreen } from './screens/ListB.jsx'
 import { PipelineScreen } from './screens/Pipeline.jsx'
@@ -235,6 +236,23 @@ export default function App() {
 
   const pageTitle = view === 'home' ? (isAdmin ? '관리자 대시보드' : '컨설턴트 대시보드') : (TITLES[view] && TITLES[view].crumb);
 
+  // --- 홈 좌측 "오늘 할 일" 요약 — 유지관리·신규진행·미션 화면의 핵심만 뽑아 클릭 시 해당 화면으로 이동 ---
+  const _retAug = augmentRetention(retention);
+  const _retAttn = _retAug.filter(c => needsAttention(c).flag).length;
+  const _retExpiry = _retAug.filter(c => c.expirySoon).length;
+  const _retManage = _retAug.filter(c => c.manageNeeded).length;
+  const _bothN = pipelineData.filter(c => c.track === 'B' && c.btype === 'both').length;
+  const _topN = pipelineData.filter(c => tierOf(c.score).key === 'S').length;
+  const _questsDone = quests.filter(q => q.done).length;
+  const homeTodos = [
+    _retAttn > 0 && { icon: 'warning', tone: 'danger', label: '주의 필요 유지고객', n: _retAttn, unit: '곳', go: 'retention' },
+    _retExpiry > 0 && { icon: 'event_busy', tone: 'warn', label: '계약 만료 임박', n: _retExpiry, unit: '곳', go: 'retention' },
+    _bothN > 0 && { icon: 'priority_high', tone: 'warn', label: '우선접촉 대상', n: _bothN, unit: '곳', go: 'pipeline' },
+    { icon: 'star', tone: '', label: '최우선 신규 후보', n: _topN, unit: '곳', go: 'pipeline' },
+    _retManage > 0 && { icon: 'monitor_heart', tone: '', label: '신호 관리필요', n: _retManage, unit: '곳', go: 'retention' },
+    { icon: 'military_tech', tone: '', label: '이번주 퀘스트', n: `${_questsDone}/${quests.length}`, unit: '', go: 'activity' },
+  ].filter(Boolean).slice(0, 6);
+
   // 헤더 날짜 — 오늘(실행 시점) + 이달 영업일수 경과
   const _now = new Date();
   const p2 = (x) => String(x).padStart(2, '0');
@@ -302,22 +320,20 @@ export default function App() {
         <ErrorBoundary key={view}>
           {view === 'home' ? (
             <div className="homewrap">
-              {/* 좌측 요약 패널 — 활동 점수 + 핵심 요약(클릭 시 해당 화면으로) */}
+              {/* 좌측 요약 패널 — 활동 점수 + 오늘 할 일(클릭 시 해당 화면으로) */}
               <aside className="hsummary">
                 <div className="hsummary__score">
                   <div className="hsummary__who">{persona.name} 님 · {seeAll ? '전체 지사' : user.branch}</div>
                   <div className="hsummary__pts"><MI n="stars" s={22} fill /><span className="tnum">{gamify.total}P</span></div>
                   <div className="hsummary__ptssub">오늘의 활동 점수</div>
                 </div>
-                <button className="hsummary__card" onClick={() => setView('pipeline')}>
-                  <span className="hsummary__k"><MI n="travel_explore" s={18} />신규 고객 찾기</span><b>{counts.listA}<i>곳</i></b>
-                </button>
-                <button className="hsummary__card" onClick={() => setView('pipeline')}>
-                  <span className="hsummary__k"><MI n="apartment" s={18} />기존 고객</span><b>{counts.listB}<i>곳</i></b>
-                </button>
-                <button className="hsummary__card hsummary__card--warn" onClick={() => setView('retention')}>
-                  <span className="hsummary__k"><MI n="shield_with_heart" s={18} />유지관리현황</span><b>{counts.retention}<i>곳</i></b>
-                </button>
+                <div className="hsummary__label">오늘 할 일</div>
+                {homeTodos.map((it, i) => (
+                  <button key={i} className={'hsummary__card' + (it.tone ? ' hsummary__card--' + it.tone : '')} onClick={() => setView(it.go)}>
+                    <span className="hsummary__k"><MI n={it.icon} s={18} />{it.label}</span>
+                    <b>{it.n}{it.unit && <i>{it.unit}</i>}</b>
+                  </button>
+                ))}
               </aside>
               <div className="hcol">
                 {isAdmin

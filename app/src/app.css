@@ -1200,6 +1200,40 @@ body{ background: var(--surface-home); }
 .hsummary__card--warn{ background:#fff8ef; border-color:#ffd8b0; }
 .hsummary__card--warn .hsummary__k{ color:#b45309; }
 .hsummary__card--warn b{ color:#b45309; }
+.hsummary__card--danger{ background:#fff1ef; border-color:#ffc7bd; }
+.hsummary__card--danger .hsummary__k{ color:#c2361b; }
+.hsummary__card--danger b{ color:#c2361b; }
+.hsummary__label{ font-size:13px; font-weight:700; color:#8b95a1; margin:6px 2px -2px; letter-spacing:.01em; }
+
+/* ===== 홈 — 오늘의 알림(열기·닫기) ===== */
+.home-alertbox{ background:#fff; border:1px solid #eaecf0; border-radius:14px; overflow:hidden; }
+.home-alertbox.open{ border-color:#ffd0bf; }
+.home-alertbox__head{ display:flex; align-items:center; gap:10px; width:100%; padding:14px 18px; cursor:pointer; text-align:left; background:none; border:0; }
+.home-alertbox__head:hover{ background:#fafbfc; }
+.home-alertbox__ico{ width:32px; height:32px; border-radius:9px; display:grid; place-items:center; background:#fff0ea; color:#e5502b; flex:none; }
+.home-alertbox__title{ font-size:16px; font-weight:700; color:#191f28; }
+.home-alertbox__meta{ font-size:13px; color:#8b95a1; }
+.home-alertbox__toggle{ margin-left:auto; display:inline-flex; align-items:center; gap:3px; font-size:14px; font-weight:600; color:#1d6ceb; flex:none; }
+.home-alertbox__body{ padding:4px 18px 16px; border-top:1px solid #f1f3f5; }
+.home-alertbox__body .firedsp__top{ display:flex; flex-wrap:wrap; align-items:center; gap:7px; padding:12px 0 4px; }
+
+/* ===== 홈 — 유지관리 핵심 ===== */
+.home-retstats{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:6px; }
+.home-retstat{ background:#f7f9fb; border:1px solid #eef1f4; border-radius:12px; padding:13px 12px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
+.home-retstat:hover{ border-color:#b9cdf3; box-shadow:0 2px 8px rgba(29,108,235,.1); }
+.home-retstat__n{ display:block; font-size:24px; font-weight:800; line-height:1; color:#191f28; }
+.home-retstat__n i{ font-size:14px; font-style:normal; font-weight:700; color:#8b95a1; margin-left:2px; }
+.home-retstat__lab{ display:block; font-size:13.5px; font-weight:600; color:#4e5968; margin-top:5px; }
+.home-retstat--red .home-retstat__n{ color:#e5502b; }
+.home-retstat--amber .home-retstat__n{ color:#d98a1a; }
+.home-attnlist{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.home-attnrow{ display:flex; align-items:center; gap:10px; background:#fff; border:1px solid #eef1f4; border-radius:11px; padding:11px 14px; cursor:pointer; text-align:left; transition:border-color .12s, box-shadow .12s; }
+.home-attnrow:hover{ border-color:#1d6ceb; box-shadow:0 2px 8px rgba(29,108,235,.1); }
+.home-attnrow__name{ font-size:15px; font-weight:700; color:#191f28; }
+.home-attnrow__use{ font-size:13px; }
+.home-attnrow__go{ margin-left:auto; color:#adb5bd; }
+
+@media (max-width:560px){ .home-retstats{ grid-template-columns:repeat(2,1fr); } }
 
 /* 좁은 화면 — 요약패널을 상단으로, 탭 가로 스크롤 */
 @media (max-width:1080px){
