@@ -105,15 +105,19 @@ export function TargetMap({ candidates, fireRegions, showFire, showFlood = true,
       if (c.lat == null || c.lng == null) return;
       const sel = c.id === selectedId;
       const { col, big, label } = markerInfo(c, variant, visits);
-      // 라벨 핀(시안 D) — 흰 칩 + 등급색 점 + 이름(+점수) + 아래 꼬리. 진한 지도에서도 잘 보이게.
-      const nm = String(c.name || '');
-      const short = nm.length > 8 ? nm.slice(0, 8) + '…' : nm;
-      const esc = short.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const scoreHtml = (variant !== 'C' && c.score != null) ? `<b class="mk-score">${c.score}</b>` : '';
+      // 물방울 핀(시안 B) — 위치를 꼭짓점으로 가리키고, 마우스 오버 시 물건명 툴팁을 띄운다.
+      const escName = String(c.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const dw = sel ? 38 : (big ? 34 : 30);
+      const dh = Math.round(dw / 30 * 40);
       const el = document.createElement('div');
       el.className = 'mk-pin' + (sel ? ' mk-pin--sel' : '') + (big ? ' mk-pin--big' : '');
       el.style.setProperty('--mkcol', col);
-      el.innerHTML = `<span class="mk-chip"><i class="mk-dot"></i><span class="mk-name">${esc}</span>${scoreHtml}</span><span class="mk-tail"></span>`;
+      el.innerHTML =
+        `<span class="mk-tip">${escName}</span>` +
+        `<svg class="mk-drop" width="${dw}" height="${dh}" viewBox="0 0 30 40" aria-hidden="true">` +
+          `<path d="M15 1.5 C7.5 1.5 2 7 2 14.5 C2 23 15 38.5 15 38.5 C15 38.5 28 23 28 14.5 C28 7 22.5 1.5 15 1.5 Z" fill="${col}" stroke="#fff" stroke-width="2.4"/>` +
+          `<circle cx="15" cy="14.5" r="4.8" fill="#fff"/>` +
+        `</svg>`;
       el.title = label;
       const pos = new kakao.maps.LatLng(c.lat, c.lng);
       const ov = new kakao.maps.CustomOverlay({ position: pos, content: el, xAnchor: 0.5, yAnchor: 1, zIndex: sel ? 40 : (big ? 20 : 10), clickable: true });
