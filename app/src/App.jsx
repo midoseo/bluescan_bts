@@ -245,9 +245,9 @@ export default function App() {
   const goRetention = (cat) => { setRetInitCat(cat); setView('retention'); };
   const homeRetStats = [
     { cat: 'all', icon: 'apartment', tone: '', label: '관리 유지물건', n: _retAug.length },
-    { cat: 'attn', icon: 'warning', tone: 'danger', label: '주의 필요', n: _retAttn },
-    { cat: 'expiry', icon: 'event_busy', tone: 'warn', label: '만료 도래', n: _retExpiry },
-    { cat: 'manage', icon: 'monitor_heart', tone: 'warn', label: '신호 관리필요', n: _retManage },
+    { cat: 'attn', icon: 'warning', tone: 'red', label: '주의 필요', n: _retAttn },
+    { cat: 'expiry', icon: 'event_busy', tone: 'amber', label: '만료 도래', n: _retExpiry },
+    { cat: 'manage', icon: 'monitor_heart', tone: 'amber', label: '신호 관리필요', n: _retManage },
   ];
 
   // 헤더 날짜 — 오늘(실행 시점) + 이달 영업일수 경과
@@ -325,12 +325,15 @@ export default function App() {
                   <div className="hsummary__ptssub">오늘의 활동 점수</div>
                 </div>
                 <div className="hsummary__label">유지관리 핵심</div>
-                {homeRetStats.map((it) => (
-                  <button key={it.cat} className={'hsummary__card' + (it.tone ? ' hsummary__card--' + it.tone : '')} onClick={() => goRetention(it.cat)}>
-                    <span className="hsummary__k"><MI n={it.icon} s={18} />{it.label}</span>
-                    <b>{it.n}<i>곳</i></b>
-                  </button>
-                ))}
+                <div className="hsummary__grid">
+                  {homeRetStats.map((it) => (
+                    <button key={it.cat} className={'home-retstat' + (it.tone ? ' home-retstat--' + it.tone : '')} onClick={() => goRetention(it.cat)}>
+                      <span className="home-retstat__ico"><MI n={it.icon} s={17} /></span>
+                      <span className="home-retstat__n tnum">{it.n}<i>곳</i></span>
+                      <span className="home-retstat__lab">{it.label}</span>
+                    </button>
+                  ))}
+                </div>
               </aside>
               <div className="hcol">
                 {isAdmin

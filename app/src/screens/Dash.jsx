@@ -404,33 +404,41 @@ export function SalesDash({ persona, onNav, listA, listB, retention, recorded, v
         )}
       </div>
 
-      {/* 2) 신규 진행 파이프라인 — 세로형(공간 절약) */}
+      {/* 2) 신규 진행 파이프라인 — 세로형(공간 절약, 단계 설명 유지) */}
       <div style={{ marginTop: 16 }}>
-        <DashCard title="내 파이프라인 현황" sub="단계를 누르면 영업활동관리로 이동해요"
+        <DashCard title="내 파이프라인 현황" sub="방문 결과 입력에 따라 단계가 자동 반영돼요"
           action={<DBtn size="sm" variant="line" onClick={() => onNav('confirmed')} iconLeft={<MI n="fact_check" s={18} />}>방문 결과 보기</DBtn>}>
           <div className="pipe-steps">
             {STEPS.map(([t, cnt, desc], i) => (
-              <button className="pipe-step" key={i} onClick={() => onNav('confirmed')} title={desc}>
+              <button className="pipe-step" key={i} onClick={() => onNav('confirmed')}>
                 <span className="pipe-step__n">{i + 1}</span>
-                <span className="pipe-step__t">{t}</span>
-                <span className="pipe-step__cnt tnum">{cnt}<i>건</i></span>
+                <span className="pipe-step__main">
+                  <span className="pipe-step__t">{t} <b>{cnt}건</b></span>
+                  <span className="pipe-step__d">{desc}</span>
+                </span>
                 <MI n="chevron_right" s={16} cls="pipe-step__go" />
               </button>))}
           </div>
-          {recorded.length === 0
-            ? <div className="nodata-box" style={{ marginTop: 14 }}><MI n="info" s={20} /><div>아직 입력된 방문 결과가 없어요. 신규진행현황 목록에서 <b>방문 결과 입력</b>을 누르면 파이프라인 단계에 자동 반영돼요.</div></div>
-            : <div className="pipe-reclist">
-              {recorded.map(c => { const v = visits[c.id]; const stage = STAGE_OF[v?.status] || '접촉'; const vm = v ? VISIT[v.status] : null;
-                return (
-                  <button className="pipe-recrow" key={c.id} onClick={() => onResult(c)}>
-                    <span className="pipe-recrow__name">{c.name}</span>
-                    {B(c.track === 'A' ? '신규' : '기존', c.track === 'A' ? 'info' : 'warning')}
-                    {B(stage, STAGE_TONE[stage])}
-                    {vm ? <DBadge tone={vm.tone} dot>{vm.label}</DBadge> : <DBadge tone="neutral">미입력</DBadge>}
-                    <MI n="chevron_right" s={16} cls="pipe-recrow__go" />
-                  </button>
-                ); })}
-            </div>}
+          <div style={{ marginTop: 16 }}>
+            {recorded.length === 0
+              ? <div className="nodata-box"><MI n="info" s={20} /><div>아직 입력된 방문 결과가 없어요. 신규 고객 후보·기존 고객 후보(업셀링) 목록에서 <b>방문 결과 입력</b>을 누르면 해당 건이 파이프라인 단계에 자동으로 반영돼요.</div></div>
+              : <>
+                <div className="faint" style={{ font: 'var(--type-13m)', marginBottom: 8 }}>입력된 방문 결과 <b className="tnum">{recorded.length}</b>건</div>
+                <div className="pipe-reclist">
+                  {recorded.map(c => { const v = visits[c.id]; const stage = STAGE_OF[v?.status] || '접촉'; const vm = v ? VISIT[v.status] : null;
+                    return (
+                      <button className="pipe-recrow" key={c.id} onClick={() => onResult(c)}>
+                        <span className="pipe-recrow__name">{c.name}</span>
+                        {B(c.track === 'A' ? '신규' : '기존(업셀링)', c.track === 'A' ? 'info' : 'warning')}
+                        {B(stage, STAGE_TONE[stage])}
+                        {vm ? <DBadge tone={vm.tone} dot>{vm.label}</DBadge> : <DBadge tone="neutral">미입력</DBadge>}
+                        {v?.memo && <span className="pipe-recrow__memo faint">{v.memo}</span>}
+                        <MI n="chevron_right" s={16} cls="pipe-recrow__go" />
+                      </button>
+                    ); })}
+                </div>
+              </>}
+          </div>
         </DashCard>
       </div>
     </div>
