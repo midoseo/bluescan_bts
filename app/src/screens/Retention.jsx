@@ -8,7 +8,7 @@
  */
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { MI, won, DetailModal } from '../components.jsx'
+import { MI, won, DetailModal, Pager } from '../components.jsx'
 import { Donut } from '../charts.jsx'
 import { TargetMap } from '../map.jsx'
 import { USE_TYPES, PRODUCT_TIERS } from '../retentionSchema.js'
@@ -455,15 +455,7 @@ export function RetentionScreen({ data, listMode, onListMode, reportSentOverride
                     </div>
                   ))}
                 </div>
-                {totalPages > 1 && (
-                  <div className="pager">
-                    <button className="pager__b" disabled={curPage === 1} onClick={() => setPage(curPage - 1)} aria-label="이전 페이지"><MI n="chevron_left" s={20} /></button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                      <button key={n} className={'pager__b' + (n === curPage ? ' on' : '')} onClick={() => setPage(n)}>{n}</button>
-                    ))}
-                    <button className="pager__b" disabled={curPage === totalPages} onClick={() => setPage(curPage + 1)} aria-label="다음 페이지"><MI n="chevron_right" s={20} /></button>
-                  </div>
-                )}
+                <Pager page={curPage} totalPages={totalPages} onChange={setPage} />
               </>}
           </div>
           <div className="split-map">

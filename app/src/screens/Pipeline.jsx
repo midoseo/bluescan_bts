@@ -5,7 +5,7 @@
  *  - 기존 고객은 펼치면 계약정보(계약번호·경비형태·계약유지·월경비)와 매칭 근거를 보여준다
  */
 import React from 'react'
-import { MI, Meter, Gauge, tierOf, num, won, DetailModal } from '../components.jsx'
+import { MI, Meter, Gauge, tierOf, num, won, DetailModal, Pager } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { getBranchBoundary } from '../branchBoundary.js'
 import { FIRE_OVERLAY } from '../fireOverlay.js'
@@ -251,15 +251,7 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, fl
                       onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} />
                   </div>))}
               </div>
-              {totalPages > 1 && (
-                <div className="pager">
-                  <button className="pager__b" disabled={curPage === 1} onClick={() => setPage(curPage - 1)} aria-label="이전 페이지"><MI n="chevron_left" s={20} /></button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                    <button key={n} className={'pager__b' + (n === curPage ? ' on' : '')} onClick={() => setPage(n)}>{n}</button>
-                  ))}
-                  <button className="pager__b" disabled={curPage === totalPages} onClick={() => setPage(curPage + 1)} aria-label="다음 페이지"><MI n="chevron_right" s={20} /></button>
-                </div>
-              )}
+              <Pager page={curPage} totalPages={totalPages} onChange={setPage} />
             </>}
         </div>
         <div className="split-map">

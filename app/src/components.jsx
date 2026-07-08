@@ -95,3 +95,27 @@ export function Gauge({ score, size = 44 }) {
 export function Meter({ value, max, color }) {
   return <div className="mini-meter"><i style={{ width: Math.round(value / max * 100) + '%', background: color || 'var(--accent)' }} /></div>;
 }
+
+// 페이지네이션 — 10단위 블록으로 표기. 처음(«)·이전10(‹‹)·번호 1~10·다음10(››)·끝(») + 현재/전체 표시.
+// 건수가 많아도 버튼이 무한정 늘지 않아 깔끔하게 유지된다.
+export function Pager({ page, totalPages, onChange, block = 10 }) {
+  if (totalPages <= 1) return null;
+  const cur = Math.min(Math.max(1, page), totalPages);
+  const bStart = Math.floor((cur - 1) / block) * block + 1;
+  const bEnd = Math.min(totalPages, bStart + block - 1);
+  const go = (n) => onChange(Math.min(totalPages, Math.max(1, n)));
+  const nums = [];
+  for (let n = bStart; n <= bEnd; n++) nums.push(n);
+  return (
+    <div className="pager pager--windowed">
+      <button className="pager__b pager__b--nav" disabled={cur === 1} onClick={() => go(1)} aria-label="처음으로"><MI n="first_page" s={20} /></button>
+      <button className="pager__b pager__b--nav" disabled={bStart === 1} onClick={() => go(bStart - 1)} aria-label="이전 10페이지"><MI n="keyboard_double_arrow_left" s={20} /></button>
+      {nums.map(n => (
+        <button key={n} className={'pager__b' + (n === cur ? ' on' : '')} onClick={() => go(n)}>{n}</button>
+      ))}
+      <button className="pager__b pager__b--nav" disabled={bEnd === totalPages} onClick={() => go(bEnd + 1)} aria-label="다음 10페이지"><MI n="keyboard_double_arrow_right" s={20} /></button>
+      <button className="pager__b pager__b--nav" disabled={cur === totalPages} onClick={() => go(totalPages)} aria-label="끝으로"><MI n="last_page" s={20} /></button>
+      <span className="pager__info">{cur} / {totalPages}</span>
+    </div>
+  );
+}

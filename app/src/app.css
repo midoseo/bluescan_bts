@@ -1277,6 +1277,11 @@ body{ background: var(--surface-home); }
 .pager__b:hover:not(:disabled){ background:#f2f4f6; border-color:#1d6ceb; color:#1d6ceb; }
 .pager__b.on{ background:#1d6ceb; border-color:#1d6ceb; color:#fff; }
 .pager__b:disabled{ opacity:.4; cursor:default; }
+/* 윈도우형(10단위 블록) — 버튼 수가 많아도 깔끔하게 */
+.pager--windowed{ gap:5px; }
+.pager--windowed .pager__b{ min-width:40px; height:40px; padding:0 9px; font-size:15px; }
+.pager__b--nav{ color:#8a929c; }
+.pager__info{ margin-left:8px; font-size:14px; font-weight:600; color:#8a929c; font-variant-numeric:tabular-nums; white-space:nowrap; }
 
 /* 신규/기존 후보 — 검색 섹션 높이 축소 + 업체명 한 줄 고정 */
 .filterbar{ padding:2px 20px; }

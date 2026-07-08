@@ -1,6 +1,6 @@
 /* ===== ListA.jsx — 리스트 A 신규 후보 (지도 포함) ===== */
 import React from 'react'
-import { MI, Meter, Gauge, tierOf, num } from '../components.jsx'
+import { MI, Meter, Gauge, tierOf, num, Pager } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
 import { getBranchBoundary } from '../branchBoundary.js'
@@ -254,15 +254,7 @@ export function ListAScreen({ data, onResult, recordedSet, logCounts = {}, listM
                           <ListARow c={c} rank={pageBase + i + 1} expanded={expanded === c.id} onToggle={() => { if (expanded === c.id) setExpanded(null); else select(c.id); }} onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} floodSeasonOn={floodSeasonOn} />
                         </div>))}
                     </div>}
-                  {totalPages > 1 && (
-                    <div className="pager">
-                      <button className="pager__b" disabled={curPage === 1} onClick={() => setPage(curPage - 1)} aria-label="이전 페이지"><MI n="chevron_left" s={20} /></button>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                        <button key={n} className={'pager__b' + (n === curPage ? ' on' : '')} onClick={() => setPage(n)}>{n}</button>
-                      ))}
-                      <button className="pager__b" disabled={curPage === totalPages} onClick={() => setPage(curPage + 1)} aria-label="다음 페이지"><MI n="chevron_right" s={20} /></button>
-                    </div>
-                  )}
+                  <Pager page={curPage} totalPages={totalPages} onChange={setPage} />
                 </>}
             </div>
             <div className="split-map">
