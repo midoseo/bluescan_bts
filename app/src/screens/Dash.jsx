@@ -3,7 +3,7 @@ import React from 'react'
 import { MI, VISIT } from '../components.jsx'
 import { GroupedBar } from '../charts.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
-import { augmentRetention, needsAttention } from './Retention.jsx'
+import { augmentRetention, needsAttention, MonthlyReportDialog, EmpathyMessageDialog } from './Retention.jsx'
 const { useState, useRef, useEffect } = React
 
 const DS = window.UXDesignSystem_59a60b;
@@ -374,7 +374,7 @@ function whyRows(c) {
   ];
 }
 
-export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retention, recorded, visits, onResult }) {
+export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retention, recorded, visits, onResult, reportSentOverrides = {}, onMarkReportSent, touchOverrides = {}, onMarkTouched }) {
   const goRet = onGoRetention || ((cat) => onNav('retention'));
   recorded = recorded || []; visits = visits || {};
   const D = window.APPDATA || {};
@@ -413,6 +413,8 @@ export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retenti
   /* ===== 목표 완성본 레이아웃용 상태·집계 ===== */
   const [drawerFor, setDrawerFor] = useState(null);   // 상세 드로어 대상 고객
   const [refOpen, setRefOpen] = useState(false);       // 상태 구분 기준 모달
+  const [reportFor, setReportFor] = useState(null);    // 드로어 → 월간 리포트 다이얼로그
+  const [empathyFor, setEmpathyFor] = useState(null);  // 드로어 → 감성터칭 { c, signal }
   const [bpIdx, setBpIdx] = useState(0);               // BP 사례 로테이션
   useEffect(() => { const t = setInterval(() => setBpIdx(i => (i + 1) % BP_CASES.length), 5000); return () => clearInterval(t); }, []);
 
@@ -590,9 +592,14 @@ export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retenti
                 {sig.length === 0
                   ? <div className="home2-empty" style={{ textAlign: 'left', padding: '6px 0' }}>아직 발송/접촉 이력이 없습니다. 선제 대응 대상입니다.</div>
                   : <div className="home2-tl">{sig.map((s, i) => (<div className="home2-tl__row" key={i}><span className="home2-tl__d">{s.date}</span><div><div className="home2-tl__x">{s.type}</div><div className="home2-tl__n">{s.severity}{s.notifiedAuthority ? ' · 유관기관 통보' : ''}</div></div></div>))}</div>}
+                <div className="home2-drawer__sec" style={{ marginTop: 26 }}>대응 <span className="faint" style={{ fontWeight: 400, fontSize: 12 }}>· 발송은 담당자 승인 필요</span></div>
+                <div className="home2-drawer__status">
+                  <span><MI n="description" s={16} />월간 리포트 <b>{reportSentOverrides[c.id] ? `${reportSentOverrides[c.id]} 발송` : '미발송'}</b></span>
+                  <span><MI n="favorite" s={16} />감성터칭 <b>{touchOverrides[c.id] ? `${touchOverrides[c.id]} 발송` : '없음'}</b></span>
+                </div>
                 <div className="home2-drawer__btns">
-                  <button className="home2-btn home2-btn--primary" onClick={() => { setDrawerFor(null); goRet('attn'); }}>유지관리현황에서 상세·대응</button>
-                  <button className="home2-btn home2-btn--line" onClick={() => setDrawerFor(null)}>닫기</button>
+                  <button className="home2-btn home2-btn--primary" onClick={() => setReportFor(c)}>월간 리포트 발송</button>
+                  <button className="home2-btn home2-btn--line" onClick={() => setEmpathyFor({ c, signal: (c.signalHistory && c.signalHistory[0]) || { date: '', type: '정기 안부' } })}>감성터칭 메시지</button>
                 </div>
               </div>
             </div>
@@ -615,6 +622,19 @@ export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retenti
             </div>
           </div>
         </div>
+      )}
+
+      {/* 드로어 대응 — 월간 리포트 / 감성터칭 (유지관리현황과 동일 다이얼로그 재사용) */}
+      {reportFor && (
+        <MonthlyReportDialog c={reportFor} allCustomers={retention}
+          sentDate={reportSentOverrides[reportFor.id] ?? reportFor.monthlyReportSent}
+          onMarkSent={(id) => { onMarkReportSent && onMarkReportSent(id); }}
+          onClose={() => setReportFor(null)} />
+      )}
+      {empathyFor && (
+        <EmpathyMessageDialog c={empathyFor.c} signal={empathyFor.signal}
+          onSent={(id) => { onMarkTouched && onMarkTouched(id); }}
+          onClose={() => setEmpathyFor(null)} />
       )}
     </div>
   );

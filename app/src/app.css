@@ -1784,3 +1784,6 @@ body{ background: var(--surface-home); }
 .home2-ref__crit,.home2-ref__act{ font-size:13px; color:var(--text-tertiary); line-height:1.5; }
 .home2-ref__act{ margin-top:3px; }
 .home2-ref__crit b,.home2-ref__act b{ color:var(--text-body); }
+.home2-drawer__status{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:13px; color:var(--text-tertiary); }
+.home2-drawer__status span{ display:flex; align-items:center; gap:7px; }
+.home2-drawer__status b{ color:var(--text-body); font-weight:700; margin-left:2px; }

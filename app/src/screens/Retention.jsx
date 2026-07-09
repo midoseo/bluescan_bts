@@ -169,7 +169,7 @@ const SEVERITY_TONE = { 심각: 'danger', 주의: 'warning', 경미: 'neutral' }
 // 그대로 캡처되도록 순수 마크업(app.css의 .mreport* 클래스)으로 구성했다.
 // 이 리포트는 고객사에 제출되는 자료라 생애가치(BEP/ROI, 할인율 등 내부 수익성 정보)는
 // 절대 포함하지 않는다 — 그 정보는 컨설턴트 전용인 LifetimeValueBox(행 상세)에만 남겨둔다.
-function MonthlyReportDialog({ c, allCustomers, sentDate, onMarkSent, onClose }) {
+export function MonthlyReportDialog({ c, allCustomers, sentDate, onMarkSent, onClose }) {
   const [report] = useState(() => buildMonthlyReportData(c, currentSeasonKey(), allCustomers));
   const reportRef = useRef(null);
   const daysToEnd = Math.round((new Date(c.endDate) - new Date()) / 86400000);
@@ -263,7 +263,7 @@ function MonthlyReportDialog({ c, allCustomers, sentDate, onMarkSent, onClose })
 
 // 감성터칭 메시지 팝업(R25) — AI가 신호 맥락 기반 초안을 만들고, 담당자가 톤·타이밍을 직접
 // 수정한 뒤 승인 발송한다(모의). MonthlyReportDialog와 같은 이유로 document.body에 포털로 띄운다.
-function EmpathyMessageDialog({ c, signal, onClose, onSent }) {
+export function EmpathyMessageDialog({ c, signal, onClose, onSent }) {
   const [text, setText] = useState(() => buildEmpathyMessageDraft(c, signal));
   const send = () => { onSent(c.id); onClose(); };
   return createPortal(
