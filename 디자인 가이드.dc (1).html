@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#ECEEF1;font-family:'Pretendard',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#17191E}
+  a{color:#1B50D4;text-decoration:none}
+  a:hover{color:#0F3AA8}
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:56px 24px;display:flex;justify-content:center">
+<div style="width:100%;max-width:1060px;background:#fff;border-radius:20px;box-shadow:0 1px 3px rgba(20,25,40,.06),0 24px 60px -30px rgba(20,25,40,.25);overflow:hidden">
+
+<!-- ============ HEADER ============ -->
+<div style="padding:64px 72px 48px;border-bottom:1px solid #E6E8ED">
+  <div style="display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.08em;color:#1B50D4;text-transform:uppercase">
+    <span style="width:16px;height:16px;border-radius:4px;background:#1B50D4;display:inline-block"></span>
+    에스원 블루스캔 · 유지고객 메인 대시보드
+  </div>
+  <h1 style="font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.12;margin-top:18px">디자인 개선 가이드</h1>
+  <p style="font-size:16px;line-height:1.6;color:#6A7180;margin-top:16px;max-width:640px;text-wrap:pretty">
+    현재 대시보드는 정보량은 충분하지만 <b style="color:#17191E;font-weight:600">위계·여백·색·타이포</b>가 정리되지 않아 빽빽하고 아마추어한 인상을 줍니다.
+    아래 7개 축으로 다듬으면 같은 정보를 데스크톱과 모바일 모두에서 정돈되고 신뢰감 있게 보여줄 수 있습니다. 이 문서 자체가 그 원칙을 적용한 예시입니다.
+  </p>
+</div>
+
+<!-- ============ 01 진단 ============ -->
+<div style="padding:56px 72px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4;letter-spacing:.06em">01</span>
+    <h2 style="font-size:24px;font-weight:800;letter-spacing:-.01em">지금 무엇이 아쉬운가</h2>
+  </div>
+  <p style="font-size:15px;color:#6A7180;line-height:1.6;margin-bottom:32px">눈에 먼저 걸리는 6가지. 하나씩 해결하면 됩니다.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div style="border:1px solid #E6E8ED;border-radius:14px;padding:22px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:12px;font-weight:800;color:#DC3B40;background:#FDECEC;padding:4px 9px;border-radius:20px">타이포</span></div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">본문 13px · 라벨 10~12px 남발</h3>
+      <p style="font-size:14px;color:#6A7180;line-height:1.6">정보가 많은데 글자 크기 차이가 거의 없습니다. 눈이 쉴 곳도, 먼저 볼 곳도 없죠.</p>
+    </div>
+    <div style="border:1px solid #E6E8ED;border-radius:14px;padding:22px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:12px;font-weight:800;color:#DC3B40;background:#FDECEC;padding:4px 9px;border-radius:20px">폰트</span></div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">맑은 고딕 기본 폰트</h3>
+      <p style="font-size:14px;color:#6A7180;line-height:1.6">Malgun Gothic은 화면에서 흐릿하고 구식 인상. 굵기 단계도 부족해 위계를 못 만듭니다.</p>
+    </div>
+    <div style="border:1px solid #E6E8ED;border-radius:14px;padding:22px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:12px;font-weight:800;color:#C77A0A;background:#FBF0DD;padding:4px 9px;border-radius:20px">아이콘</span></div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">이모지 아이콘 ✔ ◨ ★ ⚠ ⓘ ■</h3>
+      <p style="font-size:14px;color:#6A7180;line-height:1.6">글꼴·크기·색이 제각각인 문자 기호. 통일된 라인 아이콘 세트로 바꿔야 합니다.</p>
+    </div>
+    <div style="border:1px solid #E6E8ED;border-radius:14px;padding:22px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:12px;font-weight:800;color:#C77A0A;background:#FBF0DD;padding:4px 9px;border-radius:20px">색</span></div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">5색 × 명암 배지 남발</h3>
+      <p style="font-size:14px;color:#6A7180;line-height:1.6">최우선·경고·갱신·접촉·신호가 모두 채도 높은 색. 무지개처럼 경쟁해 진짜 위험이 안 보입니다.</p>
+    </div>
+    <div style="border:1px solid #E6E8ED;border-radius:14px;padding:22px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:12px;font-weight:800;color:#6A7180;background:#F0F1F4;padding:4px 9px;border-radius:20px">레이아웃</span></div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">강약 없는 카드</h3>
+      <p style="font-size:14px;color:#6A7180;line-height:1.6">모든 패널이 같은 테두리·그림자·간격. 무엇이 더 중요한지 화면이 말해주지 않습니다.</p>
+    </div>
+    <div style="border:1px solid #E6E8ED;border-radius:14px;padding:22px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:12px;font-weight:800;color:#6A7180;background:#F0F1F4;padding:4px 9px;border-radius:20px">정보량</span></div>
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">데이터 과잉</h3>
+      <p style="font-size:14px;color:#6A7180;line-height:1.6">점수·D-day·배지·타임라인이 한 화면에 몰려 있습니다. 핵심 지표만 남기고 나머지는 상세로.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 02 컬러 ============ -->
+<div style="padding:56px 72px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4;letter-spacing:.06em">02</span>
+    <h2 style="font-size:24px;font-weight:800;letter-spacing:-.01em">컬러 — 3의 법칙</h2>
+  </div>
+  <p style="font-size:15px;color:#6A7180;line-height:1.6;margin-bottom:32px;max-width:680px">중립 그레이가 화면의 90%를 차지하고, 브랜드 블루는 <b style="color:#17191E;font-weight:600">행동·핵심 강조에만</b>, 의미색(빨강·주황·초록)은 <b style="color:#17191E;font-weight:600">상태에만</b> 씁니다. 배지 배경은 옅게, 글자만 진하게.</p>
+
+  <div style="font-size:12px;font-weight:700;color:#9AA1AD;letter-spacing:.06em;margin-bottom:12px">브랜드 · 강조 (딱 하나)</div>
+  <div style="display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap">
+    <div style="flex:1;min-width:120px;height:72px;border-radius:12px;background:#EAF0FF;display:flex;align-items:flex-end;padding:10px 12px"><span style="font-size:11px;font-weight:700;color:#1B50D4">Soft #EAF0FF</span></div>
+    <div style="flex:1;min-width:120px;height:72px;border-radius:12px;background:#1B50D4;display:flex;align-items:flex-end;padding:10px 12px"><span style="font-size:11px;font-weight:700;color:#fff">Blue #1B50D4</span></div>
+    <div style="flex:1;min-width:120px;height:72px;border-radius:12px;background:#0F3AA8;display:flex;align-items:flex-end;padding:10px 12px"><span style="font-size:11px;font-weight:700;color:#fff">Deep #0F3AA8</span></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;color:#9AA1AD;letter-spacing:.06em;margin-bottom:12px">중립 (텍스트·배경·선)</div>
+  <div style="display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap">
+    <div style="flex:1;min-width:90px;height:64px;border-radius:12px;background:#17191E;display:flex;align-items:flex-end;padding:8px 10px"><span style="font-size:10px;font-weight:700;color:#fff">Ink</span></div>
+    <div style="flex:1;min-width:90px;height:64px;border-radius:12px;background:#6A7180;display:flex;align-items:flex-end;padding:8px 10px"><span style="font-size:10px;font-weight:700;color:#fff">Sub</span></div>
+    <div style="flex:1;min-width:90px;height:64px;border-radius:12px;background:#9AA1AD;display:flex;align-items:flex-end;padding:8px 10px"><span style="font-size:10px;font-weight:700;color:#fff">Faint</span></div>
+    <div style="flex:1;min-width:90px;height:64px;border-radius:12px;background:#F5F6F8;border:1px solid #E6E8ED;display:flex;align-items:flex-end;padding:8px 10px"><span style="font-size:10px;font-weight:700;color:#6A7180">BG</span></div>
+    <div style="flex:1;min-width:90px;height:64px;border-radius:12px;background:#fff;border:1px solid #E6E8ED;display:flex;align-items:flex-end;padding:8px 10px"><span style="font-size:10px;font-weight:700;color:#6A7180">Card</span></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:700;color:#9AA1AD;letter-spacing:.06em;margin-bottom:12px">의미색 (상태에만 · 배경은 옅게)</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <div style="flex:1;min-width:150px;border:1px solid #E6E8ED;border-radius:12px;padding:14px 16px">
+      <span style="display:inline-block;font-size:12px;font-weight:800;color:#DC3B40;background:#FDECEC;padding:4px 10px;border-radius:20px;margin-bottom:8px">최우선</span>
+      <div style="font-size:12px;color:#6A7180">위험 · Red #DC3B40</div>
+    </div>
+    <div style="flex:1;min-width:150px;border:1px solid #E6E8ED;border-radius:12px;padding:14px 16px">
+      <span style="display:inline-block;font-size:12px;font-weight:800;color:#C77A0A;background:#FBF0DD;padding:4px 10px;border-radius:20px;margin-bottom:8px">주의</span>
+      <div style="font-size:12px;color:#6A7180">경고 · Amber #C77A0A</div>
+    </div>
+    <div style="flex:1;min-width:150px;border:1px solid #E6E8ED;border-radius:12px;padding:14px 16px">
+      <span style="display:inline-block;font-size:12px;font-weight:800;color:#157A5B;background:#E4F3EC;padding:4px 10px;border-radius:20px;margin-bottom:8px">정상</span>
+      <div style="font-size:12px;color:#6A7180">양호 · Green #157A5B</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 03 타이포 ============ -->
+<div style="padding:56px 72px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4;letter-spacing:.06em">03</span>
+    <h2 style="font-size:24px;font-weight:800;letter-spacing:-.01em">타이포그래피</h2>
+  </div>
+  <p style="font-size:15px;color:#6A7180;line-height:1.6;margin-bottom:32px;max-width:680px">폰트는 <b style="color:#17191E;font-weight:600">Pretendard</b>로 교체(무료·상업 이용 가능). 본문을 15px로 올리고, 크기와 굵기로 위계를 만듭니다. 굵기는 400 / 600 / 800 세 단계면 충분합니다.</p>
+
+  <div style="border:1px solid #E6E8ED;border-radius:14px;overflow:hidden">
+    <div style="display:flex;align-items:baseline;gap:20px;padding:18px 24px;border-bottom:1px solid #F0F1F4"><span style="width:120px;font-size:12px;color:#9AA1AD;font-weight:600">Display · 34/800</span><span style="font-size:34px;font-weight:800;letter-spacing:-.02em">유지고객 현황</span></div>
+    <div style="display:flex;align-items:baseline;gap:20px;padding:18px 24px;border-bottom:1px solid #F0F1F4"><span style="width:120px;font-size:12px;color:#9AA1AD;font-weight:600">Title · 24/800</span><span style="font-size:24px;font-weight:800;letter-spacing:-.01em">오늘 할 일</span></div>
+    <div style="display:flex;align-items:baseline;gap:20px;padding:18px 24px;border-bottom:1px solid #F0F1F4"><span style="width:120px;font-size:12px;color:#9AA1AD;font-weight:600">Section · 18/700</span><span style="font-size:18px;font-weight:700">관제 신호 요약</span></div>
+    <div style="display:flex;align-items:baseline;gap:20px;padding:18px 24px;border-bottom:1px solid #F0F1F4"><span style="width:120px;font-size:12px;color:#9AA1AD;font-weight:600">Body · 15/400</span><span style="font-size:15px;font-weight:400;color:#17191E">최근 관제 신호가 급증하고 미해결 VOC가 1건 있어 이탈 조짐이 보입니다.</span></div>
+    <div style="display:flex;align-items:baseline;gap:20px;padding:18px 24px;border-bottom:1px solid #F0F1F4"><span style="width:120px;font-size:12px;color:#9AA1AD;font-weight:600">Small · 13/500</span><span style="font-size:13px;font-weight:500;color:#6A7180">담당자 김성우 · 서울1지사</span></div>
+    <div style="display:flex;align-items:baseline;gap:20px;padding:18px 24px"><span style="width:120px;font-size:12px;color:#9AA1AD;font-weight:600">Caption · 12/600</span><span style="font-size:12px;font-weight:600;letter-spacing:.06em;color:#9AA1AD;text-transform:uppercase">CONTRACT D-42</span></div>
+  </div>
+</div>
+
+<!-- ============ 04 간격 ============ -->
+<div style="padding:56px 72px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4;letter-spacing:.06em">04</span>
+    <h2 style="font-size:24px;font-weight:800;letter-spacing:-.01em">간격 · 여백</h2>
+  </div>
+  <p style="font-size:15px;color:#6A7180;line-height:1.6;margin-bottom:32px;max-width:680px"><b style="color:#17191E;font-weight:600">8px 그리드</b>로 통일합니다. 모든 여백·간격을 아래 값 중 하나로만. 카드 안쪽 여백을 넉넉히(20~24px) 주는 것만으로 화면이 훨씬 정돈됩니다.</p>
+
+  <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+    <div style="text-align:center"><div style="width:8px;height:8px;background:#1B50D4;border-radius:3px;margin:0 auto 8px"></div><span style="font-size:12px;color:#9AA1AD;font-weight:600">8</span></div>
+    <div style="text-align:center"><div style="width:16px;height:16px;background:#1B50D4;border-radius:3px;margin:0 auto 8px"></div><span style="font-size:12px;color:#9AA1AD;font-weight:600">16</span></div>
+    <div style="text-align:center"><div style="width:24px;height:24px;background:#1B50D4;border-radius:4px;margin:0 auto 8px"></div><span style="font-size:12px;color:#9AA1AD;font-weight:600">24</span></div>
+    <div style="text-align:center"><div style="width:32px;height:32px;background:#1B50D4;border-radius:5px;margin:0 auto 8px"></div><span style="font-size:12px;color:#9AA1AD;font-weight:600">32</span></div>
+    <div style="text-align:center"><div style="width:48px;height:48px;background:#1B50D4;border-radius:6px;margin:0 auto 8px"></div><span style="font-size:12px;color:#9AA1AD;font-weight:600">48</span></div>
+    <div style="text-align:center"><div style="width:64px;height:64px;background:#1B50D4;border-radius:8px;margin:0 auto 8px"></div><span style="font-size:12px;color:#9AA1AD;font-weight:600">64</span></div>
+  </div>
+</div>
+
+<!-- ============ 05 컴포넌트 before/after ============ -->
+<div style="padding:56px 72px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4;letter-spacing:.06em">05</span>
+    <h2 style="font-size:24px;font-weight:800;letter-spacing:-.01em">컴포넌트 — Before · After</h2>
+  </div>
+  <p style="font-size:15px;color:#6A7180;line-height:1.6;margin-bottom:32px;max-width:680px">원칙을 실제 컴포넌트에 적용하면 이렇게 달라집니다.</p>
+
+  <!-- KPI -->
+  <div style="font-size:13px;font-weight:800;color:#17191E;margin-bottom:14px">① KPI 카드</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px">
+    <div>
+      <div style="font-size:11px;font-weight:800;color:#DC3B40;letter-spacing:.08em;margin-bottom:10px">BEFORE</div>
+      <div style="background:#f6f7f9;border:1px solid #ddd;border-radius:6px;padding:10px 12px;font-family:'Malgun Gothic',sans-serif">
+        <div style="font-size:11px;color:#888;font-weight:700">최우선</div>
+        <div style="font-size:20px;font-weight:800;color:#e5484d">3<span style="font-size:11px;font-weight:600;color:#888"> 곳</span></div>
+        <div style="font-size:10px;color:#aaa;margin-top:2px">클릭 시 필터</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:800;color:#157A5B;letter-spacing:.08em;margin-bottom:10px">AFTER</div>
+      <div style="background:#fff;border:1px solid #E6E8ED;border-radius:14px;padding:20px 22px;box-shadow:0 1px 2px rgba(20,25,40,.04)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="width:8px;height:8px;border-radius:50%;background:#DC3B40;display:inline-block"></span>
+          <span style="font-size:13px;font-weight:600;color:#6A7180">최우선</span>
+        </div>
+        <div style="font-size:38px;font-weight:800;letter-spacing:-.02em;line-height:1">3<span style="font-size:16px;font-weight:600;color:#9AA1AD;margin-left:4px">곳</span></div>
+        <div style="font-size:12px;color:#9AA1AD;margin-top:10px">지난주 대비 +1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상태 배지 -->
+  <div style="font-size:13px;font-weight:800;color:#17191E;margin-bottom:14px">② 상태 배지</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px">
+    <div>
+      <div style="font-size:11px;font-weight:800;color:#DC3B40;letter-spacing:.08em;margin-bottom:10px">BEFORE — 채도 폭발</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;font-family:'Malgun Gothic',sans-serif">
+        <span style="font-size:11px;font-weight:800;background:#e5484d;color:#fff;padding:3px 8px;border-radius:4px">최우선</span>
+        <span style="font-size:11px;font-weight:800;background:#f5a623;color:#fff;padding:3px 8px;border-radius:4px">경고</span>
+        <span style="font-size:11px;font-weight:800;background:#2f80ed;color:#fff;padding:3px 8px;border-radius:4px">우선접촉</span>
+        <span style="font-size:11px;font-weight:800;background:#27ae60;color:#fff;padding:3px 8px;border-radius:4px">신호관리</span>
+        <span style="font-size:11px;font-weight:800;background:#9b51e0;color:#fff;padding:3px 8px;border-radius:4px">갱신</span>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:800;color:#157A5B;letter-spacing:.08em;margin-bottom:10px">AFTER — 옅은 배경 · 점으로 구분</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;background:#FDECEC;color:#DC3B40;padding:5px 11px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#DC3B40"></span>최우선</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;background:#FBF0DD;color:#C77A0A;padding:5px 11px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#C77A0A"></span>주의</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;background:#F0F1F4;color:#6A7180;padding:5px 11px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#9AA1AD"></span>접촉</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;background:#E4F3EC;color:#157A5B;padding:5px 11px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:#157A5B"></span>정상</span>
+      </div>
+      <p style="font-size:12px;color:#9AA1AD;margin-top:12px;line-height:1.5">5개→4개로 통합. 색은 위험도 순서(빨강→주황→회색→초록)로만.</p>
+    </div>
+  </div>
+
+  <!-- 큐 아이템 -->
+  <div style="font-size:13px;font-weight:800;color:#17191E;margin-bottom:14px">③ "오늘 할 일" 큐 아이템</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div>
+      <div style="font-size:11px;font-weight:800;color:#DC3B40;letter-spacing:.08em;margin-bottom:10px">BEFORE</div>
+      <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:8px 10px;font-family:'Malgun Gothic',sans-serif">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:800;background:#e5484d;color:#fff;padding:2px 6px;border-radius:3px">최우선</span>
+          <span style="font-size:13px;font-weight:800">세종빌딩</span>
+          <span style="font-size:10px;color:#888">88점</span>
+          <span style="font-size:10px;color:#888">D-42</span>
+          <span style="font-size:10px;background:#eef;color:#2f80ed;padding:1px 5px;border-radius:3px">듀얼</span>
+        </div>
+        <div style="font-size:12px;color:#666;margin-top:3px">이탈 고위험 + 계약 D-42 → 즉시 방어 필요</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:800;color:#157A5B;letter-spacing:.08em;margin-bottom:10px">AFTER</div>
+      <div style="display:flex;gap:14px;background:#fff;border:1px solid #E6E8ED;border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(20,25,40,.04)">
+        <div style="width:4px;border-radius:4px;background:#DC3B40;flex:none"></div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span style="font-size:17px;font-weight:800;letter-spacing:-.01em">세종빌딩</span>
+            <span style="font-size:12px;font-weight:700;background:#FDECEC;color:#DC3B40;padding:3px 9px;border-radius:20px">최우선</span>
+          </div>
+          <p style="font-size:14px;color:#454B57;line-height:1.55;margin-bottom:12px">이탈 고위험에 계약 만료가 임박했습니다. 즉시 방어가 필요합니다.</p>
+          <div style="display:flex;gap:18px;font-size:13px">
+            <span style="color:#9AA1AD">이탈 스코어 <b style="color:#17191E;font-weight:700;margin-left:2px">88</b></span>
+            <span style="color:#9AA1AD">계약 <b style="color:#DC3B40;font-weight:700;margin-left:2px">D-42</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 06 아이콘 ============ -->
+<div style="padding:56px 72px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4;letter-spacing:.06em">06</span>
+    <h2 style="font-size:24px;font-weight:800;letter-spacing:-.01em">아이콘 — 이모지를 버리세요</h2>
+  </div>
+  <p style="font-size:15px;color:#6A7180;line-height:1.6;margin-bottom:32px;max-width:680px">✔ ◨ ★ ⚠ ⓘ 같은 문자 기호 대신 <b style="color:#17191E;font-weight:600">1.75px 두께의 통일된 라인 아이콘</b>을 쓰세요. (Lucide·Phosphor 등 무료 세트) 크기 18~20px, 색은 텍스트와 같은 중립색으로.</p>
+  <div style="display:flex;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:150px;border:1px solid #E6E8ED;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1B50D4" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      <div><div style="font-size:14px;font-weight:700">할 일</div><div style="font-size:12px;color:#9AA1AD">✔ 대체</div></div>
+    </div>
+    <div style="flex:1;min-width:150px;border:1px solid #E6E8ED;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC3B40" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      <div><div style="font-size:14px;font-weight:700">알림</div><div style="font-size:12px;color:#9AA1AD">⚠ 대체</div></div>
+    </div>
+    <div style="flex:1;min-width:150px;border:1px solid #E6E8ED;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C77A0A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      <div><div style="font-size:14px;font-weight:700">BP 사례</div><div style="font-size:12px;color:#9AA1AD">★ 대체</div></div>
+    </div>
+    <div style="flex:1;min-width:150px;border:1px solid #E6E8ED;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6A7180" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      <div><div style="font-size:14px;font-weight:700">참고사항</div><div style="font-size:12px;color:#9AA1AD">ⓘ 대체</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 07 모바일 ============ -->
+<div style="padding:56px 72px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4;letter-spacing:.06em">07</span>
+    <h2 style="font-size:24px;font-weight:800;letter-spacing:-.01em">모바일 — 현장에서 쓰는 화면</h2>
+  </div>
+  <p style="font-size:15px;color:#6A7180;line-height:1.6;margin-bottom:32px;max-width:680px">담당자는 이동 중·현장에서 폰으로 확인합니다. 같은 토큰을 쓰되 레이아웃만 바꿉니다: <b style="color:#17191E;font-weight:600">한 컬럼으로 쌓고</b>, 필터는 상단 가로 스크롤 칩으로, 주요 액션은 <b style="color:#17191E;font-weight:600">하단 고정</b>. 모든 터치 영역은 <b style="color:#17191E;font-weight:600">최소 44px</b>.</p>
+
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:40px;align-items:start">
+
+    <!-- 폰 목업 -->
+    <div style="width:300px;height:600px;background:#0F1A38;border-radius:38px;padding:10px;box-shadow:0 30px 60px -25px rgba(20,25,40,.45);flex:none">
+      <div style="width:100%;height:100%;background:#F5F6F8;border-radius:30px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+        <!-- 상태바 -->
+        <div style="height:34px;flex:none;display:flex;align-items:center;justify-content:center;position:relative">
+          <div style="width:100px;height:22px;background:#0F1A38;border-radius:0 0 14px 14px;position:absolute;top:0"></div>
+        </div>
+        <!-- 헤더 -->
+        <div style="padding:6px 18px 12px;flex:none">
+          <div style="font-size:10px;font-weight:700;color:#1B50D4;letter-spacing:.06em">에스원 블루스캔</div>
+          <div style="font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:2px">오늘 할 일</div>
+        </div>
+        <!-- 필터 칩(가로 스크롤) -->
+        <div style="padding:0 18px 12px;flex:none;display:flex;gap:6px;overflow:hidden">
+          <span style="font-size:11px;font-weight:700;background:#1B50D4;color:#fff;padding:6px 11px;border-radius:16px;white-space:nowrap">최우선</span>
+          <span style="font-size:11px;font-weight:600;background:#fff;border:1px solid #E6E8ED;color:#454B57;padding:6px 11px;border-radius:16px;white-space:nowrap">경고</span>
+          <span style="font-size:11px;font-weight:600;background:#fff;border:1px solid #E6E8ED;color:#454B57;padding:6px 11px;border-radius:16px;white-space:nowrap">갱신</span>
+          <span style="font-size:11px;font-weight:600;background:#fff;border:1px solid #E6E8ED;color:#454B57;padding:6px 11px;border-radius:16px;white-space:nowrap">접촉</span>
+        </div>
+        <!-- 카드 리스트 -->
+        <div style="flex:1;overflow:hidden;padding:0 18px;display:flex;flex-direction:column;gap:10px">
+          <div style="background:#fff;border:1px solid #E6E8ED;border-radius:14px;padding:14px;display:flex;gap:11px">
+            <div style="width:3px;border-radius:4px;background:#DC3B40;flex:none"></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="font-size:15px;font-weight:800">세종빌딩</span><span style="font-size:10px;font-weight:700;background:#FDECEC;color:#DC3B40;padding:2px 7px;border-radius:14px">최우선</span></div>
+              <p style="font-size:12px;color:#6A7180;line-height:1.45">이탈 고위험 + 계약 D-42. 즉시 방어 필요.</p>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #E6E8ED;border-radius:14px;padding:14px;display:flex;gap:11px">
+            <div style="width:3px;border-radius:4px;background:#C77A0A;flex:none"></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="font-size:15px;font-weight:800">마포세무서</span><span style="font-size:10px;font-weight:700;background:#FBF0DD;color:#C77A0A;padding:2px 7px;border-radius:14px">경고</span></div>
+              <p style="font-size:12px;color:#6A7180;line-height:1.45">관제 신호 급증 · 미해결 VOC 1건.</p>
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #E6E8ED;border-radius:14px;padding:14px;display:flex;gap:11px">
+            <div style="width:3px;border-radius:4px;background:#E0930B;flex:none"></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="font-size:15px;font-weight:800">한빛초</span><span style="font-size:10px;font-weight:700;background:#FBF0DD;color:#B06A00;padding:2px 7px;border-radius:14px">갱신</span></div>
+              <p style="font-size:12px;color:#6A7180;line-height:1.45">계약 D-38. 갱신 협의 시작.</p>
+            </div>
+          </div>
+        </div>
+        <!-- 하단 탭바 -->
+        <div style="flex:none;background:#fff;border-top:1px solid #E6E8ED;padding:9px 18px 16px;display:flex;justify-content:space-around">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1B50D4" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg><span style="font-size:9px;font-weight:700;color:#1B50D4">할 일</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA1AD" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-3-3-4 4"></path></svg><span style="font-size:9px;font-weight:600;color:#9AA1AD">신호</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA1AD" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span style="font-size:9px;font-weight:600;color:#9AA1AD">알림</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 규칙 -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border:1px solid #E6E8ED;border-radius:14px;padding:20px 22px">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">한 컬럼으로 쌓기</h3>
+        <p style="font-size:14px;color:#6A7180;line-height:1.6">데스크톱의 2단 그리드를 세로 스택으로. 우선순위 높은 카드(오늘 할 일)를 맨 위에. 브레이크포인트 <b style="color:#17191E;font-weight:600">640px</b> 기준.</p>
+      </div>
+      <div style="border:1px solid #E6E8ED;border-radius:14px;padding:20px 22px">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">필터는 가로 스크롤 칩</h3>
+        <p style="font-size:14px;color:#6A7180;line-height:1.6">좌측 레일 대신 상단에 가로 스크롤되는 칩 줄로. 칩 높이 <b style="color:#17191E;font-weight:600">36px+</b>, 좌우 여백 확보.</p>
+      </div>
+      <div style="border:1px solid #E6E8ED;border-radius:14px;padding:20px 22px">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">터치 타깃 44px 이상</h3>
+        <p style="font-size:14px;color:#6A7180;line-height:1.6">모든 버튼·카드·칩의 탭 영역은 최소 44×44px. 12px짜리 아이콘도 패딩으로 영역을 키웁니다.</p>
+      </div>
+      <div style="border:1px solid #E6E8ED;border-radius:14px;padding:20px 22px">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">주요 액션은 하단 고정</h3>
+        <p style="font-size:14px;color:#6A7180;line-height:1.6">탭바 또는 하단 고정 버튼으로 엄지 도달 범위 안에. 상세는 전체화면 시트로 아래에서 올라오게.</p>
+      </div>
+      <div style="border:1px solid #E6E8ED;border-radius:14px;padding:20px 22px">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">본문은 15~16px 유지</h3>
+        <p style="font-size:14px;color:#6A7180;line-height:1.6">폰에서 글자를 줄이지 마세요. 오히려 라인 높이를 늘려 가독성 확보. 한 화면당 정보량은 데스크톱보다 더 줄입니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 08 요약 ============ -->
+<div style="padding:56px 72px;background:#0F1A38">
+  <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:24px">
+    <span style="font-size:13px;font-weight:800;color:#7FA3FF;letter-spacing:.06em">08</span>
+    <h2 style="font-size:24px;font-weight:800;letter-spacing:-.01em;color:#fff">핵심 체크리스트</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 32px">
+    <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#7FA3FF;font-size:16px;font-weight:800;flex:none">01</span><span style="font-size:15px;color:#D5DBEA;line-height:1.5">폰트를 <b style="color:#fff;font-weight:700">Pretendard</b>로 교체</span></div>
+    <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#7FA3FF;font-size:16px;font-weight:800;flex:none">02</span><span style="font-size:15px;color:#D5DBEA;line-height:1.5">본문 <b style="color:#fff;font-weight:700">15px</b> + 크기·굵기로 위계 만들기</span></div>
+    <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#7FA3FF;font-size:16px;font-weight:800;flex:none">03</span><span style="font-size:15px;color:#D5DBEA;line-height:1.5">색은 <b style="color:#fff;font-weight:700">중립 + 브랜드 1 + 의미색 3</b></span></div>
+    <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#7FA3FF;font-size:16px;font-weight:800;flex:none">04</span><span style="font-size:15px;color:#D5DBEA;line-height:1.5">이모지 → <b style="color:#fff;font-weight:700">통일된 라인 아이콘</b></span></div>
+    <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#7FA3FF;font-size:16px;font-weight:800;flex:none">05</span><span style="font-size:15px;color:#D5DBEA;line-height:1.5"><b style="color:#fff;font-weight:700">8px 그리드</b> · 카드 안쪽 여백 넉넉히</span></div>
+    <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#7FA3FF;font-size:16px;font-weight:800;flex:none">06</span><span style="font-size:15px;color:#D5DBEA;line-height:1.5">화면당 <b style="color:#fff;font-weight:700">핵심 지표만</b>, 나머지는 상세로</span></div>
+    <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:#7FA3FF;font-size:16px;font-weight:800;flex:none">07</span><span style="font-size:15px;color:#D5DBEA;line-height:1.5">모바일은 <b style="color:#fff;font-weight:700">한 컬럼 · 44px 터치 · 하단 액션</b></span></div>
+  </div>
+  <p style="font-size:14px;color:#8894B5;margin-top:32px;line-height:1.6">이 6가지만 적용해도 인상이 크게 달라집니다. 원하시면 이 원칙으로 <b style="color:#D5DBEA;font-weight:600">실제 대시보드를 다시 디자인</b>해 드릴게요.</p>
+</div>
+
+</div>
+</div>
+</x-dc>
+</body>
+</html>

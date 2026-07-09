@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Pretendard',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#F5F6F8;color:#17191E}
+  a{color:#1B50D4;text-decoration:none}
+  a:hover{color:#0F3AA8}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#D5D9E0;border-radius:8px;border:3px solid #F5F6F8}
+</style>
+</helmet>
+
+<div style="display:flex;min-height:100vh">
+
+  <!-- ===== 좌측 필터 레일 ===== -->
+  <aside style="width:248px;flex:none;background:#fff;border-right:1px solid #E6E8ED;padding:24px 20px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;overflow-y:auto">
+    <div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="width:22px;height:22px;border-radius:6px;background:#1B50D4;display:flex;align-items:center;justify-content:center">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v6c0 5 3.8 8.5 9 9 5.2-.5 9-4 9-9V7l-9-5z"></path></svg>
+        </span>
+        <span style="font-size:15px;font-weight:800;letter-spacing:-.01em">블루스캔 토탈 AI</span>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:#9AA1AD;margin-top:8px;letter-spacing:.04em">VER 26.02 · PROTO</div>
+    </div>
+
+    <sc-for list="{{ filterGroups }}" as="g" hint-placeholder-count="5">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#9AA1AD;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">{{ g.title }}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{ g.chips }}" as="c" hint-placeholder-count="3">
+            <span onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</span>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </aside>
+
+  <!-- ===== 메인 ===== -->
+  <main style="flex:1;min-width:0;padding:28px 36px 60px;max-width:1440px">
+
+    <!-- 상단바 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#1B50D4;letter-spacing:.06em;text-transform:uppercase">에스원 블루스캔</div>
+        <h1 style="font-size:27px;font-weight:800;letter-spacing:-.02em;margin-top:6px">유지고객 메인 대시보드</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:50%;background:#EAF0FF;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#1B50D4">김</div>
+      </div>
+    </div>
+
+    <!-- 스코프 -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:16px;font-size:13px;color:#6A7180">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9AA1AD" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+      <span>보기 범위</span>
+      <span style="color:#17191E;font-weight:600">{{ scope }}</span>
+      <sc-if value="{{ hasFilter }}" hint-placeholder-val="{{ false }}">
+        <span onClick="{{ clearFilters }}" style="margin-left:4px;font-size:12px;font-weight:600;color:#1B50D4;cursor:pointer;padding:3px 10px;border-radius:16px;background:#EAF0FF">필터 초기화</span>
+      </sc-if>
+    </div>
+
+    <!-- KPI -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:22px">
+      <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+        <div onClick="{{ k.onClick }}" style="{{ k.cardStyle }}">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px">
+            <span style="width:8px;height:8px;border-radius:50%;flex:none;background:{{ k.dot }}"></span>
+            <span style="font-size:13px;font-weight:600;color:#6A7180;white-space:nowrap">{{ k.label }}</span>
+          </div>
+          <div style="font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1">{{ k.value }}<span style="font-size:14px;font-weight:600;color:#9AA1AD;margin-left:3px">{{ k.unit }}</span></div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- 그리드 -->
+    <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:20px;margin-top:22px;align-items:start">
+
+      <!-- 좌 -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- 오늘 할 일 -->
+        <div style="background:#fff;border:1px solid #E6E8ED;border-radius:16px;padding:22px 24px;box-shadow:0 1px 2px rgba(20,25,40,.04)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:9px">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1B50D4" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              <h2 style="font-size:17px;font-weight:800">오늘 할 일</h2>
+              <span style="font-size:12px;font-weight:700;color:#6A7180;background:#F0F1F4;padding:2px 9px;border-radius:20px">{{ queueCount }}건</span>
+            </div>
+            <span onClick="{{ openRef }}" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#6A7180;cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA1AD" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              상태 기준
+            </span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ queue }}" as="s" hint-placeholder-count="4">
+              <div onClick="{{ s.onClick }}" style="display:flex;gap:14px;border:1px solid #ECEEF1;border-radius:12px;padding:15px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s" style-hover="border-color:#C9D3EE;box-shadow:0 4px 14px -8px rgba(20,25,40,.25)">
+                <div style="width:3px;border-radius:4px;flex:none;background:{{ s.dot }}"></div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">
+                    <span style="font-size:16px;font-weight:800;letter-spacing:-.01em">{{ s.name }}</span>
+                    <span style="{{ s.badgeStyle }}">{{ s.catLabel }}</span>
+                    <span style="font-size:12px;font-weight:600;color:#B4BAC4">{{ s.type }}</span>
+                  </div>
+                  <p style="font-size:13.5px;color:#454B57;line-height:1.55">{{ s.checkSummary }}</p>
+                </div>
+                <div style="flex:none;text-align:right;display:flex;flex-direction:column;gap:4px;justify-content:center">
+                  <span style="font-size:11px;font-weight:600;color:#9AA1AD">이탈 {{ s.score }}</span>
+                  <span style="font-size:12px;font-weight:700;color:{{ s.ddColor }}">{{ s.dday }}</span>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ queueEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:26px;text-align:center;font-size:14px;color:#9AA1AD">현재 조건에 조치 필요 고객이 없습니다.</div>
+            </sc-if>
+          </div>
+        </div>
+
+        <!-- 관제 신호 요약 -->
+        <div style="background:#fff;border:1px solid #E6E8ED;border-radius:16px;padding:22px 24px;box-shadow:0 1px 2px rgba(20,25,40,.04)">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:22px">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1B50D4" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-3-3-4 4"></path></svg>
+            <h2 style="font-size:17px;font-weight:800">관제 신호 요약</h2>
+            <span style="font-size:12px;font-weight:600;color:#9AA1AD">최근 30일</span>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:16px;height:170px;padding:0 4px">
+            <sc-for list="{{ signals }}" as="b" hint-placeholder-count="6">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end">
+                <span style="font-size:13px;font-weight:700;color:{{ b.color }}">{{ b.v }}</span>
+                <div style="width:100%;max-width:46px;border-radius:8px 8px 4px 4px;background:{{ b.bar }};height:{{ b.h }}"></div>
+                <span style="font-size:11.5px;font-weight:600;color:#6A7180;text-align:center;line-height:1.3">{{ b.k }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 우 -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- BP 사례 -->
+        <div style="background:#0F1A38;border-radius:16px;padding:22px 24px;color:#fff;min-height:186px;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7FA3FF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <h2 style="font-size:16px;font-weight:800">BP 사례 &amp; 공지</h2>
+          </div>
+          <div style="flex:1">
+            <span style="font-size:11px;font-weight:700;color:#7FA3FF;letter-spacing:.05em">{{ bp.tag }}</span>
+            <div style="font-size:18px;font-weight:800;letter-spacing:-.01em;margin-top:8px;line-height:1.35">{{ bp.title }}</div>
+            <p style="font-size:13.5px;color:#B8C2DC;line-height:1.6;margin-top:8px">{{ bp.body }}</p>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:16px">
+            <sc-for list="{{ bpDots }}" as="d" hint-placeholder-count="3">
+              <span onClick="{{ d.onClick }}" style="{{ d.style }}"></span>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- 화재·보안 알림 -->
+        <div style="background:#fff;border:1px solid #E6E8ED;border-radius:16px;padding:22px 24px;box-shadow:0 1px 2px rgba(20,25,40,.04)">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:18px">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#DC3B40" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <h2 style="font-size:17px;font-weight:800">화재 · 보안 알림</h2>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid #F2F3F6">
+                <span style="width:7px;height:7px;border-radius:50%;flex:none;background:{{ a.color }}"></span>
+                <span style="flex:1;font-size:14px;font-weight:600;color:#17191E">{{ a.text }}</span>
+                <span style="font-size:12px;color:#9AA1AD">{{ a.loc }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===== 상세 드로어 ===== -->
+<sc-if value="{{ detail }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeDetail }}" style="position:fixed;inset:0;background:rgba(15,26,56,.4);z-index:40;display:flex;justify-content:flex-end">
+    <div style="width:520px;max-width:92vw;height:100vh;background:#fff;overflow-y:auto;box-shadow:-20px 0 60px -30px rgba(20,25,40,.5)" onClick="{{ stop }}">
+      <div style="padding:26px 30px;border-bottom:1px solid #E6E8ED;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;position:sticky;top:0;background:#fff;z-index:1">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px;font-weight:800;letter-spacing:-.01em">{{ detail.name }}</span>
+            <span style="{{ detail.badgeStyle }}">{{ detail.catLabel }}</span>
+          </div>
+          <div style="font-size:13px;color:#6A7180;margin-top:8px">{{ detail.meta }}</div>
+        </div>
+        <span onClick="{{ closeDetail }}" style="cursor:pointer;width:32px;height:32px;border-radius:9px;background:#F0F1F4;display:flex;align-items:center;justify-content:center;flex:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6A7180" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </span>
+      </div>
+
+      <div style="padding:26px 30px">
+        <div style="background:#F5F6F8;border-radius:12px;padding:16px 18px;display:flex;gap:24px;margin-bottom:26px">
+          <div><div style="font-size:11px;font-weight:600;color:#9AA1AD;margin-bottom:5px">이탈 스코어</div><div style="font-size:22px;font-weight:800;color:{{ detail.scoreColor }}">{{ detail.score }}</div></div>
+          <div style="width:1px;background:#E6E8ED"></div>
+          <div><div style="font-size:11px;font-weight:600;color:#9AA1AD;margin-bottom:5px">계약 잔여</div><div style="font-size:22px;font-weight:800;color:{{ detail.ddColor }}">{{ detail.dday }}</div></div>
+          <div style="width:1px;background:#E6E8ED"></div>
+          <div><div style="font-size:11px;font-weight:600;color:#9AA1AD;margin-bottom:5px">방식</div><div style="font-size:22px;font-weight:800">{{ detail.type }}</div></div>
+        </div>
+
+        <div style="font-size:13px;font-weight:800;color:#17191E;margin-bottom:12px">왜 이 고객인가</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px">
+          <sc-for list="{{ detail.why }}" as="w" hint-placeholder-count="3">
+            <div style="display:flex;gap:14px;align-items:baseline">
+              <span style="font-size:13px;font-weight:700;color:#6A7180;width:88px;flex:none">{{ w.0 }}</span>
+              <span style="font-size:14px;color:#17191E;line-height:1.5">{{ w.1 }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="font-size:13px;font-weight:800;color:#17191E;margin-bottom:12px">최근 활동</div>
+        <sc-if value="{{ detail.hasSends }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ detail.sends }}" as="t" hint-placeholder-count="2">
+              <div style="display:flex;gap:14px;padding:12px 0;border-bottom:1px solid #F2F3F6">
+                <span style="font-size:12px;font-weight:700;color:#9AA1AD;width:78px;flex:none">{{ t.d }}</span>
+                <div><div style="font-size:14px;font-weight:600;color:#17191E">{{ t.x }}</div><div style="font-size:12px;color:#9AA1AD;margin-top:3px">{{ t.note }}</div></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ detail.noSends }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13px;color:#9AA1AD;padding:8px 0">아직 발송/접촉 이력이 없습니다. 선제 대응 대상입니다.</div>
+        </sc-if>
+
+        <div style="display:flex;gap:10px;margin-top:30px">
+          <button style="flex:1;height:46px;border:none;border-radius:12px;background:#1B50D4;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">연락 기록 남기기</button>
+          <button style="height:46px;padding:0 20px;border:1px solid #D5D9E0;border-radius:12px;background:#fff;color:#17191E;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">리포트 발송</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- ===== 참고사항 모달 ===== -->
+<sc-if value="{{ refOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeRef }}" style="position:fixed;inset:0;background:rgba(15,26,56,.4);z-index:50;display:flex;align-items:center;justify-content:center;padding:24px">
+    <div onClick="{{ stop }}" style="width:560px;max-width:100%;max-height:86vh;overflow-y:auto;background:#fff;border-radius:18px;padding:30px 32px;box-shadow:0 40px 80px -30px rgba(20,25,40,.5)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+        <h2 style="font-size:20px;font-weight:800">상태 구분 기준</h2>
+        <span onClick="{{ closeRef }}" style="cursor:pointer;width:30px;height:30px;border-radius:8px;background:#F0F1F4;display:flex;align-items:center;justify-content:center">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6A7180" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </span>
+      </div>
+      <p style="font-size:14px;color:#6A7180;line-height:1.6;margin-bottom:22px">각 배지가 어떤 기준으로 분류되며, 담당자가 무엇을 해야 하는지 안내합니다.</p>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ refList }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex;gap:14px;padding:15px 16px;border:1px solid #ECEEF1;border-radius:12px">
+            <span style="{{ r.badgeStyle }};height:fit-content">{{ r.catLabel }}</span>
+            <div style="flex:1"><div style="font-size:14px;font-weight:700;margin-bottom:4px">{{ r.crit }}</div><div style="font-size:13px;color:#6A7180;line-height:1.55">{{ r.action }}</div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { filters:{ div:null, team:null, owner:null, region:null, sector:null, cat:null }, detailId:null, refOpen:false, bpIdx:0 };
+
+  CAT = {
+    crit:   { label:'최우선',    text:'#DC3B40', bg:'#FDECEC', dot:'#DC3B40', order:0, crit:'이탈 고위험(80점↑) 또는 계약 D-45 이내', action:'즉시 방문·유선 방어. 담당 팀장 공유 필수.' },
+    warn:   { label:'경고',      text:'#C77A0A', bg:'#FBF0DD', dot:'#C77A0A', order:1, crit:'이탈 스코어 상승 + 관제 신호/VOC 발생', action:'3영업일 내 상황 점검 및 선제 연락.' },
+    exp:    { label:'갱신 임박',  text:'#B06A00', bg:'#FBF0DD', dot:'#E0930B', order:2, crit:'계약 잔여 D-60 이내(고위험 아님)', action:'갱신 협의 개시. 리포트로 성과 어필.' },
+    contact:{ label:'우선 접촉',  text:'#1B50D4', bg:'#EAF0FF', dot:'#1B50D4', order:3, crit:'재접촉 최적 타이밍 신호 발생', action:'타이밍 놓치기 전 안부·제안 연락.' },
+    signal: { label:'신호 관리',  text:'#157A5B', bg:'#E4F3EC', dot:'#157A5B', order:4, crit:'관제 신호 발생(VOC 접수 전)', action:'오경보 여부 확인 후 선제 안내.' },
+  };
+
+  SITES = [
+    { id:'s1', name:'마포세무서', region:'서울', sector:'공공기관', type:'듀얼', owner:'김성우', team:'서울1지사', div:'수도권사업부', cat:'warn', score:76, contractD:145, checkSummary:'최근 관제 신호가 급증하고 미해결 VOC가 1건 있어 이탈 조짐이 보입니다.',
+      why:[['이탈 스코어','76점 · 최근 30일 +18점 상승'],['관제 신호','설비 이상 신호 최근 3회'],['VOC','미해결 1건(응대 지연)']],
+      sends:[{d:'2026-05-10',x:'문자 발송 — 정기점검 안내',note:'채널: SMS · 상태: 발송완료'}] },
+    { id:'s2', name:'세종빌딩', region:'서울', sector:'상업/업무시설', type:'듀얼', owner:'박지현', team:'서울2지사', div:'수도권사업부', cat:'crit', score:88, contractD:42, checkSummary:'이탈 고위험에 계약 만료가 임박했습니다. 즉시 방어가 필요합니다.',
+      why:[['이탈 스코어','88점(고위험)'],['계약 잔여','D-42 · 만료 임박'],['보안','카메라 오프라인 발생']],
+      sends:[{d:'2026-05-01',x:'월간 리포트 발송(4월분)',note:'채널: 이메일 · 상태: 발송완료'}] },
+    { id:'s3', name:'한빛초등학교', region:'경기', sector:'교육연구시설', type:'오너', owner:'이준호', team:'경기지사', div:'수도권사업부', cat:'exp', score:54, contractD:38, checkSummary:'계약 잔여 D-38로 갱신 협의를 시작할 시점입니다.',
+      why:[['계약 잔여','D-38'],['이탈 스코어','54점(중위험)'],['만족도','양호 · VOC 없음']],
+      sends:[{d:'2026-06-02',x:'월간 리포트 발송(5월분)',note:'채널: 이메일'}] },
+    { id:'s4', name:'대성물류센터', region:'경기', sector:'창고시설', type:'듀얼', owner:'이준호', team:'경기지사', div:'수도권사업부', cat:'signal', score:61, contractD:210, checkSummary:'화재 감지 신호가 발생했습니다. VOC 접수 전 선제 연락이 필요합니다.',
+      why:[['관제 신호','화재 감지 신호 1회(오경보 확인)'],['이탈 스코어','61점(중위험)'],['VOC','없음 · 선제 대응 대상']],
+      sends:[] },
+    { id:'s5', name:'부산항운빌딩', region:'부산', sector:'상업/업무시설', type:'듀얼', owner:'최민아', team:'부산지사', div:'영남사업부', cat:'contact', score:58, contractD:120, checkSummary:'인근 화재 뉴스가 발생해 재접촉 최적 타이밍입니다.',
+      why:[['타이밍 신호','반경 500m 화재 뉴스(2026-07-08)'],['이탈 스코어','58점(중위험)'],['최근 접촉','40일 전']],
+      sends:[] },
+    { id:'s6', name:'울산기계공업', region:'울산', sector:'공장', type:'듀얼', owner:'최민아', team:'부산지사', div:'영남사업부', cat:'warn', score:72, contractD:95, checkSummary:'누수 신호가 반복되고 최근 만족도가 하락했습니다.',
+      why:[['이탈 스코어','72점'],['관제 신호','누수 신호 최근 3주 2회'],['만족도','최근 설문 하락']],
+      sends:[] },
+  ];
+
+  SIGNALS = [ {k:'화재 감지',v:12,hi:true},{k:'누수',v:9},{k:'침입 경보',v:6},{k:'정전',v:5},{k:'통신 이상',v:4},{k:'오경보',v:17} ];
+
+  BP = [
+    { tag:'BEST PRACTICE', title:'세종빌딩 이탈 방어 성공', body:'D-45 시점 즉시 방문 + 맞춤 리포트로 갱신 확정. 관제 신호 대응 속도가 핵심이었습니다.' },
+    { tag:'공지', title:'7월 정기점검 캠페인 시작', body:'전 지사 대상 정기점검 안내 문자 자동 발송이 시작됩니다. 대상 명단을 확인하세요.' },
+    { tag:'BEST PRACTICE', title:'선제 연락으로 VOC 예방', body:'오경보 신호를 먼저 안내해 불만 접수를 막은 대성물류센터 사례.' },
+  ];
+
+  ALERTS = [
+    { text:'부산 중구 상가 화재', loc:'부산항운빌딩 인근', color:'#DC3B40' },
+    { text:'마포세무서 설비 이상(3회차)', loc:'서울 마포', color:'#DC3B40' },
+    { text:'세종빌딩 카메라 오프라인', loc:'서울', color:'#1B50D4' },
+    { text:'대성물류센터 화재 감지(오경보)', loc:'경기', color:'#C77A0A' },
+  ];
+
+  chip(style){ return style; }
+  badge(cat){ const c=this.CAT[cat]; return `display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;color:${c.text};background:${c.bg}`; }
+  scoreColor(s){ return s>=80?'#DC3B40':s>=65?'#C77A0A':'#6A7180'; }
+  ddColor(d){ return d<=45?'#DC3B40':d<=90?'#C77A0A':'#6A7180'; }
+
+  filtered(){
+    const f=this.state.filters;
+    return this.SITES.filter(s =>
+      (!f.div||s.div===f.div)&&(!f.team||s.team===f.team)&&(!f.owner||s.owner===f.owner)&&
+      (!f.region||s.region===f.region)&&(!f.sector||s.sector===f.sector)&&(!f.cat||s.cat===f.cat));
+  }
+  toggle(key,val){ this.setState(st=>{ const f={...st.filters}; f[key]=f[key]===val?null:val; return {filters:f}; }); }
+
+  deriveSite(s){
+    const c=this.CAT[s.cat];
+    return { ...s, catLabel:c.label, dot:c.dot, badgeStyle:this.badge(s.cat),
+      dday:'D-'+s.contractD, ddColor:this.ddColor(s.contractD), scoreColor:this.scoreColor(s.score),
+      meta:`${s.owner} · ${s.team} · ${s.region} · ${s.sector}`,
+      onClick:()=>this.setState({detailId:s.id}) };
+  }
+
+  renderVals(){
+    const f=this.state.filters;
+    const list=this.filtered();
+
+    const mkChips=(arr,key)=>arr.map(v=>({ label:v, onClick:()=>this.toggle(key,v),
+      style:`cursor:pointer;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:20px;transition:all .12s;`+
+        (f[key]===v?'background:#1B50D4;color:#fff':'background:#F0F1F4;color:#454B57') }));
+    const filterGroups=[
+      {title:'사업부', chips:mkChips(['수도권사업부','영남사업부'],'div')},
+      {title:'사업팀 / 지사', chips:mkChips(['서울1지사','서울2지사','경기지사','부산지사'],'team')},
+      {title:'담당자', chips:mkChips(['김성우','박지현','이준호','최민아'],'owner')},
+      {title:'지역', chips:mkChips(['서울','경기','부산','울산'],'region')},
+      {title:'업종', chips:mkChips(['공공기관','상업/업무시설','공장','교육연구시설','창고시설'],'sector')},
+    ];
+
+    const count=cat=>this.SITES.filter(s=>s.cat===cat).length;
+    const kpiDef=[ {key:null,label:'전체 유지고객',dot:'#9AA1AD',value:this.SITES.length},
+      {key:'crit',label:'최우선',dot:'#DC3B40',value:count('crit')},
+      {key:'warn',label:'경고',dot:'#C77A0A',value:count('warn')},
+      {key:'exp',label:'갱신 임박',dot:'#E0930B',value:count('exp')},
+      {key:'contact',label:'우선 접촉',dot:'#1B50D4',value:count('contact')},
+      {key:'signal',label:'신호 관리',dot:'#157A5B',value:count('signal')} ];
+    const kpis=kpiDef.map(k=>{ const active=f.cat===k.key&&k.key!==null;
+      return { ...k, unit:'곳', onClick:()=>k.key===null?null:this.toggle('cat',k.key),
+        cardStyle:`background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 1px 2px rgba(20,25,40,.04);transition:all .12s;`+
+          (k.key===null?'border:1px solid #E6E8ED':'cursor:pointer;')+
+          (active?'border:1.5px solid #1B50D4;box-shadow:0 6px 18px -10px rgba(27,80,212,.5)':(k.key!==null?'border:1px solid #E6E8ED':'')) }; });
+
+    const order=s=>this.CAT[s.cat].order;
+    const queueSites=[...list].sort((a,b)=> order(a)-order(b) || b.score-a.score);
+    const queue=queueSites.map(s=>this.deriveSite(s));
+
+    const maxSig=Math.max(...this.SIGNALS.map(p=>p.v));
+    const signals=this.SIGNALS.map(p=>({ k:p.k, v:p.v, h:Math.round(p.v/maxSig*100)+'%',
+      bar:p.hi?'#DC3B40':'#C9D3EE', color:p.hi?'#DC3B40':'#6A7180' }));
+
+    const bp=this.BP[this.state.bpIdx];
+    const bpDots=this.BP.map((_,i)=>({ onClick:()=>this.setState({bpIdx:i}),
+      style:`width:${i===this.state.bpIdx?'20px':'7px'};height:7px;border-radius:20px;cursor:pointer;transition:all .2s;background:${i===this.state.bpIdx?'#7FA3FF':'rgba(255,255,255,.3)'}` }));
+
+    const scopeParts=[f.div||'전체 사업부', f.team||'전체 지사', f.owner||'전체 담당자', f.region||'전체 지역'];
+    const hasFilter=Object.values(f).some(v=>v);
+
+    const sel=this.SITES.find(s=>s.id===this.state.detailId);
+    let detail=null;
+    if(sel){ detail=this.deriveSite(sel); detail.why=sel.why; detail.sends=sel.sends;
+      detail.hasSends=sel.sends.length>0; detail.noSends=sel.sends.length===0; }
+
+    const refList=Object.keys(this.CAT).map(k=>({ catLabel:this.CAT[k].label, badgeStyle:this.badge(k), crit:this.CAT[k].crit, action:this.CAT[k].action }));
+
+    return { filterGroups, kpis, queue, queueCount:queue.length, queueEmpty:queue.length===0,
+      signals, bp, bpDots, alerts:this.ALERTS,
+      scope:scopeParts.join(' · '), hasFilter, clearFilters:()=>this.setState({filters:{div:null,team:null,owner:null,region:null,sector:null,cat:null}}),
+      detail, closeDetail:()=>this.setState({detailId:null}),
+      refOpen:this.state.refOpen, openRef:()=>this.setState({refOpen:true}), closeRef:()=>this.setState({refOpen:false}),
+      refList, stop:(e)=>e.stopPropagation() };
+  }
+}
+</script>
+</body>
+</html>

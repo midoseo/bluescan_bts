@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#ECEEF1;font-family:'Pretendard',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#17191E}
+  a{color:#1B50D4;text-decoration:none}
+  a:hover{color:#0F3AA8}
+  code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:12.5px}
+</style>
+</helmet>
+
+<div style="min-height:100vh;padding:56px 24px;display:flex;justify-content:center">
+<div style="width:100%;max-width:920px;background:#fff;border-radius:20px;box-shadow:0 1px 3px rgba(20,25,40,.06),0 24px 60px -30px rgba(20,25,40,.25);overflow:hidden">
+
+<!-- HEADER -->
+<div style="padding:56px 64px 40px;border-bottom:1px solid #E6E8ED">
+  <div style="display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.08em;color:#1B50D4;text-transform:uppercase">
+    <span style="width:16px;height:16px;border-radius:4px;background:#1B50D4"></span>
+    블루스캔 유지고객 대시보드 · Handoff
+  </div>
+  <h1 style="font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:16px">디자인 핸드오프 스펙</h1>
+  <p style="font-size:15px;line-height:1.65;color:#6A7180;margin-top:14px;max-width:620px;text-wrap:pretty">코워크에게 이 문서 + <b style="color:#17191E;font-weight:600">디자인 가이드</b> + <b style="color:#17191E;font-weight:600">대시보드 완성본</b>을 함께 전달하세요. 아래 토큰과 규칙을 기존 화면에 그대로 적용하면 됩니다.</p>
+</div>
+
+<!-- 지시문 -->
+<div style="padding:36px 64px;background:#0F1A38;color:#fff">
+  <div style="font-size:12px;font-weight:700;color:#7FA3FF;letter-spacing:.06em;margin-bottom:12px">코워크에게 그대로 붙여넣을 지시문</div>
+  <p style="font-size:15px;line-height:1.7;color:#D5DBEA">"아래 디자인 토큰(컬러·타이포·간격)과 컴포넌트 규칙을 기존 대시보드에 적용해줘. 폰트는 Pretendard, 본문 15px, 이모지는 전부 라인 아이콘으로 교체. 첨부한 <b style="color:#fff;font-weight:600">대시보드 완성본</b>이 목표 결과물이고, <b style="color:#fff;font-weight:600">디자인 가이드</b>에 각 결정의 이유가 있어. 새 화면도 이 토큰으로 일관되게 확장해줘."</p>
+</div>
+
+<!-- 1 컬러 토큰 -->
+<div style="padding:44px 64px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:22px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4">01</span>
+    <h2 style="font-size:20px;font-weight:800">컬러 토큰</h2>
+  </div>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tbody>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:10px 0;width:150px"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#1B50D4;vertical-align:middle;margin-right:8px"></span><code>brand</code></td><td style="padding:10px 0"><code>#1B50D4</code></td><td style="padding:10px 0;color:#6A7180">행동·핵심 강조 전용</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:10px 0"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#EAF0FF;vertical-align:middle;margin-right:8px;border:1px solid #E6E8ED"></span><code>brand-soft</code></td><td style="padding:10px 0"><code>#EAF0FF</code></td><td style="padding:10px 0;color:#6A7180">배지·활성 배경</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:10px 0"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#17191E;vertical-align:middle;margin-right:8px"></span><code>ink</code></td><td style="padding:10px 0"><code>#17191E</code></td><td style="padding:10px 0;color:#6A7180">본문·제목</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:10px 0"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#6A7180;vertical-align:middle;margin-right:8px"></span><code>sub</code></td><td style="padding:10px 0"><code>#6A7180</code></td><td style="padding:10px 0;color:#6A7180">보조 텍스트</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:10px 0"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#9AA1AD;vertical-align:middle;margin-right:8px"></span><code>faint</code></td><td style="padding:10px 0"><code>#9AA1AD</code></td><td style="padding:10px 0;color:#6A7180">캡션·단위</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:10px 0"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#E6E8ED;vertical-align:middle;margin-right:8px"></span><code>line</code> / <code>bg</code></td><td style="padding:10px 0"><code>#E6E8ED</code> / <code>#F5F6F8</code></td><td style="padding:10px 0;color:#6A7180">구분선 / 페이지 배경</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:10px 0"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#DC3B40;vertical-align:middle;margin-right:8px"></span><code>danger</code></td><td style="padding:10px 0"><code>#DC3B40</code> · bg <code>#FDECEC</code></td><td style="padding:10px 0;color:#6A7180">최우선 · 위험</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:10px 0"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#C77A0A;vertical-align:middle;margin-right:8px"></span><code>warn</code></td><td style="padding:10px 0"><code>#C77A0A</code> · bg <code>#FBF0DD</code></td><td style="padding:10px 0;color:#6A7180">경고 · 갱신 임박</td></tr>
+      <tr><td style="padding:10px 0"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:#157A5B;vertical-align:middle;margin-right:8px"></span><code>ok</code></td><td style="padding:10px 0"><code>#157A5B</code> · bg <code>#E4F3EC</code></td><td style="padding:10px 0;color:#6A7180">정상 · 신호 관리</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:16px;font-size:13px;color:#6A7180;background:#F5F6F8;border-radius:10px;padding:12px 16px;line-height:1.6"><b style="color:#17191E">규칙</b> · 화면의 90%는 중립색. 브랜드 블루와 의미색은 강조·상태에만. 배지는 옅은 배경 + 진한 글자.</div>
+</div>
+
+<!-- 2 타이포 -->
+<div style="padding:44px 64px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:22px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4">02</span>
+    <h2 style="font-size:20px;font-weight:800">타이포그래피</h2>
+  </div>
+  <div style="font-size:14px;color:#6A7180;margin-bottom:18px">폰트 <b style="color:#17191E">Pretendard</b> · 굵기 400 / 600 / 800 세 단계</div>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tbody>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:9px 0;width:180px"><code>display</code></td><td style="padding:9px 0">34px · 800</td><td style="padding:9px 0;color:#6A7180">페이지 대표 숫자</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:9px 0"><code>title</code></td><td style="padding:9px 0">24–27px · 800</td><td style="padding:9px 0;color:#6A7180">페이지 제목</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:9px 0"><code>section</code></td><td style="padding:9px 0">17–18px · 800</td><td style="padding:9px 0;color:#6A7180">패널 제목</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:9px 0"><code>body</code></td><td style="padding:9px 0">15px · 400</td><td style="padding:9px 0;color:#6A7180">기본 본문</td></tr>
+      <tr style="border-bottom:1px solid #F0F1F4"><td style="padding:9px 0"><code>small</code></td><td style="padding:9px 0">13px · 500–600</td><td style="padding:9px 0;color:#6A7180">보조·메타</td></tr>
+      <tr><td style="padding:9px 0"><code>caption</code></td><td style="padding:9px 0">12px · 600</td><td style="padding:9px 0;color:#6A7180">라벨·단위</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 3 간격 -->
+<div style="padding:44px 64px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:22px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4">03</span>
+    <h2 style="font-size:20px;font-weight:800">간격 · 형태</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:14px">
+    <div style="border:1px solid #E6E8ED;border-radius:12px;padding:16px 18px"><div style="font-weight:700;margin-bottom:6px">간격 스케일</div><div style="color:#6A7180">8px 그리드 · <code>8 / 16 / 24 / 32 / 48 / 64</code> 만 사용</div></div>
+    <div style="border:1px solid #E6E8ED;border-radius:12px;padding:16px 18px"><div style="font-weight:700;margin-bottom:6px">카드 여백</div><div style="color:#6A7180">안쪽 <code>20–24px</code>, 카드 사이 <code>20px</code></div></div>
+    <div style="border:1px solid #E6E8ED;border-radius:12px;padding:16px 18px"><div style="font-weight:700;margin-bottom:6px">모서리</div><div style="color:#6A7180">카드 <code>16px</code> · 배지 <code>20px</code>(pill) · 버튼 <code>12px</code></div></div>
+    <div style="border:1px solid #E6E8ED;border-radius:12px;padding:16px 18px"><div style="font-weight:700;margin-bottom:6px">그림자</div><div style="color:#6A7180">카드 <code>0 1px 2px rgba(20,25,40,.04)</code></div></div>
+  </div>
+</div>
+
+<!-- 4 컴포넌트 규칙 -->
+<div style="padding:44px 64px;border-bottom:1px solid #E6E8ED">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:22px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4">04</span>
+    <h2 style="font-size:20px;font-weight:800">컴포넌트 규칙</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.6">
+    <div style="display:flex;gap:12px"><span style="color:#1B50D4;font-weight:800;flex:none">·</span><span><b style="font-weight:700">상태 배지</b> — 옅은 배경 + 진한 글자 + 6px 점. 위험도 순서(빨강→주황→회색→초록). 채도 높은 단색 배경 금지.</span></div>
+    <div style="display:flex;gap:12px"><span style="color:#1B50D4;font-weight:800;flex:none">·</span><span><b style="font-weight:700">KPI 카드</b> — 큰 숫자(32px+) 중심. 라벨은 점+텍스트. 클릭 시 해당 상태 필터.</span></div>
+    <div style="display:flex;gap:12px"><span style="color:#1B50D4;font-weight:800;flex:none">·</span><span><b style="font-weight:700">리스트 아이템</b> — 좌측 3px 상태 컬러바 + 이름/배지/요약. 클릭 시 우측 상세 드로어.</span></div>
+    <div style="display:flex;gap:12px"><span style="color:#1B50D4;font-weight:800;flex:none">·</span><span><b style="font-weight:700">아이콘</b> — Lucide/Phosphor 라인, 두께 1.75~1.9px, 크기 18~20px, 색은 텍스트와 동일 중립색. 이모지 전면 금지.</span></div>
+    <div style="display:flex;gap:12px"><span style="color:#1B50D4;font-weight:800;flex:none">·</span><span><b style="font-weight:700">숫자 강조색</b> — 이탈 스코어 80↑ / 계약 D-45↓ 만 위험색. 나머지는 중립.</span></div>
+  </div>
+</div>
+
+<!-- 5 전달물 -->
+<div style="padding:44px 64px">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:22px">
+    <span style="font-size:13px;font-weight:800;color:#1B50D4">05</span>
+    <h2 style="font-size:20px;font-weight:800">함께 전달할 것</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;gap:14px;border:1px solid #E6E8ED;border-radius:12px;padding:16px 18px;align-items:center">
+      <span style="width:28px;height:28px;border-radius:8px;background:#EAF0FF;color:#1B50D4;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">1</span>
+      <div><div style="font-size:15px;font-weight:700">핸드오프 스펙 (이 문서)</div><div style="font-size:13px;color:#6A7180">토큰 + 규칙 — 코워크가 참고할 원본</div></div>
+    </div>
+    <div style="display:flex;gap:14px;border:1px solid #E6E8ED;border-radius:12px;padding:16px 18px;align-items:center">
+      <span style="width:28px;height:28px;border-radius:8px;background:#EAF0FF;color:#1B50D4;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">2</span>
+      <div><div style="font-size:15px;font-weight:700">블루스캔 대시보드 (완성본)</div><div style="font-size:13px;color:#6A7180">목표 결과물 — 시각 참조</div></div>
+    </div>
+    <div style="display:flex;gap:14px;border:1px solid #E6E8ED;border-radius:12px;padding:16px 18px;align-items:center">
+      <span style="width:28px;height:28px;border-radius:8px;background:#EAF0FF;color:#1B50D4;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">3</span>
+      <div><div style="font-size:15px;font-weight:700">디자인 가이드</div><div style="font-size:13px;color:#6A7180">각 결정의 "왜" — 새 화면 확장 시 판단 기준</div></div>
+    </div>
+  </div>
+  <div style="margin-top:20px;font-size:13px;color:#6A7180;background:#F5F6F8;border-radius:10px;padding:14px 16px;line-height:1.6"><b style="color:#17191E">참고</b> · 대시보드 마크업은 프리뷰용 포맷이라 실제 스택(React/Vue 등)에 그대로 붙지 않습니다. 마크업·데이터·토큰은 <b style="color:#17191E">참조 자료</b>로 주고, 코워크가 프레임워크에 맞춰 옮기게 하세요.</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+</body>
+</html>
