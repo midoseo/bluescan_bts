@@ -15,6 +15,7 @@ import { VisitDialog } from './screens/Visit.jsx'
 import { Login } from './screens/Login.jsx'
 import { scoreExisting } from './upsellScore.js'
 import { buildDemoVisits } from './demoVisits.js'
+import { seedVisitsFromActivity } from './sampleActivity.js'
 import { currentSeasonKey } from './season.js'
 import { buildSeogangRetention } from './retentionSeogang.generated.js'
 import { buildSeogangListB } from './pipelineSeogang.generated.js'
@@ -91,7 +92,9 @@ export default function App() {
   const markReportSent = useCallback((id) => setReportSentOverrides(prev => ({ ...prev, [id]: new Date().toISOString().slice(0, 10) })), []);
   const [touchOverrides, setTouchOverrides] = useState({});
   const markTouched = useCallback((id) => setTouchOverrides(prev => ({ ...prev, [id]: new Date().toISOString().slice(0, 10) })), []);
-  const [visits, setVisits] = useState(() => buildDemoVisits());   // 시연용 방문결과 3건 시드
+  // 시연용 방문결과 시드 + 영업활동관리(SAMPLE_ACTIVITY) 방문기록을 실제 후보와 매칭해 주입 →
+  // 신규진행현황·확정·지도와 단일 소스로 연동(예: 경성중고 '거절'이 양쪽에 일관 표시)
+  const [visits, setVisits] = useState(() => ({ ...buildDemoVisits(), ...seedVisitsFromActivity(listA, listB) }));
   const [resultItem, setResultItem] = useState(null);
   const [retInitCat, setRetInitCat] = useState('all');   // 홈 → 유지관리현황 진입 시 초기 KPI 필터
   const [pipeInitTier, setPipeInitTier] = useState('all'); // 홈 → 신규진행현황 진입 시 초기 등급 필터
@@ -347,7 +350,7 @@ export default function App() {
             </div>
           ) : (
             <>
-              {view === 'pipeline' && <PipelineScreen data={pipelineData} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} floodSeasonOn={floodSeasonOn} initTier={pipeInitTier} />}
+              {view === 'pipeline' && <PipelineScreen data={pipelineData} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} visits={visits} floodSeasonOn={floodSeasonOn} initTier={pipeInitTier} />}
               {view === 'listA' && <ListAScreen data={visibleA} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
               {view === 'listB' && <ListBScreen data={visibleB} onResult={openResult} recordedSet={recordedSet} logCounts={logCounts} visits={visits} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)} floodSeasonOn={floodSeasonOn} />}
               {view === 'retention' && <RetentionScreen data={retention} listMode={t.listMode} onListMode={(m) => setTweak('listMode', m)}

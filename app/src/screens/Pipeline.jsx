@@ -5,7 +5,7 @@
  *  - 기존 고객은 펼치면 계약정보(계약번호·경비형태·계약유지·월경비)와 매칭 근거를 보여준다
  */
 import React from 'react'
-import { MI, Meter, Gauge, tierOf, num, won, DetailModal, Pager } from '../components.jsx'
+import { MI, Meter, Gauge, tierOf, num, won, DetailModal, Pager, VISIT } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { getBranchBoundary } from '../branchBoundary.js'
 import { FIRE_OVERLAY } from '../fireOverlay.js'
@@ -138,7 +138,8 @@ function ExistingDetail({ c }) {
 }
 
 // 통합 행
-function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount = 0 }) {
+function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount = 0, status }) {
+  const vs = status && VISIT[status];
   const t = tierOf(c.score);
   const isB = c.track === 'B';
   const addr = isB
@@ -157,6 +158,7 @@ function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount
             {isB && c.b2 && <Badge tone="warning" shape="pill">B-2 중요실</Badge>}
             {isB && c.buildingLedger && c.buildingLedger.matched && <Badge tone="positive" shape="pill">건축물대장 매칭</Badge>}
             {!isB && c.noData && c.noData.length > 0 && <Badge tone="neutral">NO_DATA {c.noData.length}</Badge>}
+            {vs && <Badge tone={vs.tone} shape="pill" dot>방문결과 · {vs.label}</Badge>}
           </div>
           <div className="lrow-addr">{addr}</div>
         </div>
@@ -177,7 +179,7 @@ function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount
   );
 }
 
-export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, floodSeasonOn = true, initTier = 'all' }) {
+export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, visits = {}, floodSeasonOn = true, initTier = 'all' }) {
   const D = window.APPDATA;
   const [track, setTrack] = useState('전체');   // 전체 / 신규 / 기존
   const [tierF, setTierF] = useState(initTier);    // 등급 KPI 필터: all/S/A/B/C/D/both (홈에서 진입 시 initTier)
@@ -277,7 +279,7 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, fl
                   <div id={'row-' + c.id} key={c.id}>
                     <PipelineRow c={c} rank={pageBase + i + 1} expanded={expanded === c.id}
                       onToggle={() => { if (expanded === c.id) setExpanded(null); else select(c.id); }}
-                      onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} />
+                      onResult={onResult} recorded={recordedSet.has(c.id)} logCount={logCounts[c.id] || 0} status={(visits[c.id] || {}).status} />
                   </div>))}
               </div>
               <Pager page={curPage} totalPages={totalPages} onChange={setPage} />

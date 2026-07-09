@@ -152,7 +152,7 @@ export function ActivityScreen({ gamify, visits, listA, listB, retention, report
               <span className="rt-name">{r.isMe ? `${r.name} (나)` : r.name}</span>
               <span className="rt-br">{r.branch}</span>
               <span className="rt-team">{r.team}</span>
-              <span className="rt-amt tnum">{fmtWon(r.amount)}</span>
+              <span className="rt-amt tnum" title={`신규 수주 ${r.deals}건 × 306천원`}>{fmtWon(r.amount)} <span className="faint" style={{ fontWeight: 400, fontSize: 11 }}>· {r.deals}건</span></span>
             </div>
           ))}
           {rank.me && !meInTop && (
@@ -163,13 +163,13 @@ export function ActivityScreen({ gamify, visits, listA, listB, retention, report
                 <span className="rt-name">{rank.me.name} (나)</span>
                 <span className="rt-br">{rank.me.branch}</span>
                 <span className="rt-team">{rank.me.team}</span>
-                <span className="rt-amt tnum">{fmtWon(rank.me.amount)}</span>
+                <span className="rt-amt tnum" title={`신규 수주 ${rank.me.deals}건 × 306천원`}>{fmtWon(rank.me.amount)} <span className="faint" style={{ fontWeight: 400, fontSize: 11 }}>· {rank.me.deals}건</span></span>
               </div>
             </>
           )}
         </div>
         <div className="insight-note" style={{ marginTop: 10 }}>
-          <MI n="info" s={16} />실적 금액은 데모용 예시값이며, 실서비스 시 기간별 수주·계약 집계로 대체됩니다. 상위 10명과 내 순위를 함께 표시해요.
+          <MI n="info" s={16} />실적금액 = <b>신규 수주 건수 × 306천원</b>(계약 1건 월 서비스료 평균 단가) × 기간. 건수로 역산되는 값이라 억 단위가 나오지 않습니다. 상위 10명과 내 순위를 함께 표시해요.
         </div>
       </div>
     </div>

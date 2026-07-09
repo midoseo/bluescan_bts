@@ -4,7 +4,7 @@ import { MI, VISIT } from '../components.jsx'
 import { GroupedBar } from '../charts.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
 import { augmentRetention, needsAttention } from './Retention.jsx'
-const { useState, useRef } = React
+const { useState, useRef, useEffect } = React
 
 const DS = window.UXDesignSystem_59a60b;
 const { Card: DCard, Badge: DBadge, Button: DBtn, TextField: DText, Select: DSel, Textarea: DTa } = DS;
@@ -343,6 +343,37 @@ function attnReason(c) {
   return { text: '점검 필요', tone: 'warning' };
 }
 
+/* ===== 유지고객 메인 대시보드(홈) — 목표 완성본 레이아웃용 데이터·헬퍼 ===== */
+const PT_LABEL = { dual: '듀얼', owner: '오너' };
+const BP_CASES = [
+  { tag: '수주 성공사례', title: '세종시 공공기관 3곳 동시 전환', body: '인력경비 계약 만료 D-60 알림 → 원격 전환 제안 → 3곳 일괄 수주.' },
+  { tag: '우수 조치사례', title: '설비 신호 선제 점검으로 해약 방어', body: '설비 이상 신호 급증 감지 → VOC 접수 전 선제 방문 → 만족도 회복·갱신 확정.' },
+  { tag: '고객 만족 사례', title: '인근 화재 후 24시간 내 안부 연락', body: '화재 뉴스 트리거로 즉시 감성터칭 발송 → "관리받고 있다"는 체감 상승.' },
+];
+const RET_CRITERIA = [
+  { label: '주의 필요', dot: '#DC3B40', crit: '계약 만료 D-60 이내이거나 심각 신호·미해결 VOC가 있는 고객.', action: '근거 신호를 확인하고 선제 연락으로 원인을 해소하세요.' },
+  { label: '만료 도래', dot: '#C77A0A', crit: '계약 잔여 기간이 3개월 이내인 고객.', action: '갱신 협의를 시작하고 유지 리포트로 가치를 전달하세요.' },
+  { label: '신호 관리필요', dot: '#157A5B', crit: '최근 관제 신호가 늘거나 3개월 누적 30건↑인 고객.', action: 'VOC 접수 전 선제 점검·감성터칭으로 안심 소통하세요.' },
+];
+function queueSummary(c) {
+  const parts = [];
+  if (c._daysToEnd != null && c._daysToEnd >= 0 && c._daysToEnd <= 60) parts.push('계약 만료가 임박했습니다');
+  if ((c.signalHistory || []).some(s => s.severity === '심각')) parts.push('심각한 관제 신호가 발생했습니다');
+  else if (c.manageNeeded) parts.push('관제 신호가 늘고 있습니다');
+  if (c.vocAttention) parts.push('미해결 VOC가 있습니다');
+  return (parts.join(' · ') || '선제 점검이 필요합니다') + '. 선제 대응을 권장합니다.';
+}
+function whyRows(c) {
+  const sig = c.signalHistory || [];
+  const sev = sig.filter(s => s.severity === '심각').length;
+  return [
+    ['계약 잔여', c._daysToEnd != null ? `D-${c._daysToEnd}${c._daysToEnd <= 60 ? ' · 만료 임박' : ''}` : '—'],
+    ['관제 신호', sig.length ? `최근 ${sig.length}건${sev ? ` · 심각 ${sev}건` : ''}` : '최근 신호 없음'],
+    ['VOC', c.vocAttention ? '미해결·주의 VOC 있음' : '특이사항 없음'],
+    ['상품', PT_LABEL[c.productTier] || c.productTier || '—'],
+  ];
+}
+
 export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retention, recorded, visits, onResult }) {
   const goRet = onGoRetention || ((cat) => onNav('retention'));
   recorded = recorded || []; visits = visits || {};
@@ -379,83 +410,126 @@ export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retenti
     { key: 'manage', label: '신호 관리필요', n: retManage, tone: 'amber' },
   ];
 
+  /* ===== 목표 완성본 레이아웃용 상태·집계 ===== */
+  const [drawerFor, setDrawerFor] = useState(null);   // 상세 드로어 대상 고객
+  const [refOpen, setRefOpen] = useState(false);       // 상태 구분 기준 모달
+  const [bpIdx, setBpIdx] = useState(0);               // BP 사례 로테이션
+  useEffect(() => { const t = setInterval(() => setBpIdx(i => (i + 1) % BP_CASES.length), 5000); return () => clearInterval(t); }, []);
+
+  const KPIS = [
+    { key: 'all', label: '전체 유지물건', n: retAug.length, dot: '#9AA1AD' },
+    { key: 'attn', label: '주의 필요', n: retAttention.length, dot: '#DC3B40' },
+    { key: 'expiry', label: '만료 도래', n: retExpiry, dot: '#C77A0A' },
+    { key: 'manage', label: '신호 관리필요', n: retManage, dot: '#157A5B' },
+  ];
+  // 관제 신호 요약 — 유지고객 signalHistory를 유형별 집계(최근 30일 데모)
+  const sigCounts = {};
+  retAug.forEach(c => (c.signalHistory || []).forEach(s => { sigCounts[s.type] = (sigCounts[s.type] || 0) + 1; }));
+  const signalBars = Object.entries(sigCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => ({ k, v }));
+  const sigMax = Math.max(1, ...signalBars.map(b => b.v));
+  const queue = retAttention.slice(0, 6);
+  const bp = BP_CASES[bpIdx];
+  const branchLabel = persona?.branch || '내 지사';
+
   return (
     <div className="pc-content pc-content--wide fadein" data-screen-label="컨설턴트 대시보드">
-      <div className="pc-pagehead">
+      {/* 헤드 — 유지고객 메인 대시보드 */}
+      <div className="home2-head">
         <div>
-          <div className="pc-pagehead__title">안녕하세요, {persona?.name || '김영업'}님</div>
-          <div className="pc-pagehead__desc">오늘 챙길 유지관리·신규 진행 현황만 간단히 정리했어요. 항목을 누르면 상세 화면으로 넘어가요.</div>
+          <div className="home2-eyebrow">에스원 블루스캔 · 유지고객 메인 대시보드</div>
+          <h1 className="home2-title">안녕하세요, {persona?.name || '김영업'}님</h1>
+          <div className="home2-scope">
+            <MI n="visibility" s={16} />보기 범위 <b>{branchLabel}</b>
+            <button className="home2-scope__link" onClick={() => goRet('all')}>유지관리현황 열기<MI n="chevron_right" s={16} /></button>
+          </div>
         </div>
+        <div className="home2-avatar">{(persona?.name || '김').slice(0, 1)}</div>
       </div>
 
-      {/* 1) 오늘의 알림 — 화재·보안 뉴스 (열기/닫기) */}
-      <div className={'home-alertbox' + (newsOpen ? ' open' : '')}>
-        <button className="home-alertbox__head" onClick={() => setNewsOpen(o => !o)} aria-expanded={newsOpen}>
-          <span className="home-alertbox__ico"><MI n="local_fire_department" s={20} fill /></span>
-          <span className="home-alertbox__title">오늘의 화재·보안 알림</span>
-          <span className="home-alertbox__meta">출동 접수 {fireStats.national.rcpt}건 · 관련 뉴스 {newsAll.length}건</span>
-          <span className="home-alertbox__toggle">{newsOpen ? '닫기' : '열기'}<MI n={newsOpen ? 'expand_less' : 'expand_more'} s={18} /></span>
-        </button>
-        {newsOpen && (
-          <div className="home-alertbox__body">
-            <div className="firedsp__top">
-              <DBadge tone="danger" shape="pill">접수 {fireStats.national.rcpt}건</DBadge>
-              <DBadge tone="warning" shape="pill">진행중 {fireStats.national.prog}건</DBadge>
-              <DBadge tone="neutral" shape="pill">인명피해 {fireStats.national.life}명</DBadge>
-              <DBadge tone="neutral" shape="pill">재산피해 {(fireStats.national.prop / 1e8).toFixed(1)}억원</DBadge>
-              <span className="firedsp__src">{fireStats.source} · 기준일 {fireStats.baseDate}</span>
+      {/* KPI 카드 — 클릭 시 유지관리현황 해당 필터 */}
+      <div className="home2-kpis">
+        {KPIS.map(k => (
+          <button key={k.key} className="home2-kpi" onClick={() => goRet(k.key)}>
+            <span className="home2-kpi__lab"><i className="home2-dot" style={{ background: k.dot }} />{k.label}</span>
+            <span className="home2-kpi__n tnum">{k.n}<i>곳</i></span>
+          </button>
+        ))}
+      </div>
+
+      {/* 메인 그리드 */}
+      <div className="home2-grid">
+        <div className="home2-col">
+          {/* 오늘 할 일 */}
+          <section className="home2-card">
+            <div className="home2-ch">
+              <div className="home2-ch__t"><MI n="task_alt" s={20} /><h2>오늘 할 일</h2><span className="home2-pill">{queue.length}건</span></div>
+              <button className="home2-ref" onClick={() => setRefOpen(true)}><MI n="help" s={16} />상태 기준</button>
+            </div>
+            {queue.length === 0
+              ? <div className="home2-empty">현재 조건에 조치 필요 고객이 없습니다.</div>
+              : <div className="home2-queue">
+                {queue.map(c => { const r = attnReason(c); const danger = r.tone === 'danger';
+                  return (
+                    <button key={c.id} className="home2-qi" onClick={() => setDrawerFor(c)}>
+                      <span className="home2-qi__bar" style={{ background: danger ? '#DC3B40' : '#C77A0A' }} />
+                      <span className="home2-qi__body">
+                        <span className="home2-qi__top"><b>{c.name}</b><DBadge tone={toneOf(r.tone)} shape="pill" dot>{r.text}</DBadge><span className="home2-qi__use">{c.use}</span></span>
+                        <span className="home2-qi__sum">{queueSummary(c)}</span>
+                      </span>
+                      <span className="home2-qi__meta">
+                        <span className="home2-qi__mk">계약</span>
+                        <span className="home2-qi__d" style={{ color: (c._daysToEnd != null && c._daysToEnd <= 45) ? '#DC3B40' : '#6A7180' }}>{c._daysToEnd != null ? `D-${c._daysToEnd}` : '—'}</span>
+                      </span>
+                    </button>
+                  ); })}
+              </div>}
+          </section>
+
+          {/* 관제 신호 요약 */}
+          <section className="home2-card">
+            <div className="home2-ch"><div className="home2-ch__t"><MI n="sensors" s={20} /><h2>관제 신호 요약</h2></div><span className="faint" style={{ fontSize: 12 }}>최근 30일</span></div>
+            {signalBars.length === 0
+              ? <div className="home2-empty">집계할 신호가 없습니다.</div>
+              : <div className="home2-bars">
+                {signalBars.map(b => { const hi = b.v === sigMax; return (
+                  <div className="home2-bar" key={b.k} title={`${b.k}: ${b.v}`}>
+                    <span className="home2-bar__v" style={{ color: hi ? '#1B50D4' : '#6A7180' }}>{b.v}</span>
+                    <div className="home2-bar__fill" style={{ height: `${Math.round(b.v / sigMax * 100)}%`, background: hi ? '#1B50D4' : '#C7CFDD' }} />
+                    <span className="home2-bar__k">{b.k}</span>
+                  </div>); })}
+              </div>}
+          </section>
+        </div>
+
+        <div className="home2-col">
+          {/* BP 사례 & 공지 */}
+          <section className="home2-bp">
+            <div className="home2-bp__head"><MI n="campaign" s={20} /><h2>BP 사례 & 공지</h2></div>
+            <span className="home2-bp__tag">{bp.tag}</span>
+            <div className="home2-bp__title">{bp.title}</div>
+            <div className="home2-bp__body">{bp.body}</div>
+            <div className="home2-bp__dots">{BP_CASES.map((_, i) => <button key={i} className={'home2-bp__dot' + (i === bpIdx ? ' on' : '')} onClick={() => setBpIdx(i)} aria-label={'사례 ' + (i + 1)} />)}</div>
+          </section>
+
+          {/* 화재 · 보안 알림 */}
+          <section className="home2-card">
+            <div className="home2-ch">
+              <div className="home2-ch__t"><MI n="local_fire_department" s={20} /><h2>화재 · 보안 알림</h2></div>
+              <button className="home2-ref" onClick={() => setNewsOpen(o => !o)}>{newsOpen ? '접기' : '열기'}<MI n={newsOpen ? 'expand_less' : 'expand_more'} s={16} /></button>
             </div>
             {news.length === 0
-              ? <div className="nodata-box"><MI n="info" s={20} /><div>표시할 뉴스가 없어요.</div></div>
-              : <div className="news-feed" style={{ marginTop: 8 }}>
-                {news.map((f, i) => (
-                  <a className="news-item" key={i} href={f.url || '#'} target="_blank" rel="noopener noreferrer" onClick={e => { if (!f.url) e.preventDefault(); }}>
-                    <div className={'news-day' + (f.days <= 1 ? ' hot' : '')}>{dayLabel(f.days)}</div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div className="news-title">{f.title}</div>
-                      <div className="news-meta">
-                        {f.sigungu && <span className="news-region"><MI n="location_on" s={14} />{f.sigungu}</span>}
-                        {f.biz && <span className="news-src">{f.biz}</span>}
-                        <DBadge tone={f.scale === '대형' ? 'danger' : f.scale === '중형' ? 'warning' : 'neutral'} shape="pill">{f.scale}</DBadge>
-                        <span className="news-src">{f.source}</span>
-                      </div>
-                    </div>
-                    <MI n="open_in_new" s={16} cls="news-ext" />
+              ? <div className="home2-empty">표시할 알림이 없습니다.</div>
+              : <div className="home2-alerts">
+                {news.slice(0, newsOpen ? news.length : 4).map((f, i) => (
+                  <a className="home2-alert" key={i} href={f.url || '#'} target="_blank" rel="noopener noreferrer" onClick={e => { if (!f.url) e.preventDefault(); }}>
+                    <span className="home2-alert__dot" style={{ background: f.scale === '대형' ? '#DC3B40' : f.scale === '중형' ? '#C77A0A' : '#9AA1AD' }} />
+                    <span className="home2-alert__t">{f.title}</span>
+                    <span className="home2-alert__loc">{f.sigungu || dayLabel(f.days)}</span>
                   </a>
                 ))}
               </div>}
-          </div>
-        )}
-      </div>
-
-      {/* 2) 유지관리 핵심 — 스탯 + 주의 고객 상위 (클릭 시 유지관리현황 해당 필터로) */}
-      <div style={{ marginTop: 16 }}>
-        <DashCard title="유지관리 핵심" sub="주의가 필요한 유지고객을 먼저 확인하세요"
-          action={<DBtn size="sm" variant="line" onClick={() => goRet('all')} iconLeft={<MI n="shield_with_heart" s={18} />}>유지관리현황</DBtn>}>
-          <div className="home-retstats">
-            {RET_STATS.map(s => (
-              <button key={s.key} className={'home-retstat' + (s.tone ? ' home-retstat--' + s.tone : '')} onClick={() => goRet(s.key)}>
-                <span className="home-retstat__n tnum">{s.n}<i>곳</i></span>
-                <span className="home-retstat__lab">{s.label}</span>
-              </button>
-            ))}
-          </div>
-          {retAttention.length === 0
-            ? <div className="nodata-box" style={{ marginTop: 12 }}><MI n="check_circle" s={20} /><div>지금 주의가 필요한 유지고객이 없어요.</div></div>
-            : <div className="home-attnlist">
-              {retAttention.slice(0, 4).map(c => { const r = attnReason(c); return (
-                <button key={c.id} className="home-attnrow" onClick={() => goRet('attn')}>
-                  <span className="home-attnrow__name">{c.name}</span>
-                  <span className="home-attnrow__use faint">{c.use}</span>
-                  <DBadge tone={toneOf(r.tone)} shape="pill">{r.text}</DBadge>
-                  <MI n="chevron_right" s={18} cls="home-attnrow__go" />
-                </button>
-              ); })}
-              {retAttention.length > 4 && (
-                <button className="news-more" onClick={() => goRet('attn')}>주의 고객 전체 보기 <span className="news-more__n">+{retAttention.length - 4}</span> <MI n="chevron_right" s={18} /></button>
-              )}
-            </div>}
-        </DashCard>
+          </section>
+        </div>
       </div>
 
       {/* 3) 내 파이프라인 — 단계(가로) + 방문 결과 표 */}
@@ -487,6 +561,61 @@ export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retenti
           </div>
         </DashCard>
       </div>
+
+      {/* 상세 드로어 — 왜 이 고객인가 + 최근 활동 + 대응 */}
+      {drawerFor && (() => { const c = drawerFor; const r = attnReason(c); const sig = (c.signalHistory || []).slice(0, 6);
+        return (
+          <div className="home2-scrim" onClick={() => setDrawerFor(null)}>
+            <div className="home2-drawer" onClick={e => e.stopPropagation()}>
+              <div className="home2-drawer__head">
+                <div>
+                  <div className="home2-drawer__name">{c.name} <DBadge tone={toneOf(r.tone)} shape="pill" dot>{r.text}</DBadge></div>
+                  <div className="home2-drawer__meta">{c.use} · 계약 {c.contractNo} · 담당 {c.assignedConsultant || '—'}</div>
+                </div>
+                <button className="home2-x" onClick={() => setDrawerFor(null)}><MI n="close" s={20} /></button>
+              </div>
+              <div className="home2-drawer__body">
+                <div className="home2-drawer__stats">
+                  <div><div className="home2-drawer__k">최근 신호</div><div className="home2-drawer__v">{(c.signalHistory || []).length}건</div></div>
+                  <div className="home2-drawer__sep" />
+                  <div><div className="home2-drawer__k">계약 잔여</div><div className="home2-drawer__v" style={{ color: (c._daysToEnd != null && c._daysToEnd <= 45) ? '#DC3B40' : '#17191E' }}>{c._daysToEnd != null ? `D-${c._daysToEnd}` : '—'}</div></div>
+                  <div className="home2-drawer__sep" />
+                  <div><div className="home2-drawer__k">상품</div><div className="home2-drawer__v">{PT_LABEL[c.productTier] || c.productTier || '—'}</div></div>
+                </div>
+                <div className="home2-drawer__sec">왜 이 고객인가</div>
+                <div className="home2-why">
+                  {whyRows(c).map((w, i) => (<div className="home2-why__row" key={i}><span className="home2-why__k">{w[0]}</span><span className="home2-why__v">{w[1]}</span></div>))}
+                </div>
+                <div className="home2-drawer__sec">최근 활동</div>
+                {sig.length === 0
+                  ? <div className="home2-empty" style={{ textAlign: 'left', padding: '6px 0' }}>아직 발송/접촉 이력이 없습니다. 선제 대응 대상입니다.</div>
+                  : <div className="home2-tl">{sig.map((s, i) => (<div className="home2-tl__row" key={i}><span className="home2-tl__d">{s.date}</span><div><div className="home2-tl__x">{s.type}</div><div className="home2-tl__n">{s.severity}{s.notifiedAuthority ? ' · 유관기관 통보' : ''}</div></div></div>))}</div>}
+                <div className="home2-drawer__btns">
+                  <button className="home2-btn home2-btn--primary" onClick={() => { setDrawerFor(null); goRet('attn'); }}>유지관리현황에서 상세·대응</button>
+                  <button className="home2-btn home2-btn--line" onClick={() => setDrawerFor(null)}>닫기</button>
+                </div>
+              </div>
+            </div>
+          </div>); })()}
+
+      {/* 상태 구분 기준 모달 */}
+      {refOpen && (
+        <div className="home2-scrim home2-scrim--center" onClick={() => setRefOpen(false)}>
+          <div className="home2-modal" onClick={e => e.stopPropagation()}>
+            <div className="home2-modal__head"><h2>상태 구분 기준</h2><button className="home2-x" onClick={() => setRefOpen(false)}><MI n="close" s={18} /></button></div>
+            <div className="home2-modal__sub">각 배지가 어떤 기준으로 분류되며, 담당자가 무엇을 해야 하는지 안내합니다.</div>
+            <div className="home2-refgrid">
+              {RET_CRITERIA.map((rc, i) => (
+                <div className="home2-ref__card" key={i}>
+                  <span className="home2-ref__badge"><i className="home2-dot" style={{ background: rc.dot }} />{rc.label}</span>
+                  <div className="home2-ref__crit"><b>기준:</b> {rc.crit}</div>
+                  <div className="home2-ref__act"><b>할 일:</b> {rc.action}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

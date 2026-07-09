@@ -12,6 +12,7 @@ window.ReactDOM = ReactDOM
 window.L = L
 
 import './app.css'
+import './vendor/tokens/handoff-overrides.css'   // Claude Design 핸드오프 토큰(app.css 이후 로드)
 import App from './App.jsx'
 import { injectBranchManagers } from './branchManagers.js'
 import { injectDemoConsultants } from './demoConsultants.js'

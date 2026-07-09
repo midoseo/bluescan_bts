@@ -47,7 +47,12 @@ export function ConfirmedScreen({ confirmed, visits, onVisit, onRemove, onDownlo
     if (td) entries.push({ key: 'm-' + c.id, kind: 'msg', c: { ...c }, trackText: '유지', date: td, desc: `${c.name} 감성터칭 문자 발송` });
   });
   // 시연용 샘플 활동 로그 (previews/activity_log_preview.html 기준) — 읽기 전용
-  SAMPLE_ACTIVITY.forEach((sa, i) => entries.push({ key: 'sa-' + i, kind: sa.kind, c: { id: 'sample-' + i, name: sa.name }, trackText: sa.track, date: sa.date, time: sa.time, status: sa.status, desc: sa.desc, readOnly: true }));
+  // 단, 실제 후보와 매칭돼 visits로 연동된 방문(예: 경성중고)은 위에서 실제 항목으로 이미 표시되므로 중복 제거
+  const linkedVisitNames = new Set(entries.filter(e => e.kind === 'visit').map(e => e.c && e.c.name));
+  SAMPLE_ACTIVITY.forEach((sa, i) => {
+    if (sa.kind === 'visit' && sa.status && linkedVisitNames.has(sa.name)) return;
+    entries.push({ key: 'sa-' + i, kind: sa.kind, c: { id: 'sample-' + i, name: sa.name }, trackText: sa.track, date: sa.date, time: sa.time, status: sa.status, desc: sa.desc, readOnly: true });
+  });
   entries.sort((a, b) => { const d = String(b.date).localeCompare(String(a.date)); return d !== 0 ? d : String(b.time || '').localeCompare(String(a.time || '')); });
 
   const cnt = { all: entries.length, visit: 0, report: 0, msg: 0 };
@@ -62,6 +67,22 @@ export function ConfirmedScreen({ confirmed, visits, onVisit, onRemove, onDownlo
     const logs = [{ id: Date.now(), status: eStatus, date: fmtNow(), text }, ...(Array.isArray(prev.logs) ? prev.logs : [])];
     onVisit(c.id, { ...prev, status: eStatus, memo: text, logs, date: prev.date || todayYMD() });
     setEditId(null);
+  };
+
+  // CSV 다운로드 — 화면에 보이는 활동로그(방문결과+리포트발송+문자발송)를 그대로 내보낸다.
+  // (기존 버그: recorded(방문상태)만 내보내 발송이력이 빠지고 사실상 공란으로 저장됐음)
+  const KIND_LABEL = { visit: '방문결과', report: '리포트발송', msg: '문자발송' };
+  const downloadCsv = () => {
+    const head = ['일자', '시간', '종류', '구분', '대상', '상태', '내용'];
+    const rows = shown.map(e => [
+      e.date || '', e.time || '', KIND_LABEL[e.kind] || e.kind, e.trackText || '',
+      (e.c && e.c.name) || '',
+      e.kind === 'visit' ? (VISIT[e.status]?.label || e.status || '') : '',
+      (e.desc || '').replace(/[\r\n]+/g, ' '),
+    ]);
+    const csv = '﻿' + [head, ...rows].map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `영업활동관리_${todayYMD()}.csv`; a.click();
   };
 
   if (entries.length === 0) return (
@@ -97,7 +118,7 @@ export function ConfirmedScreen({ confirmed, visits, onVisit, onRemove, onDownlo
             <button key={f.key} className={'rank-chip' + (filter === f.key ? ' on' : '')} onClick={() => setFilter(f.key)}>{f.label}</button>
           ))}
         </div>
-        <CButton size="sm" variant="line" onClick={onDownload} iconLeft={<MI n="download" s={18} />}>CSV 다운로드</CButton>
+        <CButton size="sm" variant="line" onClick={downloadCsv} iconLeft={<MI n="download" s={18} />}>CSV 다운로드</CButton>
       </div>
       <div className="mgr-note"><MI n="info" /> 방문 결과는 <b>수정</b>·<b>상세(음성·AI)</b>로 보강할 수 있어요. 리포트·문자 발송은 기록으로 남습니다.</div>
 

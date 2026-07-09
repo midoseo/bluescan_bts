@@ -17,6 +17,7 @@ import { buildEmpathyMessageDraft } from '../empathyMessage.js'
 import { exportElementToPdf } from '../pdfExport.js'
 import { currentSeasonKey } from '../season.js'
 import { todayCompact } from '../dateUtil.js'
+import { buildVocDetails, buildSignalDetail } from '../historyDetail.js'
 const { useState, useRef, useEffect } = React
 const RETENTION_PER_PAGE = 5   // 페이지당 5개 + 페이지네이션
 
@@ -99,16 +100,18 @@ function aiAction(c) {
 }
 
 // VOC 이력(최근 3년) — 불만·요청·문의·칭찬. 데이터가 없어 계약처별 랜덤 생성(데모). 불만·요청 많으면 주의 고객.
-function VocBox({ c }) {
+function VocBox({ c, onOpenVoc }) {
   if (!c.voc3y) return null;
   const v = c.voc3y;
+  const total = (v.complaint || 0) + (v.request || 0) + (v.inquiry || 0) + (v.praise || 0);
   return (
     <div>
       <div className="ld-h" style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
         VOC 이력 <span className="faint" style={{ fontWeight: 400 }}>· 최근 3년</span>
         {c.vocAttention && <RBadge tone="danger" shape="pill" dot>주의 고객</RBadge>}
+        {total > 0 && <RButton size="sm" variant="line" style={{ marginLeft: 'auto' }} onClick={e => { e.stopPropagation(); onOpenVoc && onOpenVoc(c); }} iconLeft={<MI n="list" s={16} />}>세부 이력 보기</RButton>}
       </div>
-      <div className="voc-row">
+      <div className="voc-row" style={{ cursor: total > 0 ? 'pointer' : 'default' }} onClick={e => { if (total > 0 && onOpenVoc) { e.stopPropagation(); onOpenVoc(c); } }}>
         <span className="voc-chip voc-chip--complaint">불만 <b>{v.complaint}</b></span>
         <span className="voc-chip voc-chip--request">요청 <b>{v.request}</b></span>
         <span className="voc-chip voc-chip--inquiry">문의 <b>{v.inquiry}</b></span>
@@ -116,6 +119,47 @@ function VocBox({ c }) {
       </div>
       {c.vocAttention && <div className="voc-note"><MI n="priority_high" s={16} />불만·요청이 많아 <b>주의 관리가 필요한 고객</b>이에요. 선제 방문·감성터칭을 권장해요.</div>}
     </div>
+  );
+}
+
+// VOC 세부 이력 팝업 — 개별 VOC 건(일자·유형·내용·처리상태)을 최근순으로 조회
+function VocDetailDialog({ c, onClose }) {
+  const [items] = useState(() => buildVocDetails(c));
+  return createPortal(
+    <div className="dlg-boost"><RDialog title="VOC 세부 이력" subtitle={`${c.name} · 최근 3년 총 ${items.length}건`} closeButton width={620} onClose={onClose}
+      actions={[{ label: '닫기', variant: 'secondary', onClick: onClose }]}>
+      {items.length === 0
+        ? <div className="nodata-box"><MI n="info" s={18} /><div>표시할 VOC 이력이 없습니다.</div></div>
+        : <div className="kwtable">
+          {items.map((it, i) => (
+            <div className="kwt-row" key={i}>
+              <span className="kwt-kw" style={{ minWidth: 92 }}>{it.date}</span>
+              <span className="kwt-cat"><RBadge tone={it.tone} shape="pill">{it.catLabel}</RBadge></span>
+              <span className="kwt-freq" style={{ flex: 1, textAlign: 'left', fontVariantNumeric: 'normal' }}>{it.text} <span className="faint">· {it.channel}</span></span>
+              <RBadge tone={it.status === '처리완료' ? 'positive' : 'warning'} shape="pill">{it.status}</RBadge>
+            </div>))}
+        </div>}
+    </RDialog></div>,
+    document.body
+  );
+}
+
+// 관제신호 세부 팝업 — 신호 1건의 설명·점검포인트·대응상태
+function SignalDetailDialog({ c, signal, onClose }) {
+  const [d] = useState(() => buildSignalDetail(signal, c));
+  return createPortal(
+    <div className="dlg-boost"><RDialog title="관제신호 세부" subtitle={`${c.name} · ${d.date} ${d.type}`} closeButton width={520} onClose={onClose}
+      actions={[{ label: '닫기', variant: 'secondary', onClick: onClose }]}>
+      <dl className="ld-attrs">
+        <div><dt>발생일</dt><dd>{d.date}</dd></div>
+        <div><dt>유형</dt><dd>{d.type}</dd></div>
+        <div><dt>심각도</dt><dd><RBadge tone={SEVERITY_TONE[d.severity]} shape="pill">{d.severity}</RBadge>{d.notifiedAuthority && <RBadge tone="danger" shape="pill" dot style={{ marginLeft: 6 }}>유관기관 통보</RBadge>}</dd></div>
+        <div><dt>내용</dt><dd>{d.desc}</dd></div>
+        <div><dt>점검 포인트</dt><dd>{d.check}</dd></div>
+        <div><dt>대응</dt><dd>{d.response}</dd></div>
+      </dl>
+    </RDialog></div>,
+    document.body
   );
 }
 
@@ -239,7 +283,7 @@ function EmpathyMessageDialog({ c, signal, onClose, onSent }) {
   );
 }
 
-function RetentionDetail({ c, sentDate, onOpenReport, touchDate, onOpenEmpathy }) {
+function RetentionDetail({ c, sentDate, onOpenReport, touchDate, onOpenEmpathy, onOpenVoc, onOpenSignal }) {
   return (
     <>
           <div className="ld-grid">
@@ -264,11 +308,12 @@ function RetentionDetail({ c, sentDate, onOpenReport, touchDate, onOpenEmpathy }
                 : <>
                   <div className="kwtable">
                     {c.signalHistory.map((s, i) => (
-                      <div className="kwt-row" key={i}>
+                      <div className="kwt-row" key={i} style={{ cursor: 'pointer' }} title="클릭하면 신호 세부 조회"
+                        onClick={e => { e.stopPropagation(); onOpenSignal && onOpenSignal(c, s); }}>
                         <span className="kwt-kw">{s.date} · {s.type}</span>
                         <span className="kwt-cat"><RBadge tone={s.severity === '심각' ? 'danger' : s.severity === '주의' ? 'warning' : 'neutral'} shape="pill">{s.severity}</RBadge></span>
                         <span className="kwt-freq faint" style={{ flex: 1, textAlign: 'right', fontVariantNumeric: 'normal' }}>
-                          {s.notifiedAuthority ? '유관기관 통보' : ''}
+                          {s.notifiedAuthority ? '유관기관 통보 · ' : ''}세부 보기 ›
                         </span>
                         <button className="kwt-touch" title="감성터칭 메시지 생성" onClick={e => { e.stopPropagation(); onOpenEmpathy(c, s); }}>
                           <MI n="sms" s={15} />감성터칭
@@ -293,7 +338,7 @@ function RetentionDetail({ c, sentDate, onOpenReport, touchDate, onOpenEmpathy }
                 <div><dt>월간 리포트 최근 발송</dt><dd>{sentDate || <i className="nd">미발송</i>}</dd></div>
                 <div><dt>감성터칭 최근 발송</dt><dd>{touchDate || <i className="nd">없음</i>}</dd></div>
               </dl>
-              <VocBox c={c} />
+              <VocBox c={c} onOpenVoc={onOpenVoc} />
               <div className="ld-h" style={{ marginTop: 14 }}>월간 리포트 <span className="faint" style={{ fontWeight: 400 }}>· AI 자동생성 · 발송 전 검토 필요</span></div>
               <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <RButton size="sm" variant="line" onClick={() => onOpenReport(c)} iconLeft={<MI n="description" s={18} />}>월간 리포트 보기</RButton>
@@ -346,6 +391,8 @@ export function RetentionScreen({ data, listMode, onListMode, initCat = 'all', r
   const [showAttentionOnly, setShowAttentionOnly] = useState(false);
   const [reportFor, setReportFor] = useState(null); // 월간 리포트 팝업 대상 고객
   const [empathyFor, setEmpathyFor] = useState(null); // { c, signal } — 감성터칭 메시지 팝업 대상
+  const [vocFor, setVocFor] = useState(null); // VOC 세부 이력 팝업 대상 고객
+  const [signalFor, setSignalFor] = useState(null); // { c, signal } — 관제신호 세부 팝업 대상
   const [page, setPage] = useState(1);
   const [cat, setCat] = useState(initCat); // KPI 구분 필터 (홈에서 진입 시 initCat)
   useEffect(() => { setCat(initCat); }, [initCat]);
@@ -462,8 +509,11 @@ export function RetentionScreen({ data, listMode, onListMode, initCat = 'all', r
       {expanded != null && (() => { const c = filtered.find(x => x.id === expanded); if (!c) return null; return (
         <DetailModal title={c.name} subtitle={`${c.use} · 계약 ${c.contractNo}`} onClose={() => setExpanded(null)}>
           <RetentionDetail c={c} sentDate={sentOverrides[c.id] ?? c.monthlyReportSent} onOpenReport={setReportFor}
-            touchDate={touchOverrides[c.id] ?? c.lastTouchDate} onOpenEmpathy={(cust, signal) => setEmpathyFor({ c: cust, signal })} />
+            touchDate={touchOverrides[c.id] ?? c.lastTouchDate} onOpenEmpathy={(cust, signal) => setEmpathyFor({ c: cust, signal })}
+            onOpenVoc={setVocFor} onOpenSignal={(cust, signal) => setSignalFor({ c: cust, signal })} />
         </DetailModal>); })()}
+      {vocFor && <VocDetailDialog c={vocFor} onClose={() => setVocFor(null)} />}
+      {signalFor && <SignalDetailDialog c={signalFor.c} signal={signalFor.signal} onClose={() => setSignalFor(null)} />}
       {reportFor && (
         <MonthlyReportDialog c={reportFor} allCustomers={data}
           sentDate={sentOverrides[reportFor.id] ?? reportFor.monthlyReportSent}

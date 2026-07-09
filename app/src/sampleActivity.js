@@ -17,3 +17,37 @@ export const SAMPLE_ACTIVITY = [
   { kind: 'msg', track: '유지', name: '홍콩상하이은행', date: '2026-07-05', time: '10:20', desc: '감성터칭 문자 발송 — 정기 안부 및 여름철 설비 점검 안내.' },
   { kind: 'visit', track: 'B 기존(업셀)', name: '백상건설 회장실', date: '2026-07-05', time: '09:30', status: 'won', desc: '중요실(전산실) 블루스캔 도입 확정 — 월 18만원. 계약서 발송 완료.' },
 ]
+
+/* ===== 영업활동관리 ↔ 신규진행현황 연동 =====
+ * SAMPLE_ACTIVITY의 방문(visit) 기록을 실제 후보(listA/listB)와 이름으로 매칭해
+ * visits 초기값(단일 소스)에 주입한다. 이렇게 하면 경성중고 '거절'처럼 활동로그에만 있던
+ * 방문 결과가 신규진행현황·확정·지도·게이미피케이션에 일관되게 반영된다.
+ * 매칭되지 않는 유지고객 대상 활동은 그대로 활동로그 샘플로 남는다. */
+function hashName(s) { let h = 0; s = String(s); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; }
+
+export function seedVisitsFromActivity(listA = [], listB = []) {
+  const byName = new Map();
+  [...(listA || []), ...(listB || [])].forEach(c => {
+    if (c && c.name && !byName.has(c.name.trim())) byName.set(c.name.trim(), c);
+  });
+  const visits = {};
+  SAMPLE_ACTIVITY.forEach(sa => {
+    if (sa.kind !== 'visit' || !sa.status) return;
+    const cand = byName.get((sa.name || '').trim());
+    if (!cand) return;
+    visits[cand.id] = {
+      status: sa.status, memo: sa.desc, transcript: '', ai: null,
+      date: sa.date, time: sa.time, fromActivity: true,
+      logs: [{ id: 8000 + Math.abs(hashName(cand.id)), status: sa.status, date: `${sa.date} ${sa.time || ''}`.trim(), text: sa.desc }],
+    };
+  });
+  return visits;
+}
+
+// 영업활동관리 화면에서 중복 표시를 막기 위한, 실제 후보와 매칭되는 방문 활동의 이름 집합
+export function activityLinkedNames(listA = [], listB = []) {
+  const names = new Set([...(listA || []), ...(listB || [])].map(c => c && c.name && c.name.trim()).filter(Boolean));
+  const linked = new Set();
+  SAMPLE_ACTIVITY.forEach(sa => { if (sa.kind === 'visit' && sa.status && names.has((sa.name || '').trim())) linked.add((sa.name || '').trim()); });
+  return linked;
+}

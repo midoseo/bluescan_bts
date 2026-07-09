@@ -152,13 +152,24 @@ export function monthMissions(ctx) {
   });
 }
 
-/* ===== 실적 랭킹 — 월/분기/반기 누적 실적(금액) · 지사/사업팀/전체 ===== */
-const PERF_MUL = { month: 1, quarter: 3.1, half: 6.2 };
-function seededAmount(empno, period) {
-  let h = 0; const s = String(empno) + '|' + period;
+/* ===== 실적 랭킹 — 월/분기/반기 누적 실적(금액) · 지사/사업팀/전체 =====
+ * 실적금액 = 신규 수주 건수 × 306천원(계약 1건 월 서비스료 평균 단가) × 기간(개월).
+ * 모든 금액이 건수로 역산되므로 억 단위가 나오지 않고, 담당자가 "몇 건 했으니 얼마"로 바로 이해한다.
+ * 단가·건수 분포는 예시이며 실서비스 시 실제 수주·계약 집계로 대체한다.
+ */
+export const UNIT_FEE = 306000; // 계약 1건 월 서비스료 평균 단가(원)
+const PERF_MUL = { month: 1, quarter: 3, half: 6 }; // 기간 개월수
+// 월 신규 수주 건수(2~14건)를 사번 해시로 결정론적 생성 → 건수×단가×기간으로 실적금액 산출
+function seededMonthlyDeals(empno) {
+  let h = 0; const s = String(empno);
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  const baseManwon = 1800 + (Math.abs(h) % 6200); // 1,800~8,000만원(월 기준)
-  return Math.round(baseManwon * (PERF_MUL[period] || 1)) * 10000; // 원
+  return 2 + (Math.abs(h) % 13); // 2~14건/월
+}
+function seededDeals(empno, period) {
+  return seededMonthlyDeals(empno) * (PERF_MUL[period] || 1); // 기간 누적 건수
+}
+function seededAmount(empno, period) {
+  return seededDeals(empno, period) * UNIT_FEE; // 원 = 기간 누적 건수 × 306천원
 }
 /* ===== 실시간 소식(GM 방송) — 경쟁심리 자극용 브로드캐스트 피드 =====
  * 온라인 게임의 서버 공지처럼 동료의 수주·배지·미션·랭킹 소식을 흘려보낸다.
@@ -179,14 +190,15 @@ export function buildBroadcast({ accounts, myBranch }) {
     const scope = a.branch === myBranch ? 'branch' : (teamOf(a.branch) === myTeam ? 'team' : 'all');
     const kind = h % 5;
     if (kind === 0) {
-      const won = 200 + (h % 500);
-      items.push({ scope, tone: 'win', icon: 'celebration', text: `${a.name} 담당자 ${pick(a.empno + 'r', _NEWS_REGIONS)} ${pick(a.empno + 'u', _NEWS_USES)} 통합 수주! 월 ${won.toLocaleString()}만원 개시!` });
+      const deals = 3 + (h % 12);                        // 3~14건 통합 수주
+      const won = Math.round(deals * UNIT_FEE / 10000);  // 만원 = 건수 × 306천원
+      items.push({ scope, tone: 'win', icon: 'celebration', text: `${a.name} 담당자 ${pick(a.empno + 'r', _NEWS_REGIONS)} ${pick(a.empno + 'u', _NEWS_USES)} ${deals}건 통합 수주! 월 ${won.toLocaleString()}만원 개시!` });
     } else { // kind === 2
       const k = (h >> 3) % 4;
       if (k === 0) items.push({ scope, tone: 'badge', icon: 'military_tech', text: `${a.name} 담당자가 '${pick(a.empno + 'b', _NEWS_BADGES)}' 배지를 획득했습니다!` });
       else if (k === 1) items.push({ scope, tone: 'mission', icon: 'task_alt', text: `${a.name} 담당자 이달 미션 전체 달성!` });
       else if (k === 2) items.push({ scope, tone: 'rank', icon: 'emoji_events', text: `${a.name} 담당자 ${teamOf(a.branch)} 실적 1위 등극!` });
-      else items.push({ scope, tone: 'big', icon: 'payments', text: `${a.name} 담당자 월 실적 ${1 + (h % 3)}억 돌파!` });
+      else { const halfWon = Math.round((8 + (h % 7)) * UNIT_FEE * 6 / 10000); items.push({ scope, tone: 'big', icon: 'payments', text: `${a.name} 담당자 반기 실적 ${halfWon.toLocaleString()}만원 돌파!` }); }
     }
   });
   return items.slice(0, 24);
@@ -200,7 +212,8 @@ export function buildPerfRanking({ accounts, myEmpno, myBranch, period, scope })
   if (myEmpno && !pool.some(a => a.empno === myEmpno)) pool = [...pool, { empno: myEmpno, name: '나', branch: myBranch }];
   const rows = pool.map(a => ({
     empno: a.empno, name: a.name, branch: a.branch, team: teamOf(a.branch),
-    amount: seededAmount(a.empno, period), isMe: a.empno === myEmpno,
+    amount: seededAmount(a.empno, period), deals: seededDeals(a.empno, period),
+    isMe: a.empno === myEmpno,
   })).sort((x, y) => y.amount - x.amount);
   rows.forEach((r, i) => { r.rank = i + 1; });
   return { top: rows.slice(0, 10), me: rows.find(r => r.isMe) || null, total: rows.length };

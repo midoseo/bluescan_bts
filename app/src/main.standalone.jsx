@@ -4,6 +4,7 @@ import './vendor/ds-bundle.js'     // window.UXDesignSystem_59a60b (렌더 시 �
 import './vendor/ds-tokens.css'    // DS CSS 변수 (+ Pretendard CDN)
 import './appData.generated.js'    // window.APPDATA / APP_ACCOUNTS / APP_DEMO (침수 GeoJSON 인라인)
 import './app.css'
+import './vendor/tokens/handoff-overrides.css'   // Claude Design 핸드오프 토큰(app.css 이후 로드)
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'

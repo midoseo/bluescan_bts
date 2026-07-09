@@ -1,0 +1,70 @@
+/* ===========================================================================
+   handoff-overrides.css — Claude Design 핸드오프 토큰 이식 (앱 전체)
+   ---------------------------------------------------------------------------
+   기존 S-1 디자인 시스템 위에 얹는 오버라이드 레이어. app.css·/ds/styles.css
+   이후에 로드되어야 한다(main.jsx에서 app.css 다음에 import).
+   시맨틱 스케일 변수를 핸드오프 값으로 재매핑 → 배지·버튼·카드·텍스트가 일괄 반영.
+   근거: 첨부 "디자인 가이드"·"핸드오프 스펙" (컬러 3의 법칙, 본문 15px, 8px 그리드).
+   =========================================================================== */
+
+:root {
+  /* ---- 01 브랜드 블루 — 행동·핵심 강조 전용 (딱 하나) --------------------- */
+  --s1-blue-500:   #1B50D4;   /* PRIMARY accent (버튼·링크·활성) */
+  --s1-blue-600:   #0F3AA8;   /* Deep — pressed/hover */
+  --s1-blue-50:    #EAF0FF;   /* brand-soft — 배지·활성 배경 */
+  --s1-blue-bg:    #F5F6F8;   /* page bg */
+  --s1-brand-blue: #1B50D4;
+  --accent:        #1B50D4;
+  --accent-hover:  #0F3AA8;
+  --accent-pressed:#0F3AA8;
+  --accent-subtle: #EAF0FF;
+  --border-focus:  #1B50D4;
+  --text-accent-blue: #1B50D4;
+
+  /* ---- 중립 — 화면의 90% (텍스트·선·배경) ------------------------------- */
+  --text-title:     #0E1013;
+  --text-body:      #17191E;   /* ink */
+  --text-secondary: #3A414D;
+  --text-tertiary:  #6A7180;   /* sub */
+  --text-placeholder:#9AA1AD;  /* faint */
+  --border-strong:  #CDD2DA;
+  --border-default: #E6E8ED;
+  --border-subtle:  #EDEFF2;
+  --divider:        #EDEFF2;
+  --surface-page:   #F5F6F8;   /* 페이지 배경 */
+  --surface-home:   #F5F6F8;
+  --surface-card:   #FFFFFF;
+
+  /* ---- 의미색 — 상태에만, 배경은 옅게 + 글자는 진하게 -------------------- */
+  /* danger (최우선·위험) */
+  --s1-red-500: #DC3B40;  --s1-red-600: #DC3B40;  --s1-red-50: #FDECEC;
+  --danger: #DC3B40;      --danger-hover: #B92C31; --danger-subtle: #FDECEC;
+  --status-error: #DC3B40;  --text-accent-red: #DC3B40;  --text-error: #DC3B40;
+  /* amber (경고·갱신 임박) */
+  --s1-yellow-800: #C77A0A;  --s1-yellow-600: #C77A0A;  --s1-yellow-100: #FBF0DD;
+  --status-warning: #C77A0A;
+  /* green (정상·양호·신호 관리) */
+  --s1-seagreen-700: #157A5B;  --s1-seagreen-600: #157A5B;  --s1-seagreen-100: #E4F3EC;
+  --status-positive: #157A5B;
+
+  /* ---- 03 형태 — 모서리 (8px 그리드) ------------------------------------- */
+  --radius-l: 16px;   /* 카드 */
+  --radius-m: 12px;   /* 버튼·인풋·다이얼로그 내부 */
+
+  /* ---- 02 타이포 — Pretendard, 본문 15px --------------------------------- */
+  --font-base:
+    "Pretendard Variable", Pretendard, "SamsungOne Korean",
+    -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Malgun Gothic", "맑은 고딕", system-ui, Roboto, sans-serif;
+  --font-display: var(--font-base);
+  --type-15r: var(--weight-regular) 15px / var(--lh-tight) var(--font-base);
+  --type-15m: var(--weight-medium)  15px / var(--lh-tight) var(--font-base);
+}
+
+/* 본문 기본 15px (base.css=16r, app.css=14r 보다 나중에 로드되어 최종 적용) */
+body {
+  font: var(--type-15r);
+  letter-spacing: var(--ls-text);
+  color: var(--text-body);
+  background: var(--surface-page);
+}
