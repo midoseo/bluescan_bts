@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>블루스캔 토탈 AI 솔루션 — 메인 대시보드 (프로토타입)</title>
+<style>
+  :root{
+    --blue:#2f6db5; --blue-d:#215089; --blue-l:#eaf1f9; --blue-ll:#f5f9fd;
+    --grey-bar:#c9d3df; --ink:#1f2a37; --sub:#5b6b7c; --line:#e2e8f0;
+    --bg:#f0f3f7; --card:#ffffff;
+    --red:#d64545; --red-l:#fdecec; --amber:#d98b1f; --amber-l:#fbf3e3;
+    --green:#2f9e6b; --green-l:#e7f5ee; --purple:#6b4fb5; --purple-l:#efeafb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.4}
+  .app{display:flex;min-height:100vh}
+
+  /* ===== 좌측 필터 레일 ===== */
+  .rail{width:214px;flex:0 0 214px;background:#fff;border-right:1px solid var(--line);padding:14px 12px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .ver{font-size:11px;font-weight:700;color:var(--sub);background:var(--blue-l);display:inline-block;padding:2px 8px;border-radius:4px;margin-bottom:12px}
+  .rail h4{font-size:11px;color:var(--sub);margin:14px 0 6px;font-weight:700;letter-spacing:.3px}
+  .rail h4:first-of-type{margin-top:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chip{font-size:11px;padding:4px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;cursor:pointer;color:var(--sub);user-select:none}
+  .chip:hover{border-color:var(--blue)}
+  .chip.on{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:700}
+
+  /* ===== 메인 영역 ===== */
+  .main{flex:1;padding:18px 22px;min-width:0}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+  .title{font-size:22px;font-weight:800;color:var(--ink)}
+  .title .sq{color:var(--blue)}
+  .brand{font-size:20px;font-weight:800;color:var(--blue);letter-spacing:-.5px}
+  .scope{font-size:12px;color:var(--sub);background:#fff;padding:5px 12px;border-radius:6px;border:1px solid var(--line)}
+  .scope b{color:var(--blue)}
+
+  /* KPI 카드 */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:.12s;position:relative;border-top:3px solid var(--blue)}
+  .kpi:hover{box-shadow:0 4px 14px rgba(47,109,181,.15);transform:translateY(-2px)}
+  .kpi .label{font-size:12px;color:var(--sub);display:flex;align-items:center;gap:4px}
+  .kpi .num{font-size:26px;font-weight:800;margin-top:4px;color:var(--ink)}
+  .kpi .unit{font-size:12px;font-weight:600;color:var(--sub)}
+  .kpi.total{border-top-color:var(--blue)}
+  .kpi.crit{border-top-color:var(--purple)} .kpi.crit .num{color:var(--purple)}
+  .kpi.warn{border-top-color:var(--red)} .kpi.warn .num{color:var(--red)}
+  .kpi.exp{border-top-color:var(--amber)} .kpi.exp .num{color:var(--amber)}
+  .kpi.contact{border-top-color:var(--blue)} .kpi.contact .num{color:var(--blue)}
+  .kpi.signal{border-top-color:var(--green)} .kpi.signal .num{color:var(--green)}
+  .info-i{width:15px;height:15px;border-radius:50%;background:var(--blue-l);color:var(--blue);font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+  .info-i:hover{background:var(--blue);color:#fff}
+
+  /* 그리드 레이아웃 */
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .panel h3{font-size:13px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+  .panel h3 .o{color:var(--blue);font-weight:800}
+  .btn-open{font-size:11px;color:var(--blue);background:var(--blue-l);border:none;padding:4px 10px;border-radius:5px;cursor:pointer;font-weight:700}
+  .btn-open:hover{background:var(--blue);color:#fff}
+
+  /* 오늘 할 일 큐 */
+  .queue-item{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:.1s}
+  .queue-item:hover{background:var(--blue-ll);border-color:var(--blue)}
+  .badge{font-size:10px;font-weight:800;padding:3px 7px;border-radius:20px;white-space:nowrap;flex:0 0 auto}
+  .b-crit{background:var(--purple-l);color:var(--purple)}
+  .b-warn{background:var(--red-l);color:var(--red)}
+  .b-exp{background:var(--amber-l);color:var(--amber)}
+  .b-contact{background:var(--blue-l);color:var(--blue)}
+  .b-signal{background:var(--green-l);color:var(--green)}
+  .qi-body{flex:1;min-width:0}
+  .qi-name{font-weight:800;font-size:13px}
+  .qi-reason{font-size:12px;color:var(--sub);margin-top:2px}
+  .qi-action{font-size:11px;color:var(--blue);margin-top:3px;font-weight:700}
+  .qi-arrow{color:var(--sub);font-size:16px;align-self:center}
+
+  /* 차트 */
+  .bars{display:flex;align-items:flex-end;gap:8px;height:150px;padding-top:16px}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .bar-val{font-size:10px;font-weight:700;color:var(--sub);margin-bottom:3px}
+  .bar{width:70%;background:var(--grey-bar);border-radius:3px 3px 0 0;min-height:2px;transition:.2s}
+  .bar.hi{background:var(--blue)}
+  .bar-lb{font-size:10px;color:var(--sub);margin-top:5px;text-align:center;white-space:nowrap}
+
+  /* BP 사례 */
+  .bp{background:linear-gradient(120deg,var(--blue-l),#fff);border:1px solid var(--line);border-radius:8px;padding:12px;position:relative}
+  .bp-tag{font-size:10px;font-weight:800;color:#fff;background:var(--blue);padding:2px 8px;border-radius:20px}
+  .bp-title{font-weight:800;font-size:14px;margin:8px 0 4px}
+  .bp-desc{font-size:12px;color:var(--sub)}
+  .bp-dots{display:flex;gap:5px;justify-content:center;margin-top:10px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);cursor:pointer}
+  .dot.on{background:var(--blue);width:18px;border-radius:4px}
+
+  /* 알림 리스트 */
+  .alert-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12px}
+  .alert-row:last-child{border-bottom:none}
+  .alert-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .a-fire{background:var(--red)} .a-sec{background:var(--amber)}
+  .alert-row .a-loc{color:var(--sub);margin-left:auto;font-size:11px}
+
+  /* ===== 리스트 뷰 ===== */
+  .backbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .back{font-size:13px;color:var(--blue);cursor:pointer;font-weight:700;background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:6px}
+  .back:hover{background:var(--blue-l)}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  th{background:var(--blue-l);color:var(--blue-d);font-size:12px;text-align:left;padding:10px 12px;font-weight:800}
+  td{padding:10px 12px;border-top:1px solid var(--line);font-size:12px}
+  tr.click{cursor:pointer} tr.click:hover td{background:var(--blue-ll)}
+  .score-pill{font-weight:800;padding:2px 8px;border-radius:6px;font-size:12px}
+  .s-hi{background:var(--red-l);color:var(--red)} .s-mid{background:var(--amber-l);color:var(--amber)} .s-lo{background:var(--green-l);color:var(--green)}
+
+  /* ===== 상세 뷰 ===== */
+  .detail-head{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:12px}
+  .dh-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .dh-name{font-size:20px;font-weight:800}
+  .dh-meta{color:var(--sub);font-size:12px;margin-top:6px}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .why-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:12px}
+  .why-item:last-child{border-bottom:none}
+  .why-k{font-weight:700;color:var(--sub);flex:0 0 92px}
+  .why-v{flex:1}
+  .todo{display:flex;align-items:flex-start;gap:8px;padding:8px;border:1px solid var(--line);border-radius:7px;margin-bottom:6px;font-size:12px}
+  .todo input{margin-top:2px}
+  .todo .g-num{font-weight:800;color:var(--blue);flex:0 0 auto}
+  .timeline{position:relative;padding-left:6px}
+  .tl{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+  .tl:hover{background:var(--blue-ll)}
+  .tl:last-child{border-bottom:none}
+  .tl-date{flex:0 0 78px;color:var(--sub);font-size:11px;font-weight:700}
+  .tl-body{flex:1;font-size:12px}
+  .tl-type{font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;margin-right:6px}
+  .t-visit{background:var(--blue-l);color:var(--blue)} .t-voc{background:var(--amber-l);color:var(--amber)}
+  .t-signal{background:var(--red-l);color:var(--red)} .t-send{background:var(--green-l);color:var(--green)}
+  .full-note{font-size:11px;color:var(--sub);margin-top:4px;padding-left:4px;border-left:2px solid var(--line)}
+  .rej-tag{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px}
+
+  /* 링크 배너 (신규↔유지 연동) */
+  .linkbar{background:var(--amber-l);border:1px solid #f0d9a8;border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .linkbar b{color:var(--amber)}
+
+  /* 모달 (참고사항) */
+  .modal-bg{position:fixed;inset:0;background:rgba(20,30,45,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal-bg.on{display:flex}
+  .modal{background:#fff;border-radius:12px;max-width:760px;width:100%;max-height:86vh;overflow-y:auto;padding:22px}
+  .modal h2{font-size:17px;margin-bottom:4px}
+  .modal .sub{color:var(--sub);font-size:12px;margin-bottom:14px}
+  .modal .close{float:right;cursor:pointer;font-size:20px;color:var(--sub);line-height:1}
+  .ref-card{border:1px solid var(--line);border-radius:9px;padding:12px 14px;margin-bottom:9px}
+  .ref-card .rc-head{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .ref-card .rc-crit{font-size:12px;color:var(--sub)}
+  .ref-card .rc-act{font-size:12px;margin-top:4px}
+  .ref-card .rc-act b{color:var(--blue)}
+  .muted{color:var(--sub)}
+  .hide{display:none}
+  .foot{margin-top:16px;font-size:11px;color:var(--sub);text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 좌측 필터 레일 -->
+  <aside class="rail">
+    <span class="ver">VER 26.02 · PROTO</span>
+    <h4>사업부</h4>
+    <div class="chips" id="f-div"></div>
+    <h4>사업팀 / 지사</h4>
+    <div class="chips" id="f-team"></div>
+    <h4>담당자</h4>
+    <div class="chips" id="f-owner"></div>
+    <h4>지역</h4>
+    <div class="chips" id="f-region"></div>
+    <h4>업종</h4>
+    <div class="chips" id="f-sector"></div>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="main" id="view"></main>
+</div>
+
+<!-- 참고사항 모달 -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <span class="close" onclick="closeModal()">×</span>
+    <h2>참고사항 — 상태 구분 기준</h2>
+    <div class="sub">각 배지가 무슨 기준으로 분류되는지, 그리고 담당자가 무엇을 해야 하는지 안내합니다.</div>
+    <div id="ref-list"></div>
+  </div>
+</div>
+
+<script>
+/* ============ 목업 데이터 ============ */
+const OWNERS = ['김성우','박지현','이준호','최민아'];
+const TEAMS  = ['서울1지사','서울2지사','경기지사','부산지사'];
+const DIVS   = ['수도권사업부','영남사업부'];
+
+// 관제 포인트 (엑셀 대시보드 값 재사용)
+const SIGNAL_POINTS = [
+  {k:'화재P',v:957,hi:true},{k:'정전P',v:395},{k:'누수P',v:1619},{k:'가스P',v:265},
+  {k:'설비P',v:6005},{k:'온습도센서',v:887},{k:'온습도제어',v:694},{k:'카메라P',v:1583},{k:'조명P',v:770}
+];
+
+// 상태 기준 정의 (참고사항)
+const CATEGORIES = {
+  crit:  {name:'최우선', cls:'crit', badge:'b-crit',
+    crit:'이탈 스코어 고위험(80점↑) + 계약 만료 D-60 이내가 동시에 겹치는 고객. 즉시 방어가 필요.',
+    act:'해약 방어 시나리오 착수 + 관리자 보고. 24시간 내 접촉.'},
+  warn:  {name:'주의 필요', cls:'warn', badge:'b-warn',
+    crit:'이탈 스코어 상승, 관제 신호 급증, 또는 미해결 VOC가 누적된 고객.',
+    act:'근거 신호 확인 → 선제 연락으로 원인 해소. 이번 주 내 대응.'},
+  exp:   {name:'계약 만료 임박', cls:'exp', badge:'b-exp',
+    crit:'계약 잔여 기간이 D-60 이내인 고객.',
+    act:'갱신 협의 개시. 유지 리포트로 그동안의 가치 전달.'},
+  contact:{name:'우선접촉', cls:'contact', badge:'b-contact',
+    crit:'인근 사고뉴스(화재 등) 발생 또는 거절 사유별 재접촉 예정일이 도래한 고객.',
+    act:'타이밍 신호를 근거로 재접촉. 방문/통화 후 결과 입력.'},
+  signal:{name:'신호관리', cls:'signal', badge:'b-signal',
+    crit:'관제 신호가 발생해 VOC 접수 전 선제 대응이 필요한 고객.',
+    act:'감성터칭 메시지 발송(승인 후). VOC 접수 전 먼저 연락.'}
+};
+
+// 사업장(유지고객) 목업
+const SITES = [
+  { id:'s1', name:'마포세무서', region:'서울', sector:'공공기관', type:'듀얼', owner:'김성우', team:'서울1지사', div:'수도권사업부',
+    cat:'warn', score:76, contractD:145, checkSummary:'최근 관제 신호 급증 + 미해결 VOC 1건 → 이탈 조짐',
+    why:[ ['이탈 스코어','76점 (중~고위험). 최근 30일 +18점 상승'],
+          ['관제 신호','설비 이상 신호 최근 2주 3회 (평소 대비 급증)'],
+          ['미해결 VOC','1건 (에어컨 오작동 문의, 5일째 미종결)'],
+          ['계약 잔여','D-145 (여유 있음)'] ],
+    guide:['미해결 VOC(에어컨 오작동) 당일 종결 처리','설비 이상 신호 원인 점검 방문 배정','감성터칭 메시지 발송 — "최근 설비 신호를 선제 점검했습니다" (승인 필요)','다음 월간 리포트에 조치 내역 반영'],
+    history:[
+      {t:'signal',d:'2026-07-08',x:'설비 이상 신호 발생 (3회차)',note:'공조기 전류 이상 감지. 자동 알림 발송됨.'},
+      {t:'voc',d:'2026-07-04',x:'VOC 접수 — 에어컨 오작동 문의',note:'상태: 미해결(진행 중). 담당 배정 필요.'},
+      {t:'signal',d:'2026-06-30',x:'설비 이상 신호 발생 (2회차)',note:''},
+      {t:'visit',d:'2026-05-20',x:'정기 방문 — 방문완료',note:'담당자 김성우. 특이사항 없음. 만족도 양호.'} ],
+    sends:[
+      {t:'send',d:'2026-06-01',x:'월간 리포트 발송 (5월분)',note:'채널: 이메일 · 상태: 발송완료 · 발송자: 김성우'},
+      {t:'send',d:'2026-05-10',x:'문자 발송 — 정기점검 안내',note:'채널: SMS · 상태: 발송완료'} ] },
+
+  { id:'s2', name:'세종빌딩', region:'서울', sector:'상업/업무시설', type:'듀얼', owner:'박지현', team:'서울2지사', div:'수도권사업부',
+    cat:'crit', score:88, contractD:42, checkSummary:'이탈 고위험 + 계약 D-42 → 즉시 방어 필요',
+    why:[ ['이탈 스코어','88점 (고위험)'], ['계약 잔여','D-42 (만료 임박)'],
+          ['최근 접촉','2개월간 접촉 이력 없음'], ['관제 신호','카메라 오프라인 반복'] ],
+    guide:['관리자 보고 — 최우선 방어 대상','24시간 내 대표 접촉, 갱신 협의 개시','해약 방어 시나리오 A(가격+서비스 재설계) 적용','유지 리포트로 1년 성과 요약 전달'],
+    history:[
+      {t:'signal',d:'2026-07-07',x:'카메라 오프라인 신호',note:'3번 카메라 간헐적 오프라인.'},
+      {t:'visit',d:'2026-05-02',x:'정기 방문 — 재방문필요',note:'담당자 박지현. 갱신 관련 미온적 반응.'} ],
+    sends:[ {t:'send',d:'2026-05-01',x:'월간 리포트 발송 (4월분)',note:'채널: 이메일 · 상태: 발송완료'} ] },
+
+  { id:'s3', name:'한빛초등학교', region:'경기', sector:'교육연구시설', type:'오너', owner:'이준호', team:'경기지사', div:'수도권사업부',
+    cat:'exp', score:54, contractD:38, checkSummary:'계약 D-38 → 갱신 협의 개시 시점',
+    why:[ ['계약 잔여','D-38'], ['이탈 스코어','54점 (중위험)'], ['만족도','양호 (VOC 없음)'] ],
+    guide:['갱신 제안서 준비','유지 리포트로 그간 가치 전달','방문 일정 조율'],
+    history:[ {t:'visit',d:'2026-04-15',x:'정기 방문 — 방문완료',note:'담당자 이준호. 갱신 긍정적.'} ],
+    sends:[ {t:'send',d:'2026-06-02',x:'월간 리포트 발송 (5월분)',note:'채널: 이메일'} ] },
+
+  { id:'s4', name:'대성물류센터', region:'경기', sector:'창고시설', type:'듀얼', owner:'이준호', team:'경기지사', div:'수도권사업부',
+    cat:'signal', score:61, contractD:210, checkSummary:'화재 감지 신호 발생 → VOC 접수 전 선제 연락',
+    why:[ ['관제 신호','화재 감지 신호 1회 (오경보 확인)'], ['이탈 스코어','61점 (중위험)'], ['VOC','없음 (선제 대응 대상)'] ],
+    guide:['화재 신호 오경보 여부 확인 결과 안내','감성터칭 메시지 발송 — "인근/현장 신호를 선제 점검했습니다" (승인 필요)','VOC 접수 전 담당자 선제 통화'],
+    history:[ {t:'signal',d:'2026-07-09',x:'화재 감지 신호 발생',note:'오경보로 확인. 고객 미인지 상태.'} ],
+    sends:[] },
+
+  { id:'s5', name:'부산항운빌딩', region:'부산', sector:'상업/업무시설', type:'듀얼', owner:'최민아', team:'부산지사', div:'영남사업부',
+    cat:'contact', score:58, contractD:120, checkSummary:'인근 화재 뉴스 발생 → 재접촉 최적 타이밍',
+    why:[ ['타이밍 신호','반경 500m 내 화재 뉴스 (2026-07-08)'], ['이탈 스코어','58점 (중위험)'], ['최근 접촉','40일 전'] ],
+    guide:['인근 화재를 근거로 안부/보안 점검 재접촉','감성터칭 메시지 발송 (승인 필요)','필요 시 추가 보안 상품 제안'],
+    history:[ {t:'signal',d:'2026-07-08',x:'인근 화재 뉴스 매칭',note:'부산 중구 상가 화재. 반경 500m.'} ],
+    sends:[] },
+
+  { id:'s6', name:'울산기계공업', region:'울산', sector:'공장', type:'듀얼', owner:'최민아', team:'부산지사', div:'영남사업부',
+    cat:'warn', score:72, contractD:95, checkSummary:'누수 신호 반복 + 만족도 하락',
+    why:[ ['이탈 스코어','72점'], ['관제 신호','누수 신호 최근 3주 2회'], ['만족도','최근 설문 하락'] ],
+    guide:['누수 신호 원인 점검 방문','선제 연락으로 만족도 회복','다음 리포트 조치 반영'],
+    history:[ {t:'signal',d:'2026-07-05',x:'누수 신호 발생',note:''} ],
+    sends:[ {t:'send',d:'2026-06-03',x:'월간 리포트 발송',note:'채널: 이메일'} ] },
+];
+
+// 신규 진행현황(테마 A) — 방문결과·거절이 여기와 연동돼야 함 (피드백 #5)
+const NEW_PIPELINE = [
+  { id:'n1', name:'경성중고', region:'서울', sector:'상업/업무시설', grade:'A', score:84, owner:'김성우',
+    visitStatus:'거절', rejCode:'REJ-04', rejLabel:'경쟁사 이용 중',
+    note:'타사 관제 계약 중. 계약 만료 추정 D-90 또는 인근 사고 발생 시 즉시 재접촉.',
+    nextContact:'2026-09-30', special:true },
+  { id:'n2', name:'동방철강', region:'경기', sector:'공장', grade:'S', score:93, owner:'이준호',
+    visitStatus:'재방문필요', rejCode:null, rejLabel:null,
+    note:'키맨 미도달. 30일 후 재방문 예정.', nextContact:'2026-08-05', special:false },
+  { id:'n3', name:'미래타워', region:'서울', sector:'상업/업무시설', grade:'A', score:82, owner:'박지현',
+    visitStatus:'방문완료', rejCode:null, rejLabel:null,
+    note:'제안서 검토 중. 긍정적.', nextContact:'-', special:false },
+];
+
+const BP_CASES = [
+  {tag:'수주 성공사례', title:'세종시 공공기관 3곳 동시 전환', desc:'인력경비 계약 만료 D-60 알림 → 원격 전환 제안 → 3곳 일괄 수주. 재접촉 규칙 REJ-02 활용.'},
+  {tag:'우수 조치사례', title:'설비 신호 선제 점검으로 해약 방어', desc:'마포세무서 설비 이상 신호 급증 감지 → VOC 접수 전 선제 방문 → 만족도 회복, 갱신 확정.'},
+  {tag:'고객 만족 사례', title:'인근 화재 후 24시간 내 안부 연락', desc:'화재 뉴스 트리거로 즉시 감성터칭 메시지 발송. "관리받고 있다"는 체감 → NPS 상승.'},
+];
+
+/* ============ 상태 ============ */
+let filters = {div:null,team:null,owner:null,region:null,sector:null};
+let bpIdx = 0, bpTimer = null;
+
+/* ============ 유틸 ============ */
+const $ = s => document.querySelector(s);
+function scoreClass(s){ return s>=80?'s-hi':s>=65?'s-mid':'s-lo'; }
+function count(cat){ return filtered().filter(s=>s.cat===cat).length; }
+function filtered(){
+  return SITES.filter(s =>
+    (!filters.div||s.div===filters.div) &&
+    (!filters.team||s.team===filters.team) &&
+    (!filters.owner||s.owner===filters.owner) &&
+    (!filters.region||s.region===filters.region) &&
+    (!filters.sector||s.sector===filters.sector));
+}
+
+/* ============ 필터 레일 ============ */
+function renderRail(){
+  const mk=(id,arr,key)=>{
+    $(id).innerHTML = arr.map(v=>`<span class="chip ${filters[key]===v?'on':''}" onclick="toggleFilter('${key}','${v}')">${v}</span>`).join('');
+  };
+  mk('#f-div',DIVS,'div'); mk('#f-team',TEAMS,'team'); mk('#f-owner',OWNERS,'owner');
+  mk('#f-region',['서울','경기','부산','울산','경남','대구'],'region');
+  mk('#f-sector',['공공기관','상업/업무시설','공장','교육연구시설','창고시설','병원'],'sector');
+}
+function toggleFilter(key,val){ filters[key] = filters[key]===val?null:val; renderRail(); renderMain(); }
+
+/* ============ 메인 대시보드 ============ */
+function renderMain(){
+  const f = filtered();
+  const queue = f.filter(s=>['crit','warn','contact','signal','exp'].includes(s.cat))
+                 .sort((a,b)=>b.score-a.score);
+  const maxSig = Math.max(...SIGNAL_POINTS.map(p=>p.v));
+
+  $('#view').innerHTML = `
+    <div class="topbar">
+      <div class="title"><span class="sq">■</span> 블루스캔 토탈 AI 솔루션 <span style="font-size:13px;color:var(--sub);font-weight:600">· 유지고객 메인 대시보드</span></div>
+      <div class="brand">에스원 블루스캔</div>
+    </div>
+    <div class="scope">보기 범위: <b>${filters.div||'전체 사업부'}</b> · <b>${filters.team||'전체 지사'}</b> · <b>${filters.owner||'전체 담당자'}</b> · <b>${filters.region||'전체 지역'}</b> &nbsp;→ 유지고객 <b>${f.length}</b>곳</div>
+
+    <div class="kpis" style="margin-top:14px">
+      ${kpiCard('total','전체 유지고객',f.length,'곳',false)}
+      ${kpiCard('crit','최우선',count('crit'),'곳',true)}
+      ${kpiCard('warn','주의 필요',count('warn'),'곳',true)}
+      ${kpiCard('exp','계약 만료 임박',count('exp'),'곳',true)}
+      ${kpiCard('contact','우선접촉',count('contact'),'곳',true)}
+      ${kpiCard('signal','신호관리',count('signal'),'곳',true)}
+    </div>
+
+    <div class="grid">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="panel">
+          <h3><span><span class="o">✔</span> 오늘 할 일 — 조치가 필요한 고객</span>
+          <span class="btn-open" onclick="openModal()">상태 기준 참고사항 ⓘ</span></h3>
+          ${queue.length? queue.map(s=>queueItem(s)).join('') : '<div class="muted" style="padding:14px">현재 조건에 조치 필요 고객이 없습니다.</div>'}
+        </div>
+
+        <div class="panel">
+          <h3><span><span class="o">◨</span> 관제 신호 요약</span>
+          <span class="btn-open" onclick="alert('전체 신호 상세 보기 — 실제 앱에서 신호 로그 화면으로 연결됩니다.')">열기 ▸</span></h3>
+          <div class="bars">
+            ${SIGNAL_POINTS.map(p=>`
+              <div class="bar-col" title="${p.k}: ${p.v}">
+                <div class="bar-val">${p.v}</div>
+                <div class="bar ${p.hi?'hi':''}" style="height:${Math.round(p.v/maxSig*100)}%"></div>
+                <div class="bar-lb">${p.k}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="panel">
+          <h3><span><span class="o">★</span> BP 사례 & 공지</span>
+          <span class="btn-open" onclick="alert('전체 BP 사례 아카이브로 연결됩니다.')">전체 ▸</span></h3>
+          <div id="bp-slot"></div>
+          <div class="bp-dots">${BP_CASES.map((_,i)=>`<span class="dot ${i===bpIdx?'on':''}" onclick="setBp(${i})"></span>`).join('')}</div>
+        </div>
+
+        <div class="panel">
+          <h3><span><span class="o">⚠</span> 화재 · 보안 알림 (중요)</span>
+          <span class="btn-open" onclick="alert('전체 알림 로그로 연결됩니다.')">열기 ▸</span></h3>
+          <div class="alert-row"><span class="alert-dot a-fire"></span> 부산 중구 상가 화재 <span class="a-loc">부산항운빌딩 인근</span></div>
+          <div class="alert-row"><span class="alert-dot a-fire"></span> 마포세무서 설비 이상 (3회차) <span class="a-loc">서울 마포</span></div>
+          <div class="alert-row"><span class="alert-dot a-sec"></span> 세종빌딩 카메라 오프라인 <span class="a-loc">서울</span></div>
+          <div class="alert-row"><span class="alert-dot a-fire"></span> 대성물류센터 화재 감지(오경보) <span class="a-loc">경기</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot">프로토타입 · 목업 데이터 · 좌측 필터/KPI 카드/사업장을 클릭하면 드릴다운·상세로 이동합니다.</div>
+  `;
+  renderBp();
+}
+
+function kpiCard(cls,label,num,unit,info){
+  return `<div class="kpi ${cls}" onclick="showList('${cls==='total'?'all':cls}')">
+    <div class="label">${label} ${info?`<span class="info-i" onclick="event.stopPropagation();openModal()">i</span>`:''}</div>
+    <div class="num">${num}<span class="unit"> ${unit}</span></div>
+  </div>`;
+}
+
+function queueItem(s){
+  const c = CATEGORIES[s.cat];
+  return `<div class="queue-item" onclick="showDetail('${s.id}')">
+    <span class="badge ${c.badge}">${c.name}</span>
+    <div class="qi-body">
+      <div class="qi-name">${s.name} <span class="muted" style="font-weight:400;font-size:11px">· ${s.region} · ${s.owner}</span></div>
+      <div class="qi-reason">${s.checkSummary}</div>
+      <div class="qi-action">▸ ${c.act}</div>
+    </div>
+    <div class="qi-arrow">›</div>
+  </div>`;
+}
+
+/* BP 로테이션 */
+function renderBp(){
+  const b = BP_CASES[bpIdx];
+  const slot = $('#bp-slot');
+  if(slot) slot.innerHTML = `<div class="bp"><span class="bp-tag">${b.tag}</span><div class="bp-title">${b.title}</div><div class="bp-desc">${b.desc}</div></div>`;
+  clearInterval(bpTimer);
+  bpTimer = setInterval(()=>{ bpIdx=(bpIdx+1)%BP_CASES.length; refreshBpDots(); renderBp(); },5000);
+}
+function refreshBpDots(){ document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===bpIdx)); }
+function setBp(i){ bpIdx=i; refreshBpDots(); renderBp(); }
+
+/* ============ 리스트(드릴다운) ============ */
+function showList(cat){
+  clearInterval(bpTimer);
+  const f = filtered();
+  const rows = cat==='all'? f : f.filter(s=>s.cat===cat);
+  const title = cat==='all'? '전체 유지고객' : CATEGORIES[cat].name;
+  $('#view').innerHTML = `
+    <div class="backbar"><span class="back" onclick="renderMain()">‹ 메인으로</span>
+      <div class="title" style="font-size:18px">${title} <span style="font-size:13px;color:var(--sub)">${rows.length}곳</span></div></div>
+    ${cat!=='all'?`<div class="linkbar"><b>기준</b> ${CATEGORIES[cat].crit} &nbsp;|&nbsp; <b>할 일</b> ${CATEGORIES[cat].act}</div>`:''}
+    <table><thead><tr>
+      <th>사업장</th><th>지역</th><th>업종</th><th>담당자</th><th>상태</th><th>이탈스코어</th><th>계약잔여</th><th>점검 사유</th>
+    </tr></thead><tbody>
+    ${rows.map(s=>`<tr class="click" onclick="showDetail('${s.id}')">
+      <td><b>${s.name}</b></td><td>${s.region}</td><td>${s.sector}</td><td>${s.owner}</td>
+      <td><span class="badge ${CATEGORIES[s.cat].badge}">${CATEGORIES[s.cat].name}</span></td>
+      <td><span class="score-pill ${scoreClass(s.score)}">${s.score}</span></td>
+      <td>D-${s.contractD}</td><td class="muted">${s.checkSummary}</td>
+    </tr>`).join('')}
+    </tbody></table>
+  `;
+}
+
+/* ============ 사업장 상세 ============ */
+function showDetail(id){
+  clearInterval(bpTimer);
+  const s = SITES.find(x=>x.id===id);
+  const c = CATEGORIES[s.cat];
+  const events = [...s.history,...s.sends].sort((a,b)=>b.d.localeCompare(a.d));
+  // 신규 파이프라인 연동 확인 (피드백 #5)
+  const inPipe = NEW_PIPELINE.find(n=>n.name===s.name);
+
+  $('#view').innerHTML = `
+    <div class="backbar"><span class="back" onclick="renderMain()">‹ 메인</span>
+      <span class="back" onclick="showList('${s.cat}')">‹ ${c.name} 목록</span></div>
+
+    <div class="detail-head">
+      <div class="dh-top">
+        <div class="dh-name">${s.name}</div>
+        <span class="badge ${c.badge}">${c.name}</span>
+        <span class="score-pill ${scoreClass(s.score)}">이탈 ${s.score}점</span>
+        <span class="btn-open" onclick="openModal()">이 상태 기준 ⓘ</span>
+      </div>
+      <div class="dh-meta">${s.region} · ${s.sector} · ${s.type} · 담당 ${s.owner} · ${s.team} · 계약 잔여 D-${s.contractD}</div>
+    </div>
+
+    ${inPipe?`<div class="linkbar"><b>🔗 신규 진행현황 연동</b> — 이 사업장은 신규 파이프라인에도 존재합니다. 방문결과 <span class="rej-tag">${inPipe.visitStatus}${inPipe.rejLabel?' · '+inPipe.rejLabel:''}</span> · 재접촉 예정 ${inPipe.nextContact}</div>`:''}
+
+    <div class="detail-grid">
+      <div class="panel">
+        <h3>① 왜 <span style="color:${s.cat==='warn'?'var(--red)':s.cat==='crit'?'var(--purple)':'var(--blue)'}">${c.name}</span> 인가 — 근거 신호</h3>
+        ${s.why.map(w=>`<div class="why-item"><div class="why-k">${w[0]}</div><div class="why-v">${w[1]}</div></div>`).join('')}
+      </div>
+      <div class="panel">
+        <h3>② 무엇을 해야 하나 — 대응 가이드</h3>
+        ${s.guide.map((g,i)=>`<div class="todo"><input type="checkbox"><span class="g-num">${i+1}.</span><span>${g}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="detail-grid" style="margin-top:12px">
+      <div class="panel">
+        <h3>③ 히스토리 — 방문 · VOC · 관제신호 <span class="muted" style="font-weight:400;font-size:11px">(클릭하면 상세)</span></h3>
+        <div class="timeline">
+          ${s.history.length? s.history.map((h,i)=>timelineRow(h,'h'+i)).join('') : '<div class="muted">이력 없음</div>'}
+        </div>
+      </div>
+      <div class="panel">
+        <h3>④ 발송 이력 — 리포트 · 문자 <span class="muted" style="font-weight:400;font-size:11px">(담당자 변경돼도 유지)</span></h3>
+        <div class="timeline">
+          ${s.sends.length? s.sends.map((h,i)=>timelineRow(h,'d'+i)).join('') : '<div class="muted">발송 이력 없음</div>'}
+        </div>
+      </div>
+    </div>
+    <div class="foot">체크박스·발송 등은 프로토타입 UI 데모입니다. 실제 앱에서는 이력으로 저장됩니다.</div>
+  `;
+}
+function timelineRow(h,rid){
+  const map={visit:['t-visit','방문'],voc:['t-voc','VOC'],signal:['t-signal','관제신호'],send:['t-send','발송']};
+  const m=map[h.t];
+  return `<div class="tl" onclick="document.getElementById('${rid}').classList.toggle('hide')">
+    <div class="tl-date">${h.d}</div>
+    <div class="tl-body"><span class="tl-type ${m[0]}">${m[1]}</span>${h.x}
+      ${h.note?`<div class="full-note hide" id="${rid}">${h.note}</div>`:''}</div>
+  </div>`;
+}
+
+/* ============ 참고사항 모달 ============ */
+function openModal(){
+  $('#ref-list').innerHTML = Object.values(CATEGORIES).map(c=>`
+    <div class="ref-card">
+      <div class="rc-head"><span class="badge ${c.badge}">${c.name}</span></div>
+      <div class="rc-crit"><b>분류 기준:</b> ${c.crit}</div>
+      <div class="rc-act"><b>담당자 할 일:</b> ${c.act}</div>
+    </div>`).join('');
+  $('#modal').classList.add('on');
+}
+function closeModal(){ $('#modal').classList.remove('on'); }
+$('#modal').addEventListener('click',e=>{ if(e.target.id==='modal') closeModal(); });
+
+/* ============ 초기화 ============ */
+renderRail();
+renderMain();
+</script>
+</body>
+</html>
