@@ -967,6 +967,11 @@ body{ background: var(--surface-home); }
   /* 하단 페이지네이션 버튼 축소(폰에서 너무 큼) — windowed 변형도 함께 오버라이드 */
   .pager{ gap:4px !important; }
   .pager__b, .pager--windowed .pager__b{ min-width:32px !important; height:32px !important; padding:0 8px !important; font-size:13px !important; border-radius:8px !important; }
+  /* 상세 팝업(모달) 가독성 — 폰에선 세로 1단 + 속성표도 1단(글자 짜부러짐 방지) */
+  .ld-grid{ grid-template-columns:1fr !important; gap:16px !important; }
+  .ld-attrs{ grid-template-columns:1fr !important; }
+  /* 상단 날짜 바 — 화면 폭에 맞게 축소·줄바꿈 허용 */
+  .hdr__date{ font-size:11.5px; height:auto; min-height:34px; padding:5px 10px; gap:5px; max-width:100%; min-width:0; white-space:normal; line-height:1.35; }
 }
 
 /* compact 목록/카드 토글 (리스트 툴바 내 배치) */
