@@ -1,5 +1,6 @@
 /* ===== Dash.jsx — 관리자/컨설턴트 대시보드 ===== */
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { MI, VISIT, tierOf } from '../components.jsx'
 import { GroupedBar } from '../charts.jsx'
 import { questProgress } from '../gamification.js'
@@ -572,7 +573,7 @@ export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, onGoPipe
 
       {/* 상세 드로어 — 왜 이 고객인가 + 최근 활동 + 대응 */}
       {drawerFor && (() => { const c = drawerFor; const r = attnReason(c); const sig = (c.signalHistory || []).slice(0, 6);
-        return (
+        return createPortal(
           <div className="home2-scrim" onClick={() => setDrawerFor(null)}>
             <div className="home2-drawer" onClick={e => e.stopPropagation()}>
               <div className="home2-drawer__head">
@@ -609,10 +610,10 @@ export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, onGoPipe
                 </div>
               </div>
             </div>
-          </div>); })()}
+          </div>, document.body); })()}
 
       {/* 상태 구분 기준 모달 */}
-      {refOpen && (
+      {refOpen && createPortal(
         <div className="home2-scrim home2-scrim--center" onClick={() => setRefOpen(false)}>
           <div className="home2-modal" onClick={e => e.stopPropagation()}>
             <div className="home2-modal__head"><h2>상태 구분 기준</h2><button className="home2-x" onClick={() => setRefOpen(false)}><MI n="close" s={18} /></button></div>
@@ -627,7 +628,8 @@ export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, onGoPipe
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 드로어 대응 — 월간 리포트 / 감성터칭 (유지관리현황과 동일 다이얼로그 재사용) */}
