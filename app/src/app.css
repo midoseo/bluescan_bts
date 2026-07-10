@@ -960,6 +960,11 @@ body{ background: var(--surface-home); }
   .topbar__alertpop{ position:fixed; left:0; right:0; bottom:0; top:auto; width:auto; max-width:none;
     border-radius:16px 16px 0 0; z-index:200; box-shadow:0 -8px 30px rgba(0,0,0,.18); animation:none; }
   .topbar__alertpop-list{ max-height:64vh; }
+  /* 필터 칩(업종 등)이 인라인 flex:0 0 auto 때문에 한 줄로 넘쳐 잘리던 문제 → 전체폭으로 줄바꿈 */
+  .fb-chips{ flex:1 1 100% !important; min-width:0; }
+  /* 하단 페이지네이션 버튼 축소(폰에서 너무 큼) — windowed 변형도 함께 오버라이드 */
+  .pager{ gap:4px !important; }
+  .pager__b, .pager--windowed .pager__b{ min-width:32px !important; height:32px !important; padding:0 8px !important; font-size:13px !important; border-radius:8px !important; }
 }
 
 /* compact 목록/카드 토글 (리스트 툴바 내 배치) */
