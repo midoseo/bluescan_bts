@@ -5,18 +5,76 @@
    ③ 실 화재 사례 — 화재 대시보드에서 끌어온 실 화재 포인트를 앱 UI에 맞춘 네이티브 카드로 표시
    ※ 외부 대시보드 iframe 임베드는 제외(별도 연동 예정).
 */
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { MI } from '../components.jsx'
 import { TargetMap } from '../map.jsx'
 import { FIRE_OVERLAY } from '../fireOverlay.js'
 import { SIGNAL_INSIGHTS as SI, SEOGANG_INSIGHTS as SG } from '../signalInsights.js'
 import { AreaChartC, GroupedBar } from '../charts.jsx'
+import { BP_CASES_DATA, BP_CASES_SUMMARY } from '../bpCases.generated.js'
 
 const TABS = [
   { key: 'report', label: '신호 인사이트 리포트', icon: 'insights' },
+  { key: 'bp', label: '수주 사례 (BP)', icon: 'emoji_events' },
   { key: 'news', label: '화재 뉴스', icon: 'newspaper' },
   { key: 'cases', label: '실 화재 사례', icon: 'local_fire_department' },
 ]
+
+const won만 = (n) => (n / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 0 }) + '만원'
+
+/* 수주 사례(BP) — 실데이터(3~6월 수주 사례 엑셀) 리스트 + 요약 */
+function BpCasesTab() {
+  const [m, setM] = useState('전체')
+  const [sec, setSec] = useState('전체')
+  const [q, setQ] = useState('')
+  const months = ['전체', ...BP_CASES_SUMMARY.months]
+  const sectors = ['전체', ...BP_CASES_SUMMARY.bySector.slice(0, 8).map(s => s[0])]
+  const qx = q.trim().toLowerCase()
+  const list = BP_CASES_DATA.filter(c =>
+    (m === '전체' || c.month === m) &&
+    (sec === '전체' || c.sector === sec) &&
+    (qx === '' || `${c.name} ${c.story} ${c.branch} ${c.points}`.toLowerCase().includes(qx)))
+  const totalFee = list.reduce((s, c) => s + (c.fee || 0), 0)
+  const shown = list.slice(0, 120)
+  return (
+    <div className="fadein">
+      <div className="ins-src"><MI n="database" s={16} />블루스캔 수주 사례 · 2026년 3~6월 · 실데이터</div>
+      <div className="ins-kpis">
+        <div className="ins-kpi"><div className="ins-kpi__ico"><MI n="emoji_events" s={20} /></div><div className="ins-kpi__body"><div className="ins-kpi__val">{list.length}<span>건</span></div><div className="ins-kpi__label">수주 사례</div><div className="ins-kpi__note">필터 적용 기준</div></div></div>
+        <div className="ins-kpi"><div className="ins-kpi__ico"><MI n="payments" s={20} /></div><div className="ins-kpi__body"><div className="ins-kpi__val">{won만(totalFee)}</div><div className="ins-kpi__label">월 서비스료 합계</div><div className="ins-kpi__note">신규 수주 MRR</div></div></div>
+        <div className="ins-kpi"><div className="ins-kpi__ico"><MI n="trending_up" s={20} /></div><div className="ins-kpi__body"><div className="ins-kpi__val">{list.length ? Math.round(totalFee / list.length / 1000) : 0}<span>천원</span></div><div className="ins-kpi__label">평균 단가</div><div className="ins-kpi__note">건당 월 서비스료</div></div></div>
+        <div className="ins-kpi"><div className="ins-kpi__ico"><MI n="factory" s={20} /></div><div className="ins-kpi__body"><div className="ins-kpi__val" style={{ fontSize: 20 }}>{BP_CASES_SUMMARY.bySector[0][0]}</div><div className="ins-kpi__label">최다 업종</div><div className="ins-kpi__note">{BP_CASES_SUMMARY.bySector[0][1]}건</div></div></div>
+      </div>
+
+      <div className="bp-filters">
+        <div className="bp-chips">{months.map(x => <button key={x} className={'bp-chip' + (m === x ? ' on' : '')} onClick={() => setM(x)}>{x}</button>)}</div>
+        <div className="bp-chips">{sectors.map(x => <button key={x} className={'bp-chip' + (sec === x ? ' on' : '')} onClick={() => setSec(x)}>{x}</button>)}</div>
+        <input className="bp-search" value={q} onChange={e => setQ(e.target.value)} placeholder="상호·지사·관제포인트·내용 검색" />
+      </div>
+
+      {list.length === 0
+        ? <div className="nodata-box" style={{ marginTop: 12 }}><MI n="filter_alt_off" s={20} /><div>조건에 맞는 사례가 없어요.</div></div>
+        : <div className="bp-list">
+          {shown.map((c, i) => (
+            <div className="bp-item" key={i}>
+              <div className="bp-item__head">
+                <span className="bp-item__name">{c.name}</span>
+                <span className="bp-item__fee">{c.fee ? won만(c.fee) : '—'}</span>
+              </div>
+              <div className="bp-item__meta">
+                <span className="bp-tag bp-tag--month">{c.month}</span>
+                <span className="bp-tag">{c.sector}</span>
+                {c.points && <span className="bp-tag bp-tag--pt">{c.points}</span>}
+                <span className="bp-item__br">{c.team} · {c.branch}{c.channel ? ' · ' + c.channel : ''}</span>
+              </div>
+              <div className="bp-item__story">{c.story}</div>
+            </div>
+          ))}
+          {list.length > shown.length && <div className="insight-note"><MI n="info" s={16} />{list.length}건 중 상위 {shown.length}건을 표시했어요. 월·업종·검색으로 좁혀보세요.</div>}
+        </div>}
+    </div>
+  )
+}
 
 /* 화재 유형 → 심각도 톤 */
 function fireTone(type) {
@@ -175,8 +233,9 @@ function SeogangReport() {
   )
 }
 
-export function InsightScreen() {
-  const [tab, setTab] = useState('report')
+export function InsightScreen({ initTab } = {}) {
+  const [tab, setTab] = useState(initTab || 'report')
+  useEffect(() => { if (initTab) setTab(initTab) }, [initTab])
   const [scope, setScope] = useState('nat')
   const D = (typeof window !== 'undefined' && window.APPDATA) || {}
   const newsAll = (D.firePoints || []).filter(f => f.title).slice().sort((a, b) => a.days - b.days).slice(0, 12)
@@ -211,6 +270,9 @@ export function InsightScreen() {
           {scope === 'nat' ? <NationalReport /> : <SeogangReport />}
         </>
       )}
+
+      {/* 수주 사례 (BP) */}
+      {tab === 'bp' && <BpCasesTab />}
 
       {/* ② 화재 뉴스 */}
       {tab === 'news' && (

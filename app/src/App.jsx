@@ -98,6 +98,8 @@ export default function App() {
   const [resultItem, setResultItem] = useState(null);
   const [retInitCat, setRetInitCat] = useState('all');   // 홈 → 유지관리현황 진입 시 초기 KPI 필터
   const [pipeInitTier, setPipeInitTier] = useState('all'); // 홈 → 신규진행현황 진입 시 초기 등급 필터
+  const [insightTab, setInsightTab] = useState('report'); // 홈 → 인사이트 진입 시 초기 탭
+  const goInsight = useCallback((t) => { setInsightTab(t || 'report'); setView('insight'); }, []);
   const [alertOpen, setAlertOpen] = useState(() => {
     try { return localStorage.getItem('bluescan.alertOpen') !== '0'; } catch { return true; }
   });
@@ -345,7 +347,7 @@ export default function App() {
               <div className="hcol">
                 {isAdmin
                   ? <AdminDash onNav={setView} user={user} seeAll={seeAll} listA={visibleA} listB={visibleB} recorded={visRecorded} />
-                  : <SalesDash persona={persona} onNav={setView} onGoRetention={goRetention} listA={visibleA} listB={visibleB} retention={retention} recorded={visRecorded} visits={visits} onResult={openResult}
+                  : <SalesDash persona={persona} onNav={setView} onGoRetention={goRetention} onGoInsight={goInsight} listA={visibleA} listB={visibleB} retention={retention} recorded={visRecorded} visits={visits} onResult={openResult}
                       reportSentOverrides={reportSentOverrides} onMarkReportSent={markReportSent} touchOverrides={touchOverrides} onMarkTouched={markTouched} />}
               </div>
             </div>
@@ -361,7 +363,7 @@ export default function App() {
               {view === 'confirmed' && <ConfirmedScreen confirmed={visRecorded} visits={visits} onVisit={saveVisit} onRemove={removeVisit} onDownload={download} onResult={openResult}
                 retention={retention} reportSentOverrides={reportSentOverrides} touchOverrides={touchOverrides} />}
               {view === 'activity' && <ActivityScreen gamify={gamify} visits={visits} listA={visibleA} listB={visibleB} retention={retention} reportSentOverrides={reportSentOverrides} touchOverrides={touchOverrides} myEmpno={user.empno} myBranch={user.branch} />}
-              {view === 'insight' && <InsightScreen />}
+              {view === 'insight' && <InsightScreen initTab={insightTab} />}
             </>
           )}
         </ErrorBoundary>

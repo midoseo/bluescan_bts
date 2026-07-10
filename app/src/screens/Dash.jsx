@@ -4,6 +4,7 @@ import { MI, VISIT } from '../components.jsx'
 import { GroupedBar } from '../charts.jsx'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
 import { augmentRetention, needsAttention, MonthlyReportDialog, EmpathyMessageDialog } from './Retention.jsx'
+import { BP_CASES_DATA } from '../bpCases.generated.js'
 const { useState, useRef, useEffect } = React
 
 const DS = window.UXDesignSystem_59a60b;
@@ -344,11 +345,16 @@ function attnReason(c) {
 
 /* ===== 유지고객 메인 대시보드(홈) — 목표 완성본 레이아웃용 데이터·헬퍼 ===== */
 const PT_LABEL = { dual: '듀얼', owner: '오너' };
-const BP_CASES = [
-  { tag: '수주 성공사례', title: '세종시 공공기관 3곳 동시 전환', body: '인력경비 계약 만료 D-60 알림 → 원격 전환 제안 → 3곳 일괄 수주.' },
-  { tag: '우수 조치사례', title: '설비 신호 선제 점검으로 해약 방어', body: '설비 이상 신호 급증 감지 → VOC 접수 전 선제 방문 → 만족도 회복·갱신 확정.' },
-  { tag: '고객 만족 사례', title: '인근 화재 후 24시간 내 안부 연락', body: '화재 뉴스 트리거로 즉시 감성터칭 발송 → "관리받고 있다"는 체감 상승.' },
-];
+// BP 사례 로테이션 — 실데이터(수주 사례 엑셀) 중 스토리가 있는 상위 서비스료 건을 하이라이트로
+const BP_CASES = BP_CASES_DATA
+  .filter(c => c.story && c.story.length > 25)
+  .sort((a, b) => (b.fee || 0) - (a.fee || 0))
+  .slice(0, 6)
+  .map(c => ({
+    tag: `${c.month} · ${c.sector}`,
+    title: (c.name.replace(/블루스캔.*$/, '').replace(/[\s(（[{]+$/, '').trim() || c.name),
+    body: c.story.length > 110 ? c.story.slice(0, 108) + '…' : c.story,
+  }));
 const RET_CRITERIA = [
   { label: '주의 필요', dot: '#DC3B40', crit: '심각한 관제 신호가 발생했거나 불만·요청 VOC가 누적된(주의 고객) 고객. 계약 만료 임박은 「만료 도래」로 분리.', action: '근거 신호·VOC를 확인하고 선제 연락으로 원인을 해소하세요.' },
   { label: '만료 도래', dot: '#C77A0A', crit: '계약 잔여 기간이 3개월 이내인 고객.', action: '갱신 협의를 시작하고 유지 리포트로 가치를 전달하세요.' },
@@ -372,7 +378,8 @@ function whyRows(c) {
   ];
 }
 
-export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retention, recorded, visits, onResult, reportSentOverrides = {}, onMarkReportSent, touchOverrides = {}, onMarkTouched }) {
+export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, listA, listB, retention, recorded, visits, onResult, reportSentOverrides = {}, onMarkReportSent, touchOverrides = {}, onMarkTouched }) {
+  const goInsight = onGoInsight || ((t) => onNav('insight'));
   const goRet = onGoRetention || ((cat) => onNav('retention'));
   recorded = recorded || []; visits = visits || {};
   const D = window.APPDATA || {};
@@ -502,13 +509,13 @@ export function SalesDash({ persona, onNav, onGoRetention, listA, listB, retenti
         </div>
 
         <div className="home2-col">
-          {/* BP 사례 & 공지 */}
-          <section className="home2-bp">
-            <div className="home2-bp__head"><MI n="campaign" s={20} /><h2>BP 사례 & 공지</h2></div>
+          {/* BP 사례 & 공지 — 클릭 시 인사이트 수주 사례 탭으로 */}
+          <section className="home2-bp home2-bp--link" onClick={() => goInsight('bp')} role="button" tabIndex={0}>
+            <div className="home2-bp__head"><MI n="emoji_events" s={20} /><h2>BP 사례 & 공지</h2><span className="home2-bp__more">전체 보기<MI n="chevron_right" s={16} /></span></div>
             <span className="home2-bp__tag">{bp.tag}</span>
             <div className="home2-bp__title">{bp.title}</div>
             <div className="home2-bp__body">{bp.body}</div>
-            <div className="home2-bp__dots">{BP_CASES.map((_, i) => <button key={i} className={'home2-bp__dot' + (i === bpIdx ? ' on' : '')} onClick={() => setBpIdx(i)} aria-label={'사례 ' + (i + 1)} />)}</div>
+            <div className="home2-bp__dots">{BP_CASES.map((_, i) => <button key={i} className={'home2-bp__dot' + (i === bpIdx ? ' on' : '')} onClick={(e) => { e.stopPropagation(); setBpIdx(i); }} aria-label={'사례 ' + (i + 1)} />)}</div>
           </section>
 
           {/* 화재 · 보안 알림 */}

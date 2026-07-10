@@ -1733,6 +1733,9 @@ body{ background: var(--surface-home); }
 .home2-bp__dots{ display:flex; gap:6px; margin-top:16px; }
 .home2-bp__dot{ width:7px; height:7px; border-radius:50%; border:none; background:rgba(255,255,255,.28); cursor:pointer; padding:0; }
 .home2-bp__dot.on{ width:18px; border-radius:4px; background:#7FA3FF; }
+.home2-bp--link{ cursor:pointer; transition:.12s; }
+.home2-bp--link:hover{ box-shadow:0 6px 20px rgba(15,26,56,.28); transform:translateY(-2px); }
+.home2-bp__more{ margin-left:auto; display:inline-flex; align-items:center; gap:2px; font-size:12px; font-weight:700; color:#7FA3FF; }
 
 /* 화재·보안 알림 */
 .home2-alerts{ display:flex; flex-direction:column; }
@@ -1787,3 +1790,23 @@ body{ background: var(--surface-home); }
 .home2-drawer__status{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; font-size:13px; color:var(--text-tertiary); }
 .home2-drawer__status span{ display:flex; align-items:center; gap:7px; }
 .home2-drawer__status b{ color:var(--text-body); font-weight:700; margin-left:2px; }
+
+/* 인사이트 — 수주 사례(BP) 탭 */
+.bp-filters{ display:flex; flex-direction:column; gap:8px; margin:14px 0 12px; }
+.bp-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.bp-chip{ font-size:12px; font-weight:600; padding:5px 11px; border-radius:20px; border:1px solid var(--border-default); background:var(--surface-card); color:var(--text-tertiary); cursor:pointer; }
+.bp-chip:hover{ border-color:var(--accent); }
+.bp-chip.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.bp-search{ width:100%; max-width:340px; height:36px; padding:0 12px; border:1px solid var(--border-strong); border-radius:12px; font:inherit; font-size:13px; color:var(--text-body); background:var(--surface-card); }
+.bp-search:focus{ outline:none; border-color:var(--accent); }
+.bp-list{ display:flex; flex-direction:column; gap:10px; }
+.bp-item{ border:1px solid var(--border-default); border-radius:12px; padding:14px 16px; background:var(--surface-card); }
+.bp-item__head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.bp-item__name{ font-size:15px; font-weight:800; color:var(--text-body); }
+.bp-item__fee{ font-size:14px; font-weight:800; color:var(--accent); white-space:nowrap; }
+.bp-item__meta{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:7px 0; }
+.bp-tag{ font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; background:#F0F1F4; color:var(--text-secondary); }
+.bp-tag--month{ background:var(--accent-subtle); color:var(--accent); }
+.bp-tag--pt{ background:var(--ok-bg,#E4F3EC); color:var(--ok,#157A5B); }
+.bp-item__br{ font-size:12px; color:var(--text-placeholder); margin-left:auto; }
+.bp-item__story{ font-size:13.5px; color:var(--text-tertiary); line-height:1.55; }
