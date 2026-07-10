@@ -1715,6 +1715,8 @@ body{ background: var(--surface-home); }
 .home2-qi__meta{ flex:none; text-align:right; display:flex; flex-direction:column; gap:3px; justify-content:center; }
 .home2-qi__mk{ font-size:11px; font-weight:600; color:var(--text-placeholder); }
 .home2-qi__d{ font-size:13px; font-weight:800; }
+.home2-catn{ font-size:12px; font-weight:800; color:var(--accent); background:var(--accent-subtle); padding:1px 8px; border-radius:20px; }
+.home2-qi__go{ color:var(--text-placeholder); }
 
 /* 관제 신호 요약 바 */
 .home2-bars{ display:flex; align-items:flex-end; gap:14px; height:168px; padding:2px 4px 0; }

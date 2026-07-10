@@ -347,7 +347,7 @@ export default function App() {
               <div className="hcol">
                 {isAdmin
                   ? <AdminDash onNav={setView} user={user} seeAll={seeAll} listA={visibleA} listB={visibleB} recorded={visRecorded} />
-                  : <SalesDash persona={persona} onNav={setView} onGoRetention={goRetention} onGoInsight={goInsight} listA={visibleA} listB={visibleB} retention={retention} recorded={visRecorded} visits={visits} onResult={openResult}
+                  : <SalesDash persona={persona} onNav={setView} onGoRetention={goRetention} onGoInsight={goInsight} onGoPipeline={goPipeline} listA={visibleA} listB={visibleB} retention={retention} recorded={visRecorded} visits={visits} onResult={openResult}
                       reportSentOverrides={reportSentOverrides} onMarkReportSent={markReportSent} touchOverrides={touchOverrides} onMarkTouched={markTouched} />}
               </div>
             </div>

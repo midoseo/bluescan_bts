@@ -1,7 +1,8 @@
 /* ===== Dash.jsx — 관리자/컨설턴트 대시보드 ===== */
 import React from 'react'
-import { MI, VISIT } from '../components.jsx'
+import { MI, VISIT, tierOf } from '../components.jsx'
 import { GroupedBar } from '../charts.jsx'
+import { questProgress } from '../gamification.js'
 import { buildFireDispatchDemo } from '../fireDispatch.demo.js'
 import { augmentRetention, needsAttention, MonthlyReportDialog, EmpathyMessageDialog } from './Retention.jsx'
 import { BP_CASES_DATA } from '../bpCases.generated.js'
@@ -355,10 +356,14 @@ const BP_CASES = BP_CASES_DATA
     title: (c.name.replace(/블루스캔.*$/, '').replace(/[\s(（[{]+$/, '').trim() || c.name),
     body: c.story.length > 110 ? c.story.slice(0, 108) + '…' : c.story,
   }));
+// 상태 기준 — '오늘 할 일' 6개 카테고리와 동일 기준
 const RET_CRITERIA = [
-  { label: '주의 필요', dot: '#DC3B40', crit: '심각한 관제 신호가 발생했거나 불만·요청 VOC가 누적된(주의 고객) 고객. 계약 만료 임박은 「만료 도래」로 분리.', action: '근거 신호·VOC를 확인하고 선제 연락으로 원인을 해소하세요.' },
-  { label: '만료 도래', dot: '#C77A0A', crit: '계약 잔여 기간이 3개월 이내인 고객.', action: '갱신 협의를 시작하고 유지 리포트로 가치를 전달하세요.' },
-  { label: '신호 관리필요', dot: '#157A5B', crit: '최근 관제 신호가 늘거나 3개월 누적 30건↑인 고객.', action: 'VOC 접수 전 선제 점검·감성터칭으로 안심 소통하세요.' },
+  { label: '주의 필요 유지고객', dot: '#DC3B40', crit: '심각한 관제 신호가 발생했거나 불만·요청 VOC가 누적된 유지고객.', action: '근거 신호·VOC를 확인하고 선제 연락으로 원인을 해소하세요.' },
+  { label: '계약 만료 임박', dot: '#C77A0A', crit: '계약 잔여 기간이 3개월 이내인 유지고객.', action: '갱신 협의를 시작하고 유지 리포트로 가치를 전달하세요.' },
+  { label: '우선접촉 대상', dot: '#1B50D4', crit: '인력경비(B-1)와 중요실(B-2)에 모두 해당하는 신규 후보.', action: '원격 전환과 중요실 보호를 함께 제안하세요.' },
+  { label: '최우선 신규 후보', dot: '#0F3AA8', crit: '도입 가능성 점수 S등급(91점↑)인 신규 후보.', action: '즉시 제안 가능한 최우선 방문 대상입니다.' },
+  { label: '신호 관리필요', dot: '#157A5B', crit: '최근 관제 신호가 늘거나 3개월 누적 30건↑인 유지고객.', action: 'VOC 접수 전 선제 점검·감성터칭으로 안심 소통하세요.' },
+  { label: '이번주 퀘스트', dot: '#6A7180', crit: '방문·리포트·감성터칭 등 이번 주 활동 목표.', action: '미션&랭킹에서 남은 퀘스트를 달성하세요.' },
 ];
 function queueSummary(c) {
   const parts = [];
@@ -378,8 +383,9 @@ function whyRows(c) {
   ];
 }
 
-export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, listA, listB, retention, recorded, visits, onResult, reportSentOverrides = {}, onMarkReportSent, touchOverrides = {}, onMarkTouched }) {
+export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, onGoPipeline, listA, listB, retention, recorded, visits, onResult, reportSentOverrides = {}, onMarkReportSent, touchOverrides = {}, onMarkTouched }) {
   const goInsight = onGoInsight || ((t) => onNav('insight'));
+  const goPipe = onGoPipeline || (() => onNav('pipeline'));
   const goRet = onGoRetention || ((cat) => onNav('retention'));
   recorded = recorded || []; visits = visits || {};
   const D = window.APPDATA || {};
@@ -429,28 +435,33 @@ export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, listA, l
     { key: 'expiry', label: '만료 도래', n: retExpiry, dot: '#C77A0A' },
     { key: 'manage', label: '신호 관리필요', n: retManage, dot: '#157A5B' },
   ];
-  // 관제 신호 요약 — 유지고객 signalHistory를 유형별 집계(최근 30일 데모)
-  const sigCounts = {};
-  retAug.forEach(c => (c.signalHistory || []).forEach(s => { sigCounts[s.type] = (sigCounts[s.type] || 0) + 1; }));
-  const signalBars = Object.entries(sigCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => ({ k, v }));
-  const sigMax = Math.max(1, ...signalBars.map(b => b.v));
-  const queue = retAttention.slice(0, 6);
+  // 오늘 할 일 — 좌측 네비게이션과 동일한 6개 카테고리, 각 대표 1건
+  const retExpiryList = retAug.filter(c => c.expirySoon).sort((a, b) => (a._daysToEnd ?? 9999) - (b._daysToEnd ?? 9999));
+  const manageList = retAug.filter(c => c.manageNeeded);
+  const bothList = (listB || []).filter(c => c.btype === 'both');
+  const topList = [...(listA || []), ...(listB || [])].filter(c => c.score != null && tierOf(c.score).key === 'S');
+  const qp = questProgress({ visits, listA, listB, retention, reportSentOverrides, touchOverrides });
+  const questDone = qp.filter(q => q.done).length;
+  const todoCats = [
+    retAttention.length && { key: 'attn', label: '주의 필요 유지고객', dot: '#DC3B40', rep: retAttention[0], n: retAttention.length, go: () => setDrawerFor(retAttention[0]) },
+    retExpiryList.length && { key: 'expiry', label: '계약 만료 임박', dot: '#C77A0A', rep: retExpiryList[0], n: retExpiryList.length, go: () => setDrawerFor(retExpiryList[0]) },
+    bothList.length && { key: 'both', label: '우선접촉 대상', dot: '#1B50D4', rep: bothList[0], n: bothList.length, kind: 'pipe', go: () => goPipe('both') },
+    { key: 'S', label: '최우선 신규 후보', dot: '#0F3AA8', rep: topList[0], n: topList.length, kind: 'pipe', go: () => goPipe('S') },
+    manageList.length && { key: 'manage', label: '신호 관리필요', dot: '#157A5B', rep: manageList[0], n: manageList.length, go: () => setDrawerFor(manageList[0]) },
+    { key: 'quest', label: '이번주 퀘스트', dot: '#6A7180', kind: 'quest', n: `${questDone}/${qp.length}`, go: () => onNav('activity') },
+  ].filter(Boolean);
   const bp = BP_CASES[bpIdx];
   const branchLabel = persona?.branch || '내 지사';
 
   return (
     <div className="pc-content pc-content--wide fadein" data-screen-label="컨설턴트 대시보드">
-      {/* 헤드 — 유지고객 메인 대시보드 */}
-      <div className="home2-head">
+      {/* 내 유지 현황 — 섹션 헤더(하단 '내 파이프라인 현황'과 동일 스타일) */}
+      <div className="dashhead" style={{ marginBottom: 12 }}>
         <div>
-          <div className="home2-eyebrow">에스원 블루스캔 · 유지고객 메인 대시보드</div>
-          <h1 className="home2-title">안녕하세요, {persona?.name || '김영업'}님</h1>
-          <div className="home2-scope">
-            <MI n="visibility" s={16} />보기 범위 <b>{branchLabel}</b>
-            <button className="home2-scope__link" onClick={() => goRet('all')}>유지관리현황 열기<MI n="chevron_right" s={16} /></button>
-          </div>
+          <div className="dashhead__t">내 유지 현황</div>
+          <div className="dashhead__s">주의가 필요한 유지고객을 먼저 확인하세요 · {branchLabel}</div>
         </div>
-        <div className="home2-avatar">{(persona?.name || '김').slice(0, 1)}</div>
+        <div className="dashhead__a"><DBtn size="sm" variant="line" onClick={() => goRet('all')} iconLeft={<MI n="shield_with_heart" s={18} />}>유지관리현황</DBtn></div>
       </div>
 
       {/* KPI 카드 — 클릭 시 유지관리현황 해당 필터 */}
@@ -466,45 +477,35 @@ export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, listA, l
       {/* 메인 그리드 */}
       <div className="home2-grid">
         <div className="home2-col">
-          {/* 오늘 할 일 */}
+          {/* 오늘 할 일 — 좌측 네비게이션 6개 카테고리, 각 대표 1건 */}
           <section className="home2-card">
             <div className="home2-ch">
-              <div className="home2-ch__t"><MI n="task_alt" s={20} /><h2>오늘 할 일</h2><span className="home2-pill">{queue.length}건</span></div>
+              <div className="home2-ch__t"><MI n="task_alt" s={20} /><h2>오늘 할 일</h2><span className="home2-pill">{todoCats.length}개 항목</span></div>
               <button className="home2-ref" onClick={() => setRefOpen(true)}><MI n="help" s={16} />상태 기준</button>
             </div>
-            {queue.length === 0
-              ? <div className="home2-empty">현재 조건에 조치 필요 고객이 없습니다.</div>
-              : <div className="home2-queue">
-                {queue.map(c => { const r = attnReason(c); const danger = r.tone === 'danger';
-                  return (
-                    <button key={c.id} className="home2-qi" onClick={() => setDrawerFor(c)}>
-                      <span className="home2-qi__bar" style={{ background: danger ? '#DC3B40' : '#C77A0A' }} />
-                      <span className="home2-qi__body">
-                        <span className="home2-qi__top"><b>{c.name}</b><DBadge tone={toneOf(r.tone)} shape="pill" dot>{r.text}</DBadge><span className="home2-qi__use">{c.use}</span></span>
-                        <span className="home2-qi__sum">{queueSummary(c)}</span>
-                      </span>
-                      <span className="home2-qi__meta">
-                        <span className="home2-qi__mk">계약</span>
-                        <span className="home2-qi__d" style={{ color: (c._daysToEnd != null && c._daysToEnd >= 0 && c._daysToEnd <= 45) ? '#DC3B40' : '#6A7180' }}>{c._daysToEnd == null ? '—' : c._daysToEnd < 0 ? '만료' : `D-${c._daysToEnd}`}</span>
-                      </span>
-                    </button>
-                  ); })}
-              </div>}
-          </section>
-
-          {/* 관제 신호 요약 */}
-          <section className="home2-card">
-            <div className="home2-ch"><div className="home2-ch__t"><MI n="sensors" s={20} /><h2>관제 신호 요약</h2></div><span className="faint" style={{ fontSize: 12 }}>최근 30일</span></div>
-            {signalBars.length === 0
-              ? <div className="home2-empty">집계할 신호가 없습니다.</div>
-              : <div className="home2-bars">
-                {signalBars.map(b => { const hi = b.v === sigMax; return (
-                  <div className="home2-bar" key={b.k} title={`${b.k}: ${b.v}`}>
-                    <span className="home2-bar__v" style={{ color: hi ? '#1B50D4' : '#6A7180' }}>{b.v}</span>
-                    <div className="home2-bar__fill" style={{ height: `${Math.round(b.v / sigMax * 100)}%`, background: hi ? '#1B50D4' : '#C7CFDD' }} />
-                    <span className="home2-bar__k">{b.k}</span>
-                  </div>); })}
-              </div>}
+            <div className="home2-queue">
+              {todoCats.map(cat => {
+                const rep = cat.rep;
+                const sub = cat.kind === 'quest'
+                  ? `이번주 퀘스트 ${cat.n} 달성 · 미션&랭킹에서 이어가기`
+                  : rep
+                    ? `대표: ${rep.name}${rep.use || rep.ind ? ' · ' + (rep.use || rep.ind) : ''}`
+                    : '현재 해당 대상이 없습니다';
+                return (
+                  <button key={cat.key} className="home2-qi" onClick={cat.go}>
+                    <span className="home2-qi__bar" style={{ background: cat.dot }} />
+                    <span className="home2-qi__body">
+                      <span className="home2-qi__top"><b>{cat.label}</b>{typeof cat.n === 'number' && <span className="home2-catn">{cat.n}건</span>}</span>
+                      <span className="home2-qi__sum">{sub}</span>
+                    </span>
+                    <span className="home2-qi__meta">
+                      <span className="home2-qi__mk">{cat.kind === 'pipe' ? '신규진행' : cat.kind === 'quest' ? '미션' : '유지관리'}</span>
+                      <MI n="chevron_right" s={18} cls="home2-qi__go" />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </section>
         </div>
 
