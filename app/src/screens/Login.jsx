@@ -1,6 +1,6 @@
 /* ===== Login.jsx — 사번/비밀번호 로그인 (역할 선택 + 시연용 추천 계정) ===== */
 import React from 'react'
-import { MI, BrandMark, BltaMark } from '../components.jsx'
+import { MI, BrandMark, BltaMark, BtsMark } from '../components.jsx'
 const { useState } = React
 
 const { TextField: LTextField, Button: LButton } = window.UXDesignSystem_59a60b
@@ -59,6 +59,12 @@ export function Login({ onLogin }) {
       {/* 우측 — 로그인 폼 */}
       <div className="login2__right">
         <div className="login2__panel">
+          {/* 모바일 전용 브랜드 — 좌측 패널이 숨겨지는 폰 화면에서도 앱 제목이 보이도록 */}
+          <div className="login2__mbrand" aria-hidden="true">
+            <span className="login2__ci"><BrandMark height={22} /></span>
+            <span className="login2__mdivider" />
+            <BtsMark height={22} />
+          </div>
           <h1 className="login2__h">로그인</h1>
           <p className="login2__hsub">사번과 비밀번호로 접속하세요</p>
 

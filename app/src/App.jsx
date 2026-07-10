@@ -292,7 +292,9 @@ export default function App() {
           </div>
           <div className="hdr__right">
             <span className="hdr__date" title="오늘 날짜(요일) · 이달 영업일수 · 경과 일차/진행률 · 남은 일수/비율">
-              <MI n="calendar_month" s={18} />{todayStr} ({dow}) · 영업일수 {bizTotal}일 {bizDay}일차({bizPct}%) · 남은일수 {bizLeft}일 ({bizLeftPct}%)
+              <span className="hdr__date-day"><MI n="calendar_month" s={18} />{todayStr} ({dow})</span>
+              <span className="hdr__date-sep"> · </span>
+              <span className="hdr__date-biz">영업일수 {bizTotal}일 {bizDay}일차({bizPct}%) · 남은일수 {bizLeft}일 ({bizLeftPct}%)</span>
             </span>
             <div className="hdr__bellwrap">
               <button className="hdr__icon" title="영업 알림" aria-expanded={bellOpen} onClick={() => setBellOpen(o => !o)}>
