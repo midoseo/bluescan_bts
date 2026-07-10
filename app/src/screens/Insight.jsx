@@ -305,16 +305,6 @@ export function InsightScreen({ initTab } = {}) {
       {/* ③ 실 화재 사례 (네이티브 카드) */}
       {tab === 'cases' && (
         <div className="fadein">
-          <div className="insight-card" style={{ marginBottom: 16 }}>
-            <div className="insight-card__head">
-              <span className="insight-card__title"><MI n="local_fire_department" s={22} />전국 화재 발생 지도<span className="insight-live">{FIRE_OVERLAY.updated} · {cases.length}건</span></span>
-            </div>
-            <div style={{ position: 'relative', height: 420, borderRadius: 12, overflow: 'hidden', border: '1px solid #eaecf0' }}>
-              <TargetMap candidates={[]} firePointsLive={FIRE_OVERLAY.points} showFire showFlood={false} variant="fire" fitKey={`fire-${FIRE_OVERLAY.points.length}`} />
-            </div>
-            <div className="insight-note"><MI n="info" s={16} />국민안전24 실시간 화재정보(WGS84 좌표) 기반. 최근일수록 진하게 표시돼요.</div>
-          </div>
-
           <div className="insight-card">
             <div className="insight-card__head">
               <span className="insight-card__title"><MI n="format_list_bulleted" s={22} />최근 화재 사례</span>

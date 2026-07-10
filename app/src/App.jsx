@@ -262,6 +262,14 @@ export default function App() {
     { icon: 'military_tech', tone: '', label: '이번주 퀘스트', n: `${_questsDone}/${quests.length}`, unit: '', act: () => setView('activity') },
   ].filter(Boolean).slice(0, 6);
 
+  // 좌측 패널 — 내 영업 현황(이번달 신규 개시·해약). 데모 소액/소건, 실서비스 시 실제 집계로 교체.
+  const salesStatus = [
+    { icon: 'fiber_new', tone: '', label: '이번달 신규 개시', v: '3건' },
+    { icon: 'payments', tone: '', label: '신규 개시금액', v: '72만원' },
+    { icon: 'event_busy', tone: 'warn', label: '이번달 해약', v: '1건' },
+    { icon: 'money_off', tone: 'warn', label: '해약금액', v: '22만원' },
+  ];
+
   // 헤더 날짜 — 오늘(실행 시점) + 이달 영업일수 경과
   const _now = new Date();
   const p2 = (x) => String(x).padStart(2, '0');
@@ -336,12 +344,12 @@ export default function App() {
                   <div className="hsummary__pts"><MI n="stars" s={22} fill /><span className="tnum">{gamify.total}P</span></div>
                   <div className="hsummary__ptssub">오늘의 활동 점수</div>
                 </div>
-                <div className="hsummary__label">오늘 할 일</div>
-                {homeTodos.map((it, i) => (
-                  <button key={i} className={'hsummary__card' + (it.tone ? ' hsummary__card--' + it.tone : '')} onClick={it.act}>
+                <div className="hsummary__label">내 영업 현황</div>
+                {salesStatus.map((it, i) => (
+                  <div key={i} className={'hsummary__card hsummary__card--static' + (it.tone ? ' hsummary__card--' + it.tone : '')}>
                     <span className="hsummary__k"><MI n={it.icon} s={18} />{it.label}</span>
-                    <b>{it.n}{it.unit && <i>{it.unit}</i>}</b>
-                  </button>
+                    <b>{it.v}</b>
+                  </div>
                 ))}
               </aside>
               <div className="hcol">

@@ -119,10 +119,24 @@ export function buildLeaderboard(consultants, myEmpno, myPoints) {
 }
 
 /* ===== 사업팀 — 지사를 상위 사업팀으로 묶는다(데모: 지사명 해시로 결정론적 배정) ===== */
-const TEAM_NAMES = ['수도권사업팀', '중부사업팀', '영남사업팀', '호남·강원사업팀'];
+const TEAM_NAMES = ['호남사업팀', '강원사업팀', '부경사업팀', '경북사업팀', '충청사업팀', '경기사업팀', '경인사업팀', '서울사업팀'];
+// 명시 매핑 우선(서울사업팀 = 서강·영등포·서울중앙 / 고양·안양은 경기)
+const BRANCH_TEAM = {
+  '서강지사': '서울사업팀', '영등포지사': '서울사업팀', '서울중앙지사': '서울사업팀',
+  '고양지사': '경기사업팀', '안양지사': '경기사업팀',
+};
 export function teamOf(branch) {
-  let h = 0; const s = String(branch || '');
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  const s = String(branch || '');
+  if (BRANCH_TEAM[s]) return BRANCH_TEAM[s];
+  if (/광주|전주|전남|전북|호남|순천|익산|목포|여수|정읍/.test(s)) return '호남사업팀';
+  if (/강원|춘천|원주|강릉|속초|동해|제천|삼척|태백/.test(s)) return '강원사업팀';
+  if (/부산|부경|김해|양산|창원|거제|통영|울산|경남|함안|밀양|진주|서부산|동김해/.test(s)) return '부경사업팀';
+  if (/대구|경북|포항|구미|경산|영천|안동|경주|칠곡/.test(s)) return '경북사업팀';
+  if (/대전|충청|충남|충북|천안|청주|서산|논산|세종|성환|아산|당진/.test(s)) return '충청사업팀';
+  if (/인천|부천|경인|파주|김포|남인천/.test(s)) return '경인사업팀';
+  if (/경기|수원|안성|용인|기흥|성남|남양주|평택|안양|고양|의정부|광명|화성/.test(s)) return '경기사업팀';
+  if (/서울|강남|강서|강동|강북|구로|영등포|동서울|서초|송파|노원|중앙|마포|서강/.test(s)) return '서울사업팀';
+  let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
   return TEAM_NAMES[Math.abs(h) % TEAM_NAMES.length];
 }
 
