@@ -1,5 +1,6 @@
 /* ===== components.jsx — shared helpers, icons, atoms (S-1 DS) ===== */
 import React from 'react'
+import { createPortal } from 'react-dom'
 const { useState, useEffect, useRef, useMemo, useCallback } = React
 
 /* Material Symbols icon (matches DS icon substitution) */
@@ -10,13 +11,15 @@ export function MI({ n, s, fill, style, cls }) {
 
 /* 상세 모달 — 화면 고정(스크롤 무관) · 기본 상단 정렬 · 위/아래 토글 · 본문 내부 스크롤(노트북에서 안 잘림) */
 export function DetailModal({ title, subtitle, badge, onClose, children }) {
-  const [pos, setPos] = useState('top'); // top | bottom
+  const [pos, setPos] = useState('top'); // top | bottom (위/아래 이동 — 데스크톱 전용, 폰에선 버튼 숨김)
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose && onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
-  return (
+  // document.body에 포털로 띄운다 — 상위 요소의 transform/sticky/stacking-context에 갇혀
+  // 헤더(홈 상단 바)에 가려지거나 위치가 어긋나는 문제를 원천 차단.
+  return createPortal(
     <div className="dmodal__scrim" onClick={onClose}>
       <div className={'dmodal dmodal--' + pos} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="dmodal__head">
@@ -24,6 +27,7 @@ export function DetailModal({ title, subtitle, badge, onClose, children }) {
             <div className="dmodal__title">{title}{badge}</div>
             {subtitle && <div className="dmodal__sub">{subtitle}</div>}
           </div>
+          {/* 위/아래 이동 — 팝업이 화면을 꽉 채우지 않는 데스크톱에서만 노출(폰에선 CSS로 숨김) */}
           <button className="dmodal__pos" title={pos === 'top' ? '아래로 이동' : '위로 이동'} aria-label="모달 위치 이동"
             onClick={() => setPos(p => (p === 'top' ? 'bottom' : 'top'))}>
             <MI n={pos === 'top' ? 'keyboard_double_arrow_down' : 'keyboard_double_arrow_up'} s={22} />
@@ -32,7 +36,8 @@ export function DetailModal({ title, subtitle, badge, onClose, children }) {
         </div>
         <div className="dmodal__body">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -47,6 +52,18 @@ import bltaEn from './assets/blta-en.png'
 export function BltaMark({ height = 26, className = '', style }) {
   return <img src={bltaEn} alt="블루스캔 타깃" className={className}
     style={{ display: 'block', height: height + 'px', width: 'auto', ...style }} />;
+}
+
+// BTS 브랜드 마크 (육각형 아이콘 + 'BTS' 워드마크) — 모바일 로그인 화면용
+export function BtsMark({ height = 26, className = '', style }) {
+  return (
+    <span className={className} style={{ display: 'inline-flex', alignItems: 'center', gap: height * 0.3, ...style }}>
+      <svg width={height} height={height} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M20 2.5 L35.5 11.25 V28.75 L20 37.5 L4.5 28.75 V11.25 Z" stroke="#1d6ceb" strokeWidth="3" strokeLinejoin="round" />
+      </svg>
+      <span style={{ fontWeight: 800, fontSize: height * 0.74, color: '#1d6ceb', letterSpacing: '-0.02em', lineHeight: 1, fontFamily: 'var(--font-base)' }}>BTS</span>
+    </span>
+  );
 }
 
 /* ---------- helpers ---------- */
