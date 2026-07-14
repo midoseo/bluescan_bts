@@ -75,6 +75,9 @@ const TITLES = {
 export default function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [view, setView] = useState('home');
+  // 탭·화면을 이동하면 스크롤을 맨 위로 되돌린다. (이전 화면에서 내려둔 위치가 남아
+  //  새 화면이 중간부터 보이던 문제 방지 — window가 스크롤 컨테이너이므로 window.scrollTo)
+  useEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }, [view]);
   const [user, setUser] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem('bluescan.user') || 'null'); } catch { return null; }
   });
