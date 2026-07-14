@@ -1921,3 +1921,31 @@ body:has(.home2-scrim, .dmodal__scrim, .side-backdrop) .scroll-hint{ display:non
   .hdr__tab{ height:40px; padding:0 12px; font-size:14px; }
   .hdr__tab .hdr__tabcount{ font-size:12px; }
 }
+
+/* ============================================================================
+   모바일 홈 요약 박스 컴팩트화 (≤560px) — 활동점수·내 영업현황·내 유지현황
+   박스 패딩과 글씨를 줄이고, 내 영업 현황 카드는 2열로 묶어 한 화면에 더 담는다.
+   ============================================================================ */
+@media (max-width:560px){
+  /* 활동점수 카드 */
+  .hsummary__score{ padding:13px 14px !important; border-radius:14px; }
+  .hsummary__who{ font-size:13px; }
+  .hsummary__pts{ font-size:23px; margin-top:5px; }
+  .hsummary__ptssub{ font-size:12px; }
+  .hsummary__label{ font-size:12px; margin:4px 2px -2px; }
+
+  /* 요약 패널 → 2열 그리드 (점수·라벨은 한 줄 전체) */
+  .hsummary{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; align-items:start; }
+  .hsummary__score{ grid-column:1 / -1; }
+  .hsummary__label{ grid-column:1 / -1; }
+
+  /* 내 영업 현황 카드 — 세로 배치 + 축소 */
+  .hsummary__card{ padding:11px 13px; border-radius:12px; flex-direction:column; align-items:flex-start; gap:4px; }
+  .hsummary__k{ font-size:12px; gap:5px; }
+  .hsummary__card b{ font-size:20px; }
+
+  /* 내 유지 현황 KPI — 축소 (2열은 기존 블록에서 적용) */
+  .home2-kpi{ padding:13px 14px !important; }
+  .home2-kpi__lab{ font-size:12px; margin-bottom:7px; }
+  .home2-kpi__n{ font-size:23px; }
+}
