@@ -1660,8 +1660,8 @@ body{ background: var(--surface-home); }
 .bcast__gm{ flex:none; display:flex; align-items:center; gap:6px; padding:0 14px; font-size:14px; font-weight:800; color:#ffd84d; background:rgba(255,216,77,.12); border-right:1px solid #2a3350; white-space:nowrap; }
 .bcast__gm .material-symbols-rounded{ color:#ffd84d; }
 .bcast__view{ flex:1; overflow:hidden; position:relative; }
-.bcast__track{ display:inline-flex; align-items:center; gap:30px; padding:11px 20px; white-space:nowrap; animation:bcastRoll 45s linear infinite; will-change:transform; }
-.bcast:hover .bcast__track{ animation-play-state:paused; }
+.bcast__track{ display:inline-flex; align-items:center; gap:30px; padding:11px 20px; white-space:nowrap; animation:bcastRoll 90s linear infinite; will-change:transform; }
+@media (hover:hover){ .bcast:hover .bcast__track{ animation-play-state:paused; } } .bcast:active .bcast__track{ animation-play-state:paused; }
 @keyframes bcastRoll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 .bnews{ display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:#e7ecf6; }
 .bnews .material-symbols-rounded{ font-size:16px; color:#9fb2d8; }
