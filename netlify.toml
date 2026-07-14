@@ -13,3 +13,19 @@
   from = "/*"
   to = "/index.html"
   status = 200
+# ===== 캐시 정책 =====
+# 모바일 등에서 옛 배포(옛 데이터)가 캐시로 남아 PC와 값이 달라 보이던 문제 방지.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
