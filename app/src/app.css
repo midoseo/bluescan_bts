@@ -1464,6 +1464,8 @@ body{ background: var(--surface-home); }
   box-shadow:0 4px 14px rgba(29,108,235,.4);animation:scrollHintBob 1.6s var(--ease-standard) infinite;}
 @keyframes scrollHintBob{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(5px);}}
 @media (prefers-reduced-motion: reduce){ .scroll-hint{ animation:none; } }
+/* 모달·드로어·사이드패널이 떠 있으면 고정 스크롤 힌트를 즉시 숨긴다 (팝업 하단 버튼 가림 방지) */
+body:has(.home2-scrim, .dmodal__scrim, .side-backdrop) .scroll-hint{ display:none !important; }
 
 /* ===== 인사이트 탭 — 신호 리포트 / 화재 사례 ===== */
 .ins-seg{ flex-wrap:wrap; }

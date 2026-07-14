@@ -10,6 +10,9 @@ export function ScrollHint() {
   const [show, setShow] = useState(false)
   useEffect(() => {
     const check = () => {
+      // 모달·드로어·사이드패널이 열려 있으면 고정 힌트를 숨긴다.
+      // (window 스크롤 기준 힌트가 팝업 위에 떠서 하단 액션 버튼을 가리던 문제 방지)
+      if (document.querySelector('.home2-scrim, .dmodal__scrim, .side-backdrop')) { setShow(false); return }
       const el = document.documentElement
       const more = el.scrollHeight - window.innerHeight - window.scrollY
       setShow(more > 140)
