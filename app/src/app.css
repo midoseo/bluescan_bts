@@ -1949,3 +1949,24 @@ body:has(.home2-scrim, .dmodal__scrim, .side-backdrop) .scroll-hint{ display:non
   .home2-kpi__lab{ font-size:12px; margin-bottom:7px; }
   .home2-kpi__n{ font-size:23px; }
 }
+
+/* ============================================================================
+   모바일 리스트/문구 보정 (≤560px)
+   - 항목4: 유지관리·신규진행 행에서 긴 계약처명이 잘리고(전역 ellipsis) 우측 상태정보가
+     가려지던 문제 → 이름+상태를 좌우 스크롤로 전부 확인.
+   - 항목6: 방문결과 안내 문구가 단어 중간에서 어색하게 두 줄로 쪼개지던 문제(flex→block).
+   ============================================================================ */
+@media (max-width:560px){
+  /* 항목4 — 계약처명이 길어도 이름+상태(신호관리필요·듀얼·우선접촉 등)를 좌우 스크롤로 전부 확인 */
+  .lrow-name{ flex-wrap:nowrap !important; white-space:nowrap !important; overflow-x:auto; overflow-y:hidden;
+    text-overflow:clip !important; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .lrow-name::-webkit-scrollbar{ display:none; }
+  .lrow-name > *{ flex:0 0 auto; }
+  .lrow-id{ min-width:0; flex:1 1 auto; }
+  .lrow-kws{ max-width:none; flex:0 1 auto; overflow-x:auto; scrollbar-width:none; }
+  .lrow-kws::-webkit-scrollbar{ display:none; }
+
+  /* 항목6 — 안내 문구 자연스러운 줄바꿈 (flex→block: '수정'·'상세'가 낱자로 쪼개지던 문제 해결) */
+  .mgr-note{ display:block; word-break:keep-all; overflow-wrap:break-word; line-height:1.5; }
+  .mgr-note .material-symbols-rounded{ vertical-align:-3px; margin-right:4px; }
+}

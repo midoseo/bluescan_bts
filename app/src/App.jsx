@@ -239,10 +239,9 @@ export default function App() {
 
   // --- 영업 알림 (종 아이콘) ---
   const alerts = [];
-  const floodN = visibleA.filter(c => c.flood && c.flood.level === '주의').length;
-  const expiryN = visibleB.filter(c => c.expirySoon).length;
+  // 침수 위험 '곳' 수 — 알림이 연결되는 신규진행현황(A+B) 기준으로 집계해 화면 수치와 일치시킨다.
+  const floodN = pipelineData.filter(c => c.flood && c.flood.level === '주의').length;
   if (floodSeasonOn && floodN) alerts.push({ icon: 'water_drop', tone: 'flood', title: `[혹서기·풍수해기] 침수 위험구역 ${floodN}곳 우선 영업`, desc: '장마철 도시침수 예상구역 내 사업장이에요. 재해 대비 보안·관리 수요가 높은 시점 — 우선 방문을 권장해요.', cta: '신규진행현황 보기', go: 'pipeline' });
-  if (expiryN) alerts.push({ icon: 'schedule', tone: 'expiry', title: `경비원 계약 만료 임박 ${expiryN}곳`, desc: '인력경비 계약 만료가 도래한 고객처예요. 블루스캔 원격 전환을 제안할 적기 — 신규진행현황에서 기존 고객을 확인하세요.', cta: '신규진행현황 보기', go: 'pipeline' });
 
   const pageTitle = view === 'home' ? (isAdmin ? '관리자 대시보드' : '컨설턴트 대시보드') : (TITLES[view] && TITLES[view].crumb);
 

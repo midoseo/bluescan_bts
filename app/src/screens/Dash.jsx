@@ -444,12 +444,13 @@ export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, onGoPipe
   const qp = questProgress({ visits, listA, listB, retention, reportSentOverrides, touchOverrides });
   const questDone = qp.filter(q => q.done).length;
   const todoCats = [
-    retAttention.length && { key: 'attn', label: '주의 필요 유지고객', dot: '#DC3B40', rep: retAttention[0], n: retAttention.length, go: () => setDrawerFor(retAttention[0]) },
-    retExpiryList.length && { key: 'expiry', label: '계약 만료 임박', dot: '#C77A0A', rep: retExpiryList[0], n: retExpiryList.length, go: () => setDrawerFor(retExpiryList[0]) },
-    bothList.length && { key: 'both', label: '우선접촉 대상', dot: '#1B50D4', rep: bothList[0], n: bothList.length, kind: 'pipe', go: () => goPipe('both') },
-    { key: 'S', label: '최우선 신규 후보', dot: '#0F3AA8', rep: topList[0], n: topList.length, kind: 'pipe', go: () => goPipe('S') },
-    manageList.length && { key: 'manage', label: '신호 관리필요', dot: '#157A5B', rep: manageList[0], n: manageList.length, go: () => setDrawerFor(manageList[0]) },
-    { key: 'quest', label: '이번주 퀘스트', dot: '#6A7180', kind: 'quest', n: `${questDone}/${qp.length}`, go: () => onNav('activity') },
+    // detail: 본문 클릭 → 대표건 상세(유지고객 드로어) / nav: 우측 '>' 클릭 → 해당 메뉴로 이동
+    retAttention.length && { key: 'attn', label: '주의 필요 유지고객', dot: '#DC3B40', rep: retAttention[0], n: retAttention.length, detail: () => setDrawerFor(retAttention[0]), nav: () => goRet('attn') },
+    retExpiryList.length && { key: 'expiry', label: '계약 만료 임박', dot: '#C77A0A', rep: retExpiryList[0], n: retExpiryList.length, detail: () => setDrawerFor(retExpiryList[0]), nav: () => goRet('expiry') },
+    bothList.length && { key: 'both', label: '우선접촉 대상', dot: '#1B50D4', rep: bothList[0], n: bothList.length, kind: 'pipe', detail: () => goPipe('both'), nav: () => goPipe('both') },
+    { key: 'S', label: '최우선 신규 후보', dot: '#0F3AA8', rep: topList[0], n: topList.length, kind: 'pipe', detail: () => goPipe('S'), nav: () => goPipe('S') },
+    manageList.length && { key: 'manage', label: '신호 관리필요', dot: '#157A5B', rep: manageList[0], n: manageList.length, detail: () => setDrawerFor(manageList[0]), nav: () => goRet('manage') },
+    { key: 'quest', label: '이번주 퀘스트', dot: '#6A7180', kind: 'quest', n: `${questDone}/${qp.length}`, detail: () => onNav('activity'), nav: () => onNav('activity') },
   ].filter(Boolean);
   const bp = BP_CASES[bpIdx];
   const branchLabel = persona?.branch || '내 지사';
@@ -462,7 +463,6 @@ export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, onGoPipe
           <div className="dashhead__t">내 유지 현황</div>
           <div className="dashhead__s">주의가 필요한 유지고객을 먼저 확인하세요 · {branchLabel}</div>
         </div>
-        <div className="dashhead__a"><DBtn size="sm" variant="line" onClick={() => goRet('all')} iconLeft={<MI n="shield_with_heart" s={18} />}>유지관리현황</DBtn></div>
       </div>
 
       {/* KPI 카드 — 클릭 시 유지관리현황 해당 필터 */}
@@ -493,13 +493,16 @@ export function SalesDash({ persona, onNav, onGoRetention, onGoInsight, onGoPipe
                     ? `대표: ${rep.name}${rep.use || rep.ind ? ' · ' + (rep.use || rep.ind) : ''}`
                     : '현재 해당 대상이 없습니다';
                 return (
-                  <button key={cat.key} className="home2-qi" onClick={cat.go}>
+                  <button key={cat.key} className="home2-qi" onClick={cat.detail}>
                     <span className="home2-qi__bar" style={{ background: cat.dot }} />
                     <span className="home2-qi__body">
                       <span className="home2-qi__top"><b>{cat.label}</b>{typeof cat.n === 'number' && <span className="home2-catn">{cat.n}건</span>}</span>
                       <span className="home2-qi__sum">{sub}</span>
                     </span>
-                    <span className="home2-qi__meta">
+                    <span className="home2-qi__meta" role="button" tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); cat.nav(); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); cat.nav(); } }}
+                      aria-label="해당 메뉴로 이동" title="해당 메뉴로 이동">
                       <span className="home2-qi__mk">{cat.kind === 'pipe' ? '신규진행' : cat.kind === 'quest' ? '미션' : '유지관리'}</span>
                       <MI n="chevron_right" s={18} cls="home2-qi__go" />
                     </span>

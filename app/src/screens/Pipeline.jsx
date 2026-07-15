@@ -181,6 +181,14 @@ function PipelineRow({ c, rank, expanded, onToggle, onResult, recorded, logCount
 
 export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, visits = {}, floodSeasonOn = true, initTier = 'all' }) {
   const D = window.APPDATA;
+  // 모바일(≤560px)에서는 지도를 렌더하지 않는다 — 좁은 화면에서 사용성이 떨어져 제외(요청).
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width:560px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width:560px)');
+    const on = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
   const [track, setTrack] = useState('전체');   // 전체 / 신규 / 기존
   const [tierF, setTierF] = useState(initTier);    // 등급 KPI 필터: all/S/A/B/C/D/both (홈에서 진입 시 initTier)
   useEffect(() => { setTierF(initTier); }, [initTier]);
@@ -285,7 +293,7 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, vi
               <Pager page={curPage} totalPages={totalPages} onChange={setPage} />
             </>}
         </div>
-        <div className="split-map">
+        {!isMobile && <div className="split-map">
           <div className="map-top">
             <span className="eyebrow">타깃 분포</span>
             <span className="map-top__chips">
@@ -298,7 +306,7 @@ export function PipelineScreen({ data, onResult, recordedSet, logCounts = {}, vi
               ? <TargetMap candidates={filtered} firePointsLive={FIRE_OVERLAY.points} showFire={showFire} showFlood={showFlood} floodLayers={floodForView} branchBoundary={branchBoundary} selectedId={expanded} onSelect={select} focusId={focusId} fitKey={branchName || 'all'} variant="A" />
               : <div className="map-empty"><MI n="map" s={28} /><span>지도에 표시할 좌표가 없어요</span></div>}
           </div>
-        </div>
+        </div>}
       </div>
       {openItem && (
         <DetailModal title={openItem.name} subtitle={openItem.track === 'B' ? '기존 고객 · 업셀링' : '신규 후보'} onClose={() => setExpanded(null)}>
