@@ -1995,3 +1995,15 @@ body:has(.home2-scrim, .dmodal__scrim, .side-backdrop) .scroll-hint{ display:non
 
   .s1table td, .s1table th{ padding:10px 12px; }
 }
+
+/* ============================================================================
+   관리자 표/차트 프레임 이탈 수정 (≤560px)
+   .dash-2col의 1fr 트랙이 넓은 표를 축소하지 못해(min-width 미설정) 카드·프레임을
+   밀어내던 문제 → minmax(0,1fr)+min-width:0 으로 표를 카드 안에서 가로 스크롤시킨다.
+   ============================================================================ */
+@media (max-width:560px){
+  .dash-2col{ grid-template-columns:minmax(0,1fr) !important; }
+  .dash-2col > *{ min-width:0; }
+  .s1-card{ min-width:0; }
+  .s1-card > *{ min-width:0; }
+}
